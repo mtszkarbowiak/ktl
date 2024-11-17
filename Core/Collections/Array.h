@@ -72,7 +72,7 @@ public:
     FORCE_INLINE NODISCARD
     auto operator[](const int32 index) -> T&
     {
-        ASSERT_INDEX_BOUNDS(index >= 0 && index < _count);
+        ASSERT_INDEX(index >= 0 && index < _count);
         return static_cast<T*>(_allocData.Get())[index];
     }
 
@@ -80,7 +80,7 @@ public:
     FORCE_INLINE NODISCARD
     auto operator[](const int32 index) const -> const T&
     {
-        ASSERT_INDEX_BOUNDS(index >= 0 && index < _count);
+        ASSERT_INDEX(index >= 0 && index < _count);
         return static_cast<const T*>(_allocData.Get())[index];
     }
 
@@ -154,7 +154,7 @@ public:
 
         const int32 allocatedMemory   = newData.Allocate(_count * sizeof(T));
         const int32 allocatedCapacity = allocatedMemory / sizeof(T);
-        ASSERT_MEMORY_BOUNDS(allocatedCapacity >= _count);
+        ASSERT_MEMORY(allocatedCapacity >= _count);
 
         CollectionsUtils::MoveLinearContent<T, Alloc, Alloc>(
             _allocData, newData, _count
@@ -217,7 +217,7 @@ public:
     FORCE_INLINE
     auto Insert(const int32 index, U&& element) -> T&
     {
-        ASSERT_INDEX_BOUNDS(index >= 0 && index <= _count);  // Allow index == _count for appending
+        ASSERT_INDEX(index >= 0 && index <= _count);  // Allow index == _count for appending
 
         if (_count == _capacity)
             Reserve(_capacity + 1);
@@ -259,7 +259,7 @@ public:
     FORCE_INLINE
     auto InsertStable(const int32 index, U&& element) -> T&
     {
-        ASSERT_INDEX_BOUNDS(index >= 0 && index <= _count);
+        ASSERT_INDEX(index >= 0 && index <= _count);
 
         if (_count == _capacity)
             Reserve(_capacity + 1);
@@ -285,7 +285,7 @@ public:
     FORCE_INLINE
     auto RemoveAt(const int32 index) -> void
     {
-        ASSERT_INDEX_BOUNDS(index >= 0 && index < _count);
+        ASSERT_INDEX(index >= 0 && index < _count);
         T* target = static_cast<T*>(_allocData.Get()) + index;
 
         // Destruct the element.
@@ -313,7 +313,7 @@ public:
     FORCE_INLINE
     auto RemoveAtStable(const int32 index) -> void
     {
-        ASSERT_INDEX_BOUNDS(index >= 0 && index < _count);
+        ASSERT_INDEX(index >= 0 && index < _count);
         T* target = static_cast<T*>(_allocData.Get()) + index;
 
         // Destruct the element.
@@ -510,7 +510,7 @@ public:
             _capacity = allocatedMemory / sizeof(T);
             _count    = other._count;
 
-            ASSERT_MEMORY_BOUNDS(_capacity >= requiredCapacity);
+            ASSERT_MEMORY(_capacity >= requiredCapacity);
 
             CollectionsUtils::CopyLinearContent<T, AllocData, AllocData>(
                 other._allocData, _allocData, _count

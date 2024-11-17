@@ -14,25 +14,25 @@
 
 // Default Assertion Configuration
 
-#ifndef MEMORY_BOUNDS_ASSERTIONS_ENABLED
-    #define MEMORY_BOUNDS_ASSERTIONS_ENABLED 1
+#ifndef MEMORY_ASSERTIONS_ENABLED
+    #define MEMORY_ASSERTIONS_ENABLED 1
 #endif
 
 #ifndef INDEX_BOUNDS_ASSERTIONS_ENABLED
-    #define INDEX_BOUNDS_ASSERTIONS_ENABLED 1
+    #define INDEX_ASSERTIONS_ENABLED 1
 #endif
 
 
 // Assertion Macros
 
-#ifdef MEMORY_BOUNDS_ASSERTIONS_ENABLED
-    #define ASSERT_MEMORY_BOUNDS(x) ASSERT(x)
+#ifdef MEMORY_ASSERTIONS_ENABLED
+    #define ASSERT_MEMORY(x) ASSERT(x)
 #else
-    #define ASSERT_MEMORY_BOUNDS(x)
+    #define ASSERT_MEMORY(x)
 #endif
 
-#ifdef INDEX_BOUNDS_ASSERTIONS_ENABLED
-    #define ASSERT_INDEX_BOUNDS(x) ASSERT(x)
+#ifdef INDEX_ASSERTIONS_ENABLED
+    #define ASSERT_INDEX(x) ASSERT(x)
 #else
-    #define ASSERT_INDEX_BOUNDS(x)
+    #define ASSERT_INDEX(x)
 #endif

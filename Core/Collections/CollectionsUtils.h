@@ -39,8 +39,8 @@ public:
     FORCE_INLINE NODISCARD
     static auto GetAllocCapacity(const int32 minCapacity) -> int32
     {
-        ASSERT_INDEX_BOUNDS(minCapacity > 0); // Allocating 0 elements is not allowed.
-        ASSERT_INDEX_BOUNDS(minCapacity <= Alloc::MaxCapacity); // Requested capacity is too high for the allocator.
+        ASSERT_INDEX(minCapacity > 0); // Allocating 0 elements is not allowed.
+        ASSERT_INDEX(minCapacity <= Alloc::MaxCapacity); // Requested capacity is too high for the allocator.
 
         // First, calculate default capacity but with respect to the allocator limits.
         constexpr static int32 CappedDefault = Math::Clamp<int32>(

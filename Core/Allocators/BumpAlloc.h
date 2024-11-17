@@ -136,7 +136,7 @@ public:
         FORCE_INLINE NODISCARD
         auto Allocate(const int32 size) -> int32
         {
-            ASSERT_MEMORY_BOUNDS(_data == nullptr);
+            ASSERT_MEMORY(_data == nullptr);
             return _context->Allocate(size, _data);
         }
 

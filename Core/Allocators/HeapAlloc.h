@@ -54,7 +54,7 @@ public:
 
         ~Data()
         {
-            ASSERT_MEMORY_BOUNDS(_ptr == nullptr);
+            ASSERT_MEMORY(_ptr == nullptr);
         }
 
 
@@ -88,7 +88,7 @@ public:
         FORCE_INLINE NODISCARD
         auto Allocate(const int32 size) -> int32
         {
-            ASSERT_MEMORY_BOUNDS(_ptr == nullptr);
+            ASSERT_MEMORY(_ptr == nullptr);
 
             _ptr = MALLOC(size);
             return _ptr ? size : 0;
@@ -97,7 +97,7 @@ public:
         FORCE_INLINE
         void Free()
         {
-            ASSERT_MEMORY_BOUNDS(_ptr != nullptr);
+            ASSERT_MEMORY(_ptr != nullptr);
 
             FREE(_ptr);
             _ptr = nullptr;
