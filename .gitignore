@@ -1,0 +1,59 @@
+# Ignore build directories
+/build*/
+/cmake-build-*/
+out/
+
+# Ignore CMake-generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+
+# Ignore Visual Studio-specific files
+.vs/
+*.vcxproj*
+*.sln
+*.ncb
+*.suo
+*.user
+*.pdb
+*.idb
+*.opendb
+*.tlog
+*.lastbuildstate
+
+# Ignore binaries and libraries
+*.exe
+*.out
+*.app
+*.dSYM/
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+
+# Ignore temporary files
+*.obj
+*.o
+*.pch
+*.log
+*.tmp
+*.swp
+*.class
+*.DS_Store
+
+# Ignore packaging files
+/_CPack_Packages/
+*.deb
+*.rpm
+*.tar.gz
+*.zip
+
+# Ignore testing and coverage files
+Testing/
+*.gcda
+*.gcno
+*.gcov
+lcov*.info
