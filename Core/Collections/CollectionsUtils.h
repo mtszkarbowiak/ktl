@@ -166,6 +166,11 @@ public:
         const int32 count
     )
     {
+        static_assert(std::is_class<SourceAllocation>::value, "Allocation must be a class!");
+        static_assert(std::is_class<TargetAllocation>::value, "Allocation must be a class!");
+        static_assert(std::is_class<typename SourceAllocation::Data>::value, "Allocation::Data must be a class!");
+        static_assert(std::is_class<typename TargetAllocation::Data>::value, "Allocation::Data must be a class!");
+
         MoveLinearContentImpl<Element, SourceAllocation, TargetAllocation>(
             sourceData, targetData, count
         );
@@ -186,6 +191,11 @@ public:
         const int32 count
     )
     {
+        static_assert(std::is_class<SourceAllocation>::value, "Allocation must be a class!");
+        static_assert(std::is_class<TargetAllocation>::value, "Allocation must be a class!");
+        static_assert(std::is_class<typename SourceAllocation::Data>::value, "Allocation::Data must be a class!");
+        static_assert(std::is_class<typename TargetAllocation::Data>::value, "Allocation::Data must be a class!");
+
         CopyLinearContentImpl<Element, SourceAllocation, TargetAllocation>(
             sourceData, targetData, count
         );
@@ -198,6 +208,9 @@ public:
         const int32 count
     )
     {
+        static_assert(std::is_class<Allocation>::value, "Allocation must be a class!");
+        static_assert(std::is_class<typename Allocation::Data>::value, "Allocation::Data must be a class!");
+
         DestroyLinearContentImpl<Element, Allocation>(data, count);
     }
 };
