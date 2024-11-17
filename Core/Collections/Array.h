@@ -11,7 +11,8 @@
 /// </summary>
 /// <remarks>
 /// The container is designed to invoke the allocator as little as possible.
-/// Thus it will keep the allocation active even when the array is empty.
+/// Thus it will keep the allocation active even when the array is empty,
+/// unless explicitly freed by calling <c>Reset</c>.
 /// </remarks>
 /// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, nor a reference. </typeparam>
 /// <typeparam name="Alloc"> Type of the allocator to use. </typeparam>
@@ -44,7 +45,7 @@ public:
 
     // Count Access
 
-    /// <summary> Checks if the array is any elements. </summary>
+    /// <summary> Checks if the array has any elements. </summary>
     FORCE_INLINE NODISCARD
     constexpr auto IsEmpty() const noexcept -> bool
     {
@@ -66,29 +67,9 @@ public:
     }
 
 
-    // Element Access
-
-    /// <summary> Accesses the element at the given index. </summary>
-    FORCE_INLINE NODISCARD
-    auto operator[](const int32 index) -> T&
-    {
-        ASSERT_INDEX(index >= 0 && index < _count);
-        return static_cast<T*>(_allocData.Get())[index];
-    }
-
-    /// <summary> Accesses the element at the given index. </summary>
-    FORCE_INLINE NODISCARD
-    auto operator[](const int32 index) const -> const T&
-    {
-        ASSERT_INDEX(index >= 0 && index < _count);
-        return static_cast<const T*>(_allocData.Get())[index];
-    }
-
-
     // Allocation Manipulation
 
     /// <summary> Ensures that adding items up to the requested capacity will not invoke the allocator. </summary>
-    /// <returns> True if the capacity was increased, false if it was already sufficient. </returns>
     FORCE_INLINE
     void Reserve(int32 minCapacity)
     {
@@ -136,7 +117,6 @@ public:
                 _allocData.Free();
                 _capacity = 0;
             }
-
             return;
         }
 
@@ -163,6 +143,25 @@ public:
 
         _allocData = MOVE(newData);
         _capacity  = allocatedCapacity;
+    }
+
+
+    // Element Access
+
+    /// <summary> Accesses the element at the given index. </summary>
+    FORCE_INLINE NODISCARD
+    auto operator[](const int32 index) -> T&
+    {
+        ASSERT_INDEX(index >= 0 && index < _count);
+        return static_cast<T*>(_allocData.Get())[index];
+    }
+
+    /// <summary> Accesses the element at the given index. </summary>
+    FORCE_INLINE NODISCARD
+    auto operator[](const int32 index) const -> const T&
+    {
+        ASSERT_INDEX(index >= 0 && index < _count);
+        return static_cast<const T*>(_allocData.Get())[index];
     }
 
 
@@ -245,7 +244,6 @@ public:
         return *target;
     }
 
-
     /// <summary>
     /// Adds element at the specified index, preserving the order of the elements by moving them.
     /// </summary>
@@ -302,7 +300,6 @@ public:
         _count -= 1;
     }
 
-
     /// <summary>
     /// Removes element at the specified index, preserving the order of the elements by moving them.
     /// </summary>
@@ -331,7 +328,7 @@ public:
     FORCE_INLINE
     void Clear()
     {
-        if (_count <= 0)
+        if (_count == 0)
             return;
 
         CollectionsUtils::DestroyLinearContent<T, Alloc>(_allocData, _count);
@@ -345,12 +342,9 @@ public:
         if (_capacity == 0)
             return;
 
-        if (_count > 0)
-            CollectionsUtils::DestroyLinearContent<T, Alloc>(_allocData, _count);
+        Clear();
 
-        _allocData.Free();
-
-        _count    = 0;
+        _allocData.Free(); // Capacity is above zero!
         _capacity = 0;
     }
 
@@ -370,16 +364,12 @@ public:
     {
         if (!other.IsAllocated())
         {
-            // Source is unallocated, initialize as empty.
-
             _allocData = AllocData{};
             _count     = 0;
             _capacity  = 0;
         }
         else if (other._allocData.MovesItems())
         {
-            // Fast path: Move allocation and reset the source.
-
             _allocData = MOVE(other._allocData);
             _count     = other._count;
             _capacity  = other._capacity;
@@ -389,12 +379,11 @@ public:
         }
         else
         {
-            // Slow path: Move the items manually to the new allocation.
             _allocData = AllocData{};
+            _count     = other._count;
 
-            const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * other._count); // Minimal allocation
+            const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * _count); // Minimal allocation
             _capacity = allocatedMemory / sizeof(T);
-            _count    = other._count;
 
             CollectionsUtils::MoveLinearContent<T, AllocData, AllocData>(
                 other._allocData, this->_allocData, _count
@@ -404,15 +393,14 @@ public:
         }
     }
 
-
     /// <summary> Initializing an array by moving different allocator is not allowed. </summary>
-    /// <remarks> This operation always forces disables the fast path. </remarks>
+    /// <remarks> This operation always disables desired allocator move. </remarks>
     template<typename OtherAlloc>
-    Array(Array&&) = delete;
+    Array(Array<T, OtherAlloc>&&) = delete;
 
     /// <summary> Initializes an array by copying another array. </summary>
     template<typename OtherAlloc>
-    Array(const Array<T, OtherAlloc>& other)
+    explicit Array(const Array<T, OtherAlloc>& other)
         : _allocData{}
     {
         static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
@@ -427,6 +415,7 @@ public:
         {
             const int32 requiredCapacity = CollectionsUtils::GetAllocCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
             const int32 allocatedMemory  = _allocData.Allocate(requiredCapacity * sizeof(T));
+
             _capacity = allocatedMemory / sizeof(T);
             _count = other._count;
 
@@ -437,6 +426,12 @@ public:
                 other._allocData, _allocData, _count
             );
         }
+    }
+
+    /// <summary> Initializes an array by copying another array. </summary>
+    Array(const Array& other)
+        : Array{ other }
+    {
     }
 
 
@@ -462,7 +457,7 @@ public:
     }
 
 
-    // Collection Lifecycle - Assignments
+    // Collection Lifecycle  - Assignments
 
     FORCE_INLINE
     auto operator=(Array&& other) noexcept -> Array&
@@ -470,23 +465,34 @@ public:
         if (this == &other)
             return *this;
 
-        // Clear the current array and free the allocation.
         Reset();
 
-        // If allocation move does not move the items, move them manually.
-        if (!other._allocData.MovesItems())
+        if (!other.IsAllocated()) 
         {
-            CollectionsUtils::MoveLinearContent<T, AllocData, AllocData>(
-                other._allocData, this->_allocData, _count
-            );
+            // Pass
         }
+        else if (!other._allocData.MovesItems()) 
+        {
+            _allocData = MOVE(other._allocData);
+            _capacity  = other._capacity;
+            _count     = other._count;
 
-        _allocData = MOVE(other._allocData);
-        _capacity  = other._capacity;
-        _count     = other._count;
+            other._capacity = 0; // Allocation moved - Reset the capacity!
+            other._count    = 0;
+        }
+        else
+        {
+            _count = other._count;
 
-        other._capacity = 0;
-        other._count    = 0;
+            const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * _count);
+            _capacity = allocatedMemory / sizeof(T);
+
+            CollectionsUtils::MoveLinearContent<T, Alloc, Alloc>(
+                other._allocData, _allocData, _count
+            );
+
+            other.Reset();
+        }
 
         return *this;
     }
@@ -494,15 +500,12 @@ public:
     FORCE_INLINE
     auto operator=(const Array& other) -> Array&
     {
-        Clear();
+        if (this == &other)
+            return *this;
 
-        if (other._capacity == 0)
-        {
-            // If no allocation is active, just zero the members.
-            _capacity = 0;
-            _count    = 0;
-        }
-        else
+        Reset();
+
+        if (other._capacity != 0)
         {
             // If there's an active allocation, copy the elements.
             const int32 requiredCapacity = CollectionsUtils::GetAllocCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
@@ -512,7 +515,7 @@ public:
 
             ASSERT_MEMORY(_capacity >= requiredCapacity);
 
-            CollectionsUtils::CopyLinearContent<T, AllocData, AllocData>(
+            CollectionsUtils::CopyLinearContent<T, Alloc, Alloc>(
                 other._allocData, _allocData, _count
             );
         }
@@ -537,8 +540,8 @@ public:
     /// </summary>
     class MutEnumerator
     {
-        Array<T, Alloc>* _array{};
-        int32 _index;
+        Array<T, Alloc>* _array;
+        int32            _index;
 
     public:
         explicit MutEnumerator(Array<T, Alloc>& array)
@@ -591,6 +594,14 @@ public:
             return _index < _array->_count;
         }
 
+        /// <summary> Returns the index of the current element. </summary>
+        FORCE_INLINE NODISCARD
+        auto Index() const noexcept -> int32
+        {
+            return _index;
+        }
+
+
         /// <summary> Moves the enumerator to the next element. </summary>
         FORCE_INLINE
         auto operator++() -> MutEnumerator&
@@ -609,14 +620,13 @@ public:
         }
     };
 
-
     /// <summary>
     /// Iterator for the array which provides end condition and allows to iterate over the elements in a range-based for loop.
     /// </summary>
     class ConstEnumerator
     {
-        const Array<T, Alloc>* _array{};
-        int32 _index;
+        const Array<T, Alloc>* _array;
+        int32                  _index;
 
     public:
         explicit ConstEnumerator(const Array<T, Alloc>& array)
@@ -631,6 +641,8 @@ public:
         {
         }
 
+
+        // Identity
 
         FORCE_INLINE NODISCARD
         auto operator==(const ConstEnumerator& other) const -> bool
@@ -654,12 +666,16 @@ public:
         }
 
 
+        // Access
+
         FORCE_INLINE NODISCARD
         auto operator*() const -> const T& { return (*_array)[_index]; }
 
         FORCE_INLINE NODISCARD
         auto operator->() const -> const T* { return &(*_array)[_index]; }
 
+
+        // End Condition and Movement
 
         /// <summary> Check if the enumerator reached the end of the array. </summary>
         FORCE_INLINE NODISCARD
@@ -668,6 +684,14 @@ public:
             ASSERT(_array != nullptr);
             return _index < _array->_count;
         }
+
+        /// <summary> Returns the index of the current element. </summary>
+        FORCE_INLINE NODISCARD
+        auto Index() const noexcept -> int32
+        {
+            return _index;
+        }
+
 
         /// <summary> Moves the enumerator to the next element. </summary>
         FORCE_INLINE
@@ -686,7 +710,6 @@ public:
             return copy;
         }
     };
-
 
     /// <summary> Creates an enumerator for the array. </summary>
     FORCE_INLINE NODISCARD
