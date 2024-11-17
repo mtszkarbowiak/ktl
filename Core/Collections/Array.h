@@ -415,7 +415,7 @@ public:
     Array(const Array<T, OtherAlloc>& other)
         : _allocData{}
     {
-        static_assert(std::is_copy_constructible_v<T>, "Type must be copy-constructible.");
+        static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
 
         if (other._capacity == 0)
         {
@@ -750,13 +750,13 @@ public:
 
     // Constraints
 
-    static_assert(std::is_move_constructible_v<T>, "Type must be move-constructible.");
-    static_assert(std::is_nothrow_move_constructible_v<T>, "Type must be nothrow move-constructible.");
-    static_assert(std::is_move_assignable_v<T>, "Type must be move-assignable.");
-    static_assert(std::is_nothrow_move_assignable_v<T>, "Type must be nothrow move-assignable.");
-    static_assert(std::is_destructible_v<T>, "Type must be destructible.");
-    static_assert(std::is_nothrow_destructible_v<T>, "Type must be nothrow destructible.");
+    static_assert(std::is_move_constructible<T>        ::value, "Type must be move-constructible.");
+    static_assert(std::is_nothrow_move_constructible<T>::value, "Type must be nothrow move-constructible.");
+    static_assert(std::is_move_assignable<T>           ::value, "Type must be move-assignable.");
+    static_assert(std::is_nothrow_move_assignable<T>   ::value, "Type must be nothrow move-assignable.");
+    static_assert(std::is_destructible<T>              ::value, "Type must be destructible.");
+    static_assert(std::is_nothrow_destructible<T>      ::value, "Type must be nothrow destructible.");
 
-    static_assert(!std::is_reference_v<T>, "Type must not be a reference type.");
-    static_assert(!std::is_const_v<T>, "Type must not be a const-qualified type.");
+    static_assert(!std::is_reference<T>                ::value, "Type must not be a reference type.");
+    static_assert(!std::is_const<T>                    ::value, "Type must not be a const-qualified type.");
 };

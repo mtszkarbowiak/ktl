@@ -219,6 +219,6 @@ public:
     // Constraints
 
     static_assert(Alloc::IsNullable, "Allocator must be nullable.");
-    static_assert(!std::is_reference_v<T>, "Type must not be a reference.");
+    static_assert(!std::is_reference<T>::value, "Type must not be a reference.");
 };
 
