@@ -2,8 +2,8 @@
 
 #include <gtest/gtest.h>
 
-#include "../Collections/Array.h"
-#include "../Algorithms/Querying.h"
+#include "Collections/Array.h"
+#include "Algorithms/Querying.h"
 
 TEST(Querying, Count)
 {

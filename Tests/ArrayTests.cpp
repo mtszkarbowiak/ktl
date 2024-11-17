@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "../Collections/Array.h"
+#include "Collections/Array.h"
 
 // Test Array's ability to set capacity during initialization.
 TEST(Array, Reserving_Init)

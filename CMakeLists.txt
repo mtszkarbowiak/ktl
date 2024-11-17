@@ -79,6 +79,11 @@ target_include_directories(Tests PRIVATE
     ${gtest_BINARY_DIR}/include       # GoogleTest build output (if needed)
 )
 
+# Add the Core include directory for the Tests target
+target_include_directories(Tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/Core
+)
+
 
 # -----------------------------------------------------------------------------
 # Testing Configuration

@@ -2,9 +2,9 @@
 
 #include <gtest/gtest.h>
 
-#include "../Allocators/FixedAlloc.h"
-#include "../Allocators/HeapAlloc.h"
-#include "../Allocators/BumpAlloc.h"
+#include "Allocators/FixedAlloc.h"
+#include "Allocators/HeapAlloc.h"
+#include "Allocators/BumpAlloc.h"
 
 TEST(FixedAlloc, AllocationCycle)
 {

@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "../Collections/Array.h"
+#include "Collections/Array.h"
 
 TEST(ArrayIterators, ConstEnumerator)
 {

@@ -2,8 +2,8 @@
 
 #include <gtest/gtest.h>
 
-#include "../Types/Box.h"
-#include "../Allocators/BumpAlloc.h"
+#include "Types/Box.h"
+#include "Allocators/BumpAlloc.h"
 
 TEST(Box, Init_Empty_ByDefaultConstructor)
 {
