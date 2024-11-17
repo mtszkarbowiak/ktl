@@ -13,22 +13,35 @@
 /// where it's called <c>std::is_standard_layout</c>.
 /// </remarks>
 template<typename T>
-static constexpr bool TIsCStyle = false;
+struct TIsCStyle
+{
+    static constexpr bool Value = false;
+};
 
 
 template<typename T>
-static constexpr bool TIsCStyle<T*> = true;
+struct TIsCStyle<T*>
+{
+    // Pointers are C-style types.
+    static constexpr bool Value = true;
+};
 
 template<typename T, size_t N>
-static constexpr bool TIsCStyle<T[N]> = TIsCStyle<T>;
+struct TIsCStyle<T[N]>
+{
+    // Arrays are C-style types if their element type is C-style.
+    static constexpr bool Value = TIsCStyle<T>::Value;
+};
 
 template<typename Ret, typename... Args>
-static constexpr bool TIsCStyle<Ret(*)(Args...)> = true;
-
-
+struct TIsCStyle<Ret(*)(Args...)>
+{
+    // Function pointers are C-style types.
+    static constexpr bool Value = true;
+};
 
 /// <summary>
 /// Macro to declare a type as a C-style type.
 /// </summary>
 #define DECLARE_C_STYLE_TYPE(Type) \
-    template<> static constexpr bool TIsCStyle<Type> = true;
+    template<> struct TIsCStyle<Type> { static constexpr bool Value = true; };

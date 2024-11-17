@@ -37,7 +37,7 @@ public:
     /// </remarks>
     template<typename Alloc, int32 Default>
     FORCE_INLINE NODISCARD
-    constexpr static auto GetAllocCapacity(const int32 minCapacity) -> int32
+    static auto GetAllocCapacity(const int32 minCapacity) -> int32
     {
         ASSERT_INDEX_BOUNDS(minCapacity > 0); // Allocating 0 elements is not allowed.
         ASSERT_INDEX_BOUNDS(minCapacity <= Alloc::MaxCapacity); // Requested capacity is too high for the allocator.
@@ -53,7 +53,7 @@ public:
 private:
     template<typename Element, typename SourceAllocation, typename TargetAllocation>
     FORCE_INLINE
-    static std::enable_if_t<!TIsCStyle<Element>, void>
+    static std::enable_if_t<!TIsCStyle<Element>::Value, void>
     MoveLinearContentImpl(
         typename SourceAllocation::Data& sourceData,
         typename TargetAllocation::Data& targetData,
@@ -72,7 +72,7 @@ private:
 
     template<typename Element, typename SourceAllocation, typename TargetAllocation>
     FORCE_INLINE
-    static std::enable_if_t<TIsCStyle<Element>, void>
+    static std::enable_if_t<TIsCStyle<Element>::Value, void>
     MoveLinearContentImpl(
         typename SourceAllocation::Data& sourceData,
         typename TargetAllocation::Data& targetData,
@@ -91,7 +91,7 @@ private:
 
     template<typename Element, typename SourceAllocation, typename TargetAllocation>
     FORCE_INLINE
-    static std::enable_if_t<!TIsCStyle<Element>, void>
+    static std::enable_if_t<!TIsCStyle<Element>::Value, void>
     CopyLinearContentImpl(
         const typename SourceAllocation::Data& sourceData,
         typename TargetAllocation::Data& targetData,
@@ -109,7 +109,7 @@ private:
 
     template<typename Element, typename SourceAllocation, typename TargetAllocation>
     FORCE_INLINE
-    static std::enable_if_t<TIsCStyle<Element>, void>
+    static std::enable_if_t<TIsCStyle<Element>::Value, void>
     CopyLinearConentImpl(
         const typename SourceAllocation::Data& sourceData,
         typename TargetAllocation::Data& targetData,
@@ -124,7 +124,7 @@ private:
 
     template<typename Element, typename Allocation>
     FORCE_INLINE
-    static std::enable_if_t<!TIsCStyle<Element>, void>
+    static std::enable_if_t<!TIsCStyle<Element>::Value, void>
     DestroyLinearContentImpl(
         typename Allocation::Data& data,
         const int32 count
@@ -139,7 +139,7 @@ private:
 
     template<typename Element, typename Allocation>
     FORCE_INLINE
-    static std::enable_if_t<TIsCStyle<Element>, void>
+    static std::enable_if_t<TIsCStyle<Element>::Value, void>
     DestroyLinearContentImpl(
         typename Allocation::Data& data,
         const int32 count
