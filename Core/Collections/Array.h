@@ -110,7 +110,7 @@ public:
         // Move the content before reassigning the capacity
         if (_capacity > 0)
         {
-            CollectionsUtils::MoveLinearContent<T, AllocData, AllocData>(
+            CollectionsUtils::MoveLinearContent<T, Alloc, Alloc>(
                 _allocData, newData, _count
             );
             _allocData.Free();
@@ -156,7 +156,7 @@ public:
         const int32 allocatedCapacity = allocatedMemory / sizeof(T);
         ASSERT_MEMORY_BOUNDS(allocatedCapacity >= _count);
 
-        CollectionsUtils::MoveLinearContent<T, AllocData, AllocData>(
+        CollectionsUtils::MoveLinearContent<T, Alloc, Alloc>(
             _allocData, newData, _count
         );
         _allocData.Free();
@@ -334,7 +334,7 @@ public:
         if (_count <= 0)
             return;
 
-        CollectionsUtils::DestroyLinearContent<T, AllocData>(_allocData, _count);
+        CollectionsUtils::DestroyLinearContent<T, Alloc>(_allocData, _count);
         _count = 0;
     }
 
@@ -346,7 +346,7 @@ public:
             return;
 
         if (_count > 0)
-            CollectionsUtils::DestroyLinearContent<T, AllocData>(_allocData, _count);
+            CollectionsUtils::DestroyLinearContent<T, Alloc>(_allocData, _count);
 
         _allocData.Free();
 
