@@ -10,9 +10,11 @@
 /// It stores the elements in a contiguous memory block and uses doubling growth strategy.
 /// </summary>
 /// <remarks>
-/// The container is designed to invoke the allocator as little as possible.
+/// 1. <c>Array</c> works effectively as a stack. If you need a queue, consider using <c>Ring</c> instead.
+/// 2. The container is designed to invoke the allocator as little as possible.
 /// Thus it will keep the allocation active even when the array is empty,
 /// unless explicitly freed by calling <c>Reset</c>.
+/// 3. <c>Array</c> STL inspiration is <c>std::vector</c>.
 /// </remarks>
 /// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, nor a reference. </typeparam>
 /// <typeparam name="Alloc"> Type of the allocator to use. </typeparam>
@@ -91,8 +93,10 @@ public:
         // Move the content before reassigning the capacity
         if (_capacity > 0)
         {
-            CollectionsUtils::MoveLinearContent<T, Alloc, Alloc>(
-                _allocData, newData, _count
+            CollectionsUtils::MoveLinearContent<T>(
+                DATA_OF(T, _allocData), 
+                DATA_OF(T, newData), 
+                _count
             );
             _allocData.Free();
         }
@@ -136,8 +140,10 @@ public:
         const int32 allocatedCapacity = allocatedMemory / sizeof(T);
         ASSERT_MEMORY(allocatedCapacity >= _count);
 
-        CollectionsUtils::MoveLinearContent<T, Alloc, Alloc>(
-            _allocData, newData, _count
+        CollectionsUtils::MoveLinearContent<T>(
+            DATA_OF(T, _allocData), 
+            DATA_OF(T, newData), 
+            _count
         );
         _allocData.Free();
 
@@ -331,7 +337,7 @@ public:
         if (_count == 0)
             return;
 
-        CollectionsUtils::DestroyLinearContent<T, Alloc>(_allocData, _count);
+        CollectionsUtils::DestroyLinearContent<T>(DATA_OF(T, _allocData), _count);
         _count = 0;
     }
 
@@ -385,8 +391,10 @@ public:
             const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * _count); // Minimal allocation
             _capacity = allocatedMemory / sizeof(T);
 
-            CollectionsUtils::MoveLinearContent<T, AllocData, AllocData>(
-                other._allocData, this->_allocData, _count
+            CollectionsUtils::MoveLinearContent<T>(
+                DATA_OF(T, other._allocData), 
+                DATA_OF(T, this->_allocData), 
+                _count
             );
 
             other.Reset();
@@ -422,8 +430,10 @@ public:
             using SourceAlloc = OtherAlloc;
             using TargetAlloc = Alloc;
 
-            CollectionsUtils::CopyLinearContent<T, SourceAlloc, TargetAlloc>(
-                other._allocData, _allocData, _count
+            CollectionsUtils::CopyLinearContent<T>(
+                DATA_OF(const T, other._allocData),
+                DATA_OF(T,       this->_allocData),
+                _count
             );
         }
     }
@@ -487,8 +497,10 @@ public:
             const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * _count);
             _capacity = allocatedMemory / sizeof(T);
 
-            CollectionsUtils::MoveLinearContent<T, Alloc, Alloc>(
-                other._allocData, _allocData, _count
+            CollectionsUtils::MoveLinearContent<T>(
+                DATA_OF(T, other._allocData), 
+                DATA_OF(T, _allocData),
+                _count
             );
 
             other.Reset();
@@ -515,8 +527,10 @@ public:
 
             ASSERT_MEMORY(_capacity >= requiredCapacity);
 
-            CollectionsUtils::CopyLinearContent<T, Alloc, Alloc>(
-                other._allocData, _allocData, _count
+            CollectionsUtils::CopyLinearContent<T>(
+                DATA_OF(const T, other._allocData), 
+                DATA_OF(T,       this->_allocData), 
+                _count
             );
         }
 

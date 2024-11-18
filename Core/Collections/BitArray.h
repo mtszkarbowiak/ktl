@@ -33,6 +33,18 @@ private:
 
 
 protected:
+    FORCE_INLINE NODISCARD
+    auto Data() const noexcept -> Block*
+    {
+        return static_cast<Block*>(_allocData.Get());
+    }
+
+    FORCE_INLINE NODISCARD
+    auto Data() noexcept -> Block*
+    {
+        return static_cast<Block*>(_allocData.Get());
+    }
+
     /// <summary> Calculates the number of blocks required to store the given number of bits. </summary>
     FORCE_INLINE NODISCARD
     static constexpr auto BlocksForBits(const int32 bitCount) noexcept -> int32
@@ -104,8 +116,10 @@ public:
         if (_blockCapacity > 0)
         {
             const int32 oldBlocksCount = BlocksForBits(_bitCount);
-            CollectionsUtils::MoveLinearContent<Block, Alloc, Alloc>(
-                _allocData, newData, oldBlocksCount
+            CollectionsUtils::MoveLinearContent<Block>(
+                DATA_OF(Block, _allocData),
+                DATA_OF(Block, newData),
+                oldBlocksCount
             );
             _allocData.Free();
         }
@@ -145,8 +159,10 @@ public:
         const int32 allocatedBlocksCapacity = allocatedMemory / BytesPerBlock;
         ASSERT_MEMORY(allocatedBlocksCapacity >= requiredBlocksCapacity);
 
-        CollectionsUtils::MoveLinearContent<Block, Alloc, Alloc>(
-            _allocData, newData, BlocksForBits(_bitCount)
+        CollectionsUtils::MoveLinearContent<Block>(
+            DATA_OF(Block, _allocData), 
+            DATA_OF(Block, newData), 
+            BlocksForBits(_bitCount)
         );
         _allocData.Free();
 
@@ -323,7 +339,7 @@ public:
             return;
 
         const int32 blocksCount = BlocksForBits(_bitCount);
-        CollectionsUtils::DestroyLinearContent<Block, Alloc>(_allocData, blocksCount);
+        CollectionsUtils::DestroyLinearContent<Block>(DATA_OF(Block, _allocData), blocksCount);
         _bitCount = 0;
     }
 
@@ -379,8 +395,10 @@ public:
 
             _blockCapacity = allocatedMemory / BytesPerBlock;
 
-            CollectionsUtils::MoveLinearContent<Block, AllocData, AllocData>(
-                other._allocData, this->_allocData, requiredBlocks
+            CollectionsUtils::MoveLinearContent<Block>(
+                DATA_OF(Block, other._allocData), 
+                DATA_OF(Block, this->_allocData), 
+                requiredBlocks
             );
 
             other.Reset();
@@ -414,8 +432,10 @@ public:
             using SourceAlloc = OtherAlloc;
             using TargetAlloc = Alloc;
 
-            CollectionsUtils::CopyLinearContent<Block, SourceAlloc, TargetAlloc>(
-                other._allocData, _allocData, requiredBlocks
+            CollectionsUtils::CopyLinearContent<Block>(
+                DATA_OF(const Block, other._allocData), 
+                DATA_OF(Block,       this->_allocData), 
+                requiredBlocks
             );
         }
     }
@@ -480,8 +500,10 @@ public:
             const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
 
             _blockCapacity = allocatedMemory / BytesPerBlock;
-            CollectionsUtils::MoveLinearContent<Block, AllocData, AllocData>(
-                other._allocData, this->_allocData, requiredBlocks
+            CollectionsUtils::MoveLinearContent<Block>(
+                DATA_OF(Block, other._allocData),
+                DATA_OF(Block, this->_allocData), 
+                requiredBlocks
             );
 
             other.Reset();
@@ -505,8 +527,10 @@ public:
             _blockCapacity = allocatedMemory / BytesPerBlock;
             _bitCount      = other._bitCount;
 
-            CollectionsUtils::CopyLinearContent<Block, Alloc, Alloc>(
-                other._allocData, _allocData, requiredBlocks
+            CollectionsUtils::CopyLinearContent<Block>(
+                DATA_OF(const Block, other._allocData),
+                DATA_OF(Block,       this->_allocData), 
+                requiredBlocks
             );
         }
 
