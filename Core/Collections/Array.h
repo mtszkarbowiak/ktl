@@ -527,6 +527,58 @@ public:
         {
         }
 
+        // Access
+
+        FORCE_INLINE NODISCARD
+        auto operator*() -> T& { return (*_array)[_index]; }
+
+        FORCE_INLINE NODISCARD
+        auto operator->() -> T* { return &(*_array)[_index]; }
+
+        FORCE_INLINE NODISCARD
+        auto operator*() const -> const T& { return (*_array)[_index]; }
+
+        FORCE_INLINE NODISCARD
+        auto operator->() const -> const T* { return &(*_array)[_index]; }
+
+        /// <summary> Returns the index of the current element. </summary>
+        FORCE_INLINE NODISCARD
+        auto Index() const noexcept -> int32
+        {
+            return _index;
+        }
+
+
+        // Iteration
+
+        /// <summary> Check if the enumerator points to a valid element. </summary>
+        FORCE_INLINE NODISCARD
+        explicit operator bool() const noexcept
+        {
+            ASSERT(_array != nullptr);
+            return _index < _array->_count;
+        }
+
+        /// <summary> Moves the enumerator to the next element. </summary>
+        FORCE_INLINE
+        auto operator++() -> MutEnumerator&
+        {
+            _index += 1;
+            return *this;
+        }
+
+        /// <summary> Moves the enumerator to the next element. </summary>
+        /// <remarks> Prefixed increment operator is faster. </remarks>
+        FORCE_INLINE
+        auto operator++(int) -> MutEnumerator
+        {
+            MutEnumerator copy{ *this };
+            _index += 1;
+            return copy;
+        }
+
+
+        // Identity
 
         FORCE_INLINE NODISCARD
         auto operator==(const MutEnumerator& other) const -> bool
@@ -547,53 +599,6 @@ public:
         {
             ASSERT(_array == other._array);
             return _index < other._index;
-        }
-
-
-        FORCE_INLINE NODISCARD
-        auto operator*() -> T& { return (*_array)[_index]; }
-
-        FORCE_INLINE NODISCARD
-        auto operator->() -> T* { return &(*_array)[_index]; }
-
-        FORCE_INLINE NODISCARD
-        auto operator*() const -> const T& { return (*_array)[_index]; }
-
-        FORCE_INLINE NODISCARD
-        auto operator->() const -> const T* { return &(*_array)[_index]; }
-
-
-        /// <summary> Check if the enumerator reached the end of the array. </summary>
-        FORCE_INLINE NODISCARD
-        explicit operator bool() const noexcept
-        {
-            ASSERT(_array != nullptr);
-            return _index < _array->_count;
-        }
-
-        /// <summary> Returns the index of the current element. </summary>
-        FORCE_INLINE NODISCARD
-        auto Index() const noexcept -> int32
-        {
-            return _index;
-        }
-
-
-        /// <summary> Moves the enumerator to the next element. </summary>
-        FORCE_INLINE
-        auto operator++() -> MutEnumerator&
-        {
-            _index += 1;
-            return *this;
-        }
-
-        /// <summary> Moves the enumerator to the next element. </summary>
-        FORCE_INLINE
-        auto operator++(int) -> MutEnumerator
-        {
-            MutEnumerator copy{ *this };
-            _index += 1;
-            return copy;
         }
     };
 
@@ -619,6 +624,51 @@ public:
         }
 
 
+        // Access
+
+        FORCE_INLINE NODISCARD
+        auto operator*() const -> const T& { return (*_array)[_index]; }
+
+        FORCE_INLINE NODISCARD
+        auto operator->() const -> const T* { return &(*_array)[_index]; }
+
+        /// <summary> Returns the index of the current element. </summary>
+        FORCE_INLINE NODISCARD
+        auto Index() const noexcept -> int32
+        {
+            return _index;
+        }
+
+
+        // Iteration
+
+        /// <summary> Check if the enumerator points to a valid element. </summary>
+        FORCE_INLINE NODISCARD
+        explicit operator bool() const noexcept
+        {
+            ASSERT(_array != nullptr);
+            return _index < _array->_count;
+        }
+
+        /// <summary> Moves the enumerator to the next element. </summary>
+        FORCE_INLINE
+        auto operator++() -> ConstEnumerator&
+        {
+            _index += 1;
+            return *this;
+        }
+
+        /// <summary> Moves the enumerator to the next element. </summary>
+        /// <remarks> Prefixed increment operator is faster. </remarks>
+        FORCE_INLINE
+        auto operator++(int) -> ConstEnumerator
+        {
+            ConstEnumerator copy{ *this };
+            _index += 1;
+            return copy;
+        }
+
+
         // Identity
 
         FORCE_INLINE NODISCARD
@@ -640,51 +690,6 @@ public:
         {
             ASSERT(_array == other._array);
             return _index < other._index;
-        }
-
-
-        // Access
-
-        FORCE_INLINE NODISCARD
-        auto operator*() const -> const T& { return (*_array)[_index]; }
-
-        FORCE_INLINE NODISCARD
-        auto operator->() const -> const T* { return &(*_array)[_index]; }
-
-
-        // End Condition and Movement
-
-        /// <summary> Check if the enumerator reached the end of the array. </summary>
-        FORCE_INLINE NODISCARD
-        explicit operator bool() const noexcept
-        {
-            ASSERT(_array != nullptr);
-            return _index < _array->_count;
-        }
-
-        /// <summary> Returns the index of the current element. </summary>
-        FORCE_INLINE NODISCARD
-        auto Index() const noexcept -> int32
-        {
-            return _index;
-        }
-
-
-        /// <summary> Moves the enumerator to the next element. </summary>
-        FORCE_INLINE
-        auto operator++() -> ConstEnumerator&
-        {
-            _index += 1;
-            return *this;
-        }
-
-        /// <summary> Moves the enumerator to the next element. </summary>
-        FORCE_INLINE
-        auto operator++(int) -> ConstEnumerator
-        {
-            ConstEnumerator copy{ *this };
-            _index += 1;
-            return copy;
         }
     };
 
@@ -751,10 +756,10 @@ public:
     // Constraints
 
     static_assert(std::is_move_constructible<T>        ::value, "Type must be move-constructible.");
-    static_assert(std::is_nothrow_move_constructible<T>::value, "Type must be nothrow move-constructible.");
     static_assert(std::is_move_assignable<T>           ::value, "Type must be move-assignable.");
-    static_assert(std::is_nothrow_move_assignable<T>   ::value, "Type must be nothrow move-assignable.");
     static_assert(std::is_destructible<T>              ::value, "Type must be destructible.");
+    static_assert(std::is_nothrow_move_constructible<T>::value, "Type must be nothrow move-constructible.");
+    static_assert(std::is_nothrow_move_assignable<T>   ::value, "Type must be nothrow move-assignable.");
     static_assert(std::is_nothrow_destructible<T>      ::value, "Type must be nothrow destructible.");
 
     static_assert(!std::is_reference<T>                ::value, "Type must not be a reference type.");
