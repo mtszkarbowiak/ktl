@@ -17,6 +17,11 @@
     #define HASH_MAPS_DEFAULT_CAPACITY 64
 #endif
 
+#ifndef RING_DEFAULT_CAPACITY
+    /// <summary> Default capacity for any ring collection. </summary>
+    #define RING_DEFAULT_CAPACITY 16
+#endif
+
 
 #ifndef ZERO_MEMORY_FOR_CSTYLE
     /// <summary> Enables setting the memory to zero after a move with raw memory operation. </summary>
@@ -57,13 +62,14 @@ private:
     MoveLinearContentImpl(
         typename SourceAllocation::Data& sourceData,
         typename TargetAllocation::Data& targetData,
-        const int32 count
+        const int32 endIndex,
+        const int32 beginIndex = 0
     )
     {
-        Element* source = reinterpret_cast<Element*>(sourceData.Get());
-        Element* target = reinterpret_cast<Element*>(targetData.Get());
+        Element* source = static_cast<Element*>(sourceData.Get());
+        Element* target = static_cast<Element*>(targetData.Get());
 
-        for (int32 i = 0; i < count; ++i)
+        for (int32 i = beginIndex; i < endIndex; ++i)
         {
             new (target + i) Element(MOVE(source[i]));
             source[i].~Element();
@@ -76,16 +82,23 @@ private:
     MoveLinearContentImpl(
         typename SourceAllocation::Data& sourceData,
         typename TargetAllocation::Data& targetData,
-        const int32 count
+        const int32 endIndex,
+        const int32 beginIndex = 0
     )
     {
-        void* source = sourceData.Get();
-        void* target = targetData.Get();
+        Element* source = static_cast<Element*>(sourceData.Get());
+        Element* target = static_cast<Element*>(targetData.Get());
 
-        memcpy(target, source, count * sizeof(Element));
+        const int32 mem = (endIndex - beginIndex) * sizeof(Element);
+
+        memcpy(
+            target + beginIndex, 
+            source + beginIndex, 
+            mem
+        );
 
 #if ZERO_MEMORY_FOR_CSTYLE
-        memset(source, 0, count * sizeof(Element));
+        memset(source + beginIndex, 0, mem);
 #endif
     }
 
@@ -95,13 +108,14 @@ private:
     CopyLinearContentImpl(
         const typename SourceAllocation::Data& sourceData,
         typename TargetAllocation::Data& targetData,
-        const int32 count
+        const int32 endIndex,
+        const int32 beginIndex = 0
     )
     {
         const Element* source = reinterpret_cast<const Element*>(sourceData.Get());
         Element*       target = reinterpret_cast<      Element*>(targetData.Get());
 
-        for (int32 i = 0; i < count; ++i)
+        for (int32 i = beginIndex; i < endIndex; ++i)
         {
             new (target + i) Element(source[i]);
         }
@@ -113,12 +127,20 @@ private:
     CopyLinearConentImpl(
         const typename SourceAllocation::Data& sourceData,
         typename TargetAllocation::Data& targetData,
-        const int32 count
+        const int32 endIndex,
+        const int32 beginIndex = 0
     )
     {
-        const void* source = sourceData.Get();
-        void* target = targetData.Get();
-        memcpy(target, source, count * sizeof(Element));
+        const Element* source = static_cast<const Element*>(sourceData.Get());
+        Element*       target = static_cast<      Element*>(targetData.Get());
+
+        const int32 mem = (endIndex - beginIndex) * sizeof(Element);
+
+        memcpy(
+            target + beginIndex,
+            source + beginIndex,
+            mem
+        );
     }
 
 
@@ -127,11 +149,12 @@ private:
     static std::enable_if_t<!TIsCStyle<Element>::Value, void>
     DestroyLinearContentImpl(
         typename Allocation::Data& data,
-        const int32 count
+        const int32 endIndex,
+        const int32 beginIndex = 0
     )
     {
-        Element* elements = reinterpret_cast<Element*>(data.Get());
-        for (int32 i = 0; i < count; ++i)
+        Element* elements = static_cast<Element*>(data.Get());
+        for (int32 i = beginIndex; i < endIndex; ++i)
         {
             elements[i].~Element();
         }
@@ -142,14 +165,17 @@ private:
     static std::enable_if_t<TIsCStyle<Element>::Value, void>
     DestroyLinearContentImpl(
         typename Allocation::Data& data,
-        const int32 count
+        const int32 endIndex,
+        const int32 beginIndex = 0
     )
     {
         // Pass.
 
 #if ZERO_MEMORY_FOR_CSTYLE
-        memset(data.Get(), 0, count * sizeof(Element));
-#endif
+        Element* elements = static_cast<Element*>(data.Get());
+        const int32 mem = (endIndex - beginIndex) * sizeof(Element);
+        memset(elements + beginIndex, 0, mem);
+ #endif
     }
 
 
@@ -163,7 +189,8 @@ public:
     static void MoveLinearContent(
         typename SourceAllocation::Data& sourceData,
         typename TargetAllocation::Data& targetData,
-        const int32 count
+        const int32 endIndex,
+        const int32 beginIndex = 0
     )
     {
         static_assert(std::is_class<SourceAllocation>::value, "Allocation must be a class!");
@@ -172,7 +199,7 @@ public:
         static_assert(std::is_class<typename TargetAllocation::Data>::value, "Allocation::Data must be a class!");
 
         MoveLinearContentImpl<Element, SourceAllocation, TargetAllocation>(
-            sourceData, targetData, count
+            sourceData, targetData, endIndex, beginIndex
         );
     }
 
@@ -188,7 +215,8 @@ public:
     static void CopyLinearContent(
         const typename SourceAllocation::Data& sourceData,
         typename TargetAllocation::Data& targetData,
-        const int32 count
+        const int32 endIndex,
+        const int32 beginIndex = 0
     )
     {
         static_assert(std::is_class<SourceAllocation>::value, "Allocation must be a class!");
@@ -197,7 +225,7 @@ public:
         static_assert(std::is_class<typename TargetAllocation::Data>::value, "Allocation::Data must be a class!");
 
         CopyLinearContentImpl<Element, SourceAllocation, TargetAllocation>(
-            sourceData, targetData, count
+            sourceData, targetData, endIndex, beginIndex
         );
     }
 
@@ -205,12 +233,13 @@ public:
     FORCE_INLINE
     static void DestroyLinearContent(
         typename Allocation::Data& data,
-        const int32 count
+        const int32 endIndex,
+        const int32 beginIndex = 0
     )
     {
         static_assert(std::is_class<Allocation>::value, "Allocation must be a class!");
         static_assert(std::is_class<typename Allocation::Data>::value, "Allocation::Data must be a class!");
 
-        DestroyLinearContentImpl<Element, Allocation>(data, count);
+        DestroyLinearContentImpl<Element, Allocation>(data, endIndex, beginIndex);
     }
 };
