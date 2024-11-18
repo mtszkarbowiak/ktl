@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "../Language/Keywords.h"
-#include "../Language/Memory.h"
-#include "../Types/Numbers.h"
+#include "Language/Keywords.h"
+#include "Language/Memory.h"
+#include "Types/Numbers.h"
 
 
 template<int32 BlockSize>

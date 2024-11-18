@@ -4,10 +4,10 @@
 
 #include <cstdint>
 
-#include "../Debugging/Assertions.h"
-#include "../Language/Keywords.h"
-#include "../Language/Memory.h"
-#include "../Types/Numbers.h"
+#include "Debugging/Assertions.h"
+#include "Language/Keywords.h"
+#include "Language/Memory.h"
+#include "Types/Numbers.h"
 
 /// <summary>
 /// Memory allocator that uses the system heap.

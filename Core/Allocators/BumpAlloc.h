@@ -2,13 +2,12 @@
 
 #pragma once
 
-#include "../Debugging/Assertions.h"
-#include "../Language/Keywords.h"
-#include "../Language/Memory.h"
-#include "../Types/Numbers.h"
+#include "Debugging/Assertions.h"
+#include "Language/Keywords.h"
+#include "Language/Memory.h"
+#include "Types/Numbers.h"
 
 #include <cstdint>
-
 
 /// <summary>
 /// Memory allocator using a bump-mechanism on given buffer.
