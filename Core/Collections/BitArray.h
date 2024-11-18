@@ -358,9 +358,74 @@ public:
     }
 
 
+    // Collection Lifecycle - Overriding Content
+
+private:
+    FORCE_INLINE
+    void MoveFrom(BitArray&& other) noexcept
+    {
+        if (!other.IsAllocated())
+        {
+            _allocData = AllocData{};
+            _blockCapacity = 0;
+            _bitCount = 0;
+        }
+        else if (other._allocData.MovesItems())
+        {
+            _allocData = MOVE(other._allocData);
+            _blockCapacity = other._blockCapacity;
+            _bitCount = other._bitCount;
+
+            other._blockCapacity = 0; // Allocation moved - Reset the capacity!
+            other._bitCount = 0;
+        }
+        else
+        {
+            _allocData = AllocData{};
+            _bitCount = other._bitCount;
+
+            const int32 requiredBlocks = BlocksForBits(_bitCount);
+            const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
+
+            _blockCapacity = allocatedMemory / BytesPerBlock;
+
+            CollectionsUtils::MoveLinearContent<Block>(
+                DATA_OF(Block, other._allocData),
+                DATA_OF(Block, this->_allocData),
+                requiredBlocks
+            );
+
+            other.Reset();
+        }
+    }
+
+    void CopyFrom(const BitArray& other)
+    {
+        if (other._blockCapacity == 0)
+        {
+            _blockCapacity = 0;
+            _bitCount = 0;
+        }
+        else
+        {
+            const int32 requiredBlocks = BlocksForBits(other._bitCount);
+            const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
+            _blockCapacity = allocatedMemory / BytesPerBlock;
+            _bitCount = other._bitCount;
+            CollectionsUtils::CopyLinearContent<Block>(
+                DATA_OF(const Block, other._allocData),
+                DATA_OF(Block, this->_allocData),
+                requiredBlocks
+            );
+        }
+    }
+
+
     // Collection Lifecycle - Constructors
 
+public:
     /// <summary> Initializes an empty bit-array with no active allocation. </summary>
+    FORCE_INLINE
     constexpr BitArray() noexcept
         : _allocData{}
         , _blockCapacity{ 0 }
@@ -369,86 +434,15 @@ public:
     }
 
     /// <summary> Initializes a bit-array by moving the allocation from another array. </summary>
+    FORCE_INLINE
     BitArray(BitArray&& other) noexcept
     {
-        if (!other.IsAllocated())
-        {
-            _allocData     = AllocData{};
-            _blockCapacity = 0;
-            _bitCount      = 0;
-        }
-        else if (other._allocData.MovesItems())
-        {
-            _allocData     = MOVE(other._allocData);
-            _blockCapacity = other._blockCapacity;
-            _bitCount      = other._bitCount;
-
-            other._blockCapacity = 0; // Allocation moved - Reset the capacity!
-            other._bitCount      = 0;
-        }
-        else
-        {
-            _allocData = AllocData{};
-            _bitCount  = other._bitCount;
-
-            const int32 requiredBlocks  = BlocksForBits(_bitCount);
-            const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
-
-            _blockCapacity = allocatedMemory / BytesPerBlock;
-
-            CollectionsUtils::MoveLinearContent<Block>(
-                DATA_OF(Block, other._allocData), 
-                DATA_OF(Block, this->_allocData), 
-                requiredBlocks
-            );
-
-            other.Reset();
-        }
-    }
-
-    /// <summary> Initializing a  bit-array by moving different allocator is not allowed. </summary>
-    /// <remarks> This operation always disables desired allocator move. </remarks>
-    template<typename OtherAlloc>
-    BitArray(BitArray<OtherAlloc>&&) = delete;
-
-
-    /// <summary> Initializes a bit-array by copying another array. </summary>
-    template<typename OtherAlloc>
-    explicit BitArray(const BitArray<OtherAlloc>& other)
-        : _allocData{}
-    {
-        if (other._blockCapacity == 0)
-        {
-            _blockCapacity = 0;
-            _bitCount      = 0;
-        }
-        else 
-        {
-            const int32 requiredBlocks  = BlocksForBits(other._bitCount);
-            const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
-
-            _blockCapacity = allocatedMemory / BytesPerBlock;
-            _bitCount = other._bitCount;
-
-            using SourceAlloc = OtherAlloc;
-            using TargetAlloc = Alloc;
-
-            CollectionsUtils::CopyLinearContent<Block>(
-                DATA_OF(const Block, other._allocData), 
-                DATA_OF(Block,       this->_allocData), 
-                requiredBlocks
-            );
-        }
-    }
-
-    /// <summary> Initializes a bit-array by copying another array. </summary>
-    BitArray(const BitArray& other)
-        : BitArray{ other }
-    {
+        MoveFrom(MOVE(other));
     }
 
 
     /// <summary> Initializing an empty bit-array with an active context-less allocation of the specified capacity. </summary>
+    FORCE_INLINE
     explicit BitArray(const int32 bitCapacity)
         : _allocData{}
         , _bitCount{}
@@ -460,6 +454,7 @@ public:
 
     /// <summary> Initializes an empty bit-array with an active allocation of the specified capacity and context. </summary>
     template<typename AllocContext>
+    FORCE_INLINE
     explicit BitArray(const int32 bitCapacity, AllocContext&& context)
         : _allocData{ FORWARD(AllocContext, context) }
         , _bitCount{}
@@ -475,66 +470,21 @@ public:
     FORCE_INLINE
     auto operator=(BitArray&& other) noexcept -> BitArray&
     {
-        if (this == &other)
-            return *this;
-
-        Reset();
-
-        if (!other.IsAllocated())
+        if (this != &other)
         {
-            // Pass
+            Reset();
+            MoveFrom(MOVE(other));
         }
-        else if (other._allocData.MovesItems())
-        {
-            _allocData     = MOVE(other._allocData);
-            _blockCapacity = other._blockCapacity;
-            _bitCount      = other._bitCount;
-
-            other._blockCapacity = 0; // Allocation moved - Reset the capacity!
-            other._bitCount      = 0;
-        }
-        else
-        {
-            _bitCount = other._bitCount;
-
-            const int32 requiredBlocks  = BlocksForBits(_bitCount);
-            const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
-
-            _blockCapacity = allocatedMemory / BytesPerBlock;
-            CollectionsUtils::MoveLinearContent<Block>(
-                DATA_OF(Block, other._allocData),
-                DATA_OF(Block, this->_allocData), 
-                requiredBlocks
-            );
-
-            other.Reset();
-        }
-
         return *this;
     }
 
-    FORCE_INLINE
     auto operator=(const BitArray& other) -> BitArray&
     {
-        if (this == &other)
-            return *this;
-
-        Reset();
-
-        if (other._blockCapacity != 0)
+        if (this != &other)
         {
-            const int32 requiredBlocks  = BlocksForBits(other._bitCount);
-            const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
-            _blockCapacity = allocatedMemory / BytesPerBlock;
-            _bitCount      = other._bitCount;
-
-            CollectionsUtils::CopyLinearContent<Block>(
-                DATA_OF(const Block, other._allocData),
-                DATA_OF(Block,       this->_allocData), 
-                requiredBlocks
-            );
+            Reset();
+            CopyFrom(other);
         }
-
         return *this;
     }
 

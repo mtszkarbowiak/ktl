@@ -355,18 +355,11 @@ public:
     }
 
 
-    // Collection Lifecycle - Constructors
+    // Collection Lifecycle - Overriding Content
 
-    /// <summary> Initializes an empty array with no active allocation. </summary>
-    constexpr Array() noexcept
-        : _allocData{}
-        , _capacity{ 0 }
-        , _count{ 0 }
-    {
-    }
-
-    /// <summary> Initializes an array by moving the allocation from another array. </summary>
-    Array(Array&& other) noexcept
+private:
+    FORCE_INLINE
+    void MoveFrom(Array&& other) noexcept
     {
         if (!other.IsAllocated())
         {
@@ -386,10 +379,10 @@ public:
         else
         {
             _allocData = AllocData{};
-            _count     = other._count;
+            const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * other._count); // Minimal allocation
 
-            const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * _count); // Minimal allocation
             _capacity = allocatedMemory / sizeof(T);
+            _count     = other._count;
 
             CollectionsUtils::MoveLinearContent<T>(
                 DATA_OF(T, other._allocData), 
@@ -401,34 +394,27 @@ public:
         }
     }
 
-    /// <summary> Initializing an array by moving different allocator is not allowed. </summary>
-    /// <remarks> This operation always disables desired allocator move. </remarks>
     template<typename OtherAlloc>
-    Array(Array<T, OtherAlloc>&&) = delete;
-
-    /// <summary> Initializes an array by copying another array. </summary>
-    template<typename OtherAlloc>
-    explicit Array(const Array<T, OtherAlloc>& other)
-        : _allocData{}
+    void CopyFrom(const Array<T, OtherAlloc>& other)
     {
         static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
 
         if (other._capacity == 0)
         {
             // If no allocation is active, just zero the members.
-            _capacity = 0;
-            _count    = 0;
+            _allocData = AllocData{};
+            _capacity  = 0;
+            _count     = 0;
         }
         else
         {
+            _allocData = AllocData{};
+
             const int32 requiredCapacity = CollectionsUtils::GetAllocCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
             const int32 allocatedMemory  = _allocData.Allocate(requiredCapacity * sizeof(T));
 
             _capacity = allocatedMemory / sizeof(T);
-            _count = other._count;
-
-            using SourceAlloc = OtherAlloc;
-            using TargetAlloc = Alloc;
+            _count    = other._count;
 
             CollectionsUtils::CopyLinearContent<T>(
                 DATA_OF(const T, other._allocData),
@@ -438,14 +424,36 @@ public:
         }
     }
 
-    /// <summary> Initializes an array by copying another array. </summary>
-    Array(const Array& other)
-        : Array{ other }
+
+    // Collection Lifecycle - Constructors
+
+public:
+    /// <summary> Initializes an empty array with no active allocation. </summary>
+    FORCE_INLINE
+    constexpr Array() noexcept
+        : _allocData{}
+        , _capacity{ 0 }
+        , _count{ 0 }
     {
+    }
+
+    /// <summary> Initializes an array by moving the allocation from another array. </summary>
+    FORCE_INLINE
+    Array(Array&& other) noexcept
+    {
+        MoveFrom(MOVE(other));
+    }
+
+    /// <summary> Initializes an array by copying another array. </summary>
+    template<typename = typename std::enable_if<std::is_copy_constructible_v<T>>::type>
+    Array(const Array& other)
+    {
+        CopyFrom<Alloc>(other);
     }
 
 
     /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
+    FORCE_INLINE
     explicit Array(const int32 capacity)
         : _allocData{}
         , _count{}
@@ -457,6 +465,7 @@ public:
 
     /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
     template<typename AllocContext>
+    FORCE_INLINE
     explicit Array(const int32 capacity, AllocContext&& context)
         : _allocData{ FORWARD(AllocContext, context) }
         , _count{}
@@ -466,74 +475,28 @@ public:
         _capacity = allocatedMemory / sizeof(T);
     }
 
-
+    
     // Collection Lifecycle  - Assignments
 
     FORCE_INLINE
     auto operator=(Array&& other) noexcept -> Array&
     {
-        if (this == &other)
-            return *this;
-
-        Reset();
-
-        if (!other.IsAllocated()) 
+        if (this != &other) 
         {
-            // Pass
+            Reset();
+            MoveFrom(MOVE(other));
         }
-        else if (!other._allocData.MovesItems()) 
-        {
-            _allocData = MOVE(other._allocData);
-            _capacity  = other._capacity;
-            _count     = other._count;
-
-            other._capacity = 0; // Allocation moved - Reset the capacity!
-            other._count    = 0;
-        }
-        else
-        {
-            _count = other._count;
-
-            const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * _count);
-            _capacity = allocatedMemory / sizeof(T);
-
-            CollectionsUtils::MoveLinearContent<T>(
-                DATA_OF(T, other._allocData), 
-                DATA_OF(T, _allocData),
-                _count
-            );
-
-            other.Reset();
-        }
-
         return *this;
     }
 
-    FORCE_INLINE
+    template<typename = typename std::enable_if<std::is_copy_constructible_v<T>>::type>
     auto operator=(const Array& other) -> Array&
     {
-        if (this == &other)
-            return *this;
-
-        Reset();
-
-        if (other._capacity != 0)
+        if (this != &other)
         {
-            // If there's an active allocation, copy the elements.
-            const int32 requiredCapacity = CollectionsUtils::GetAllocCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
-            const int32 allocatedMemory  = _allocData.Allocate(requiredCapacity * sizeof(T));
-            _capacity = allocatedMemory / sizeof(T);
-            _count    = other._count;
-
-            ASSERT_MEMORY(_capacity >= requiredCapacity);
-
-            CollectionsUtils::CopyLinearContent<T>(
-                DATA_OF(const T, other._allocData), 
-                DATA_OF(T,       this->_allocData), 
-                _count
-            );
+            Reset();
+            CopyFrom<Alloc>(other);
         }
-
         return *this;
     }
 
@@ -554,11 +517,11 @@ public:
     /// </summary>
     class MutEnumerator
     {
-        Array<T, Alloc>* _array;
-        int32            _index;
+        Array* _array;
+        int32  _index;
 
     public:
-        explicit MutEnumerator(Array<T, Alloc>& array)
+        explicit MutEnumerator(Array& array)
             : _array{ &array }
             , _index{ 0 }
         {
@@ -639,11 +602,11 @@ public:
     /// </summary>
     class ConstEnumerator
     {
-        const Array<T, Alloc>* _array;
-        int32                  _index;
+        const Array* _array;
+        int32        _index;
 
     public:
-        explicit ConstEnumerator(const Array<T, Alloc>& array)
+        explicit ConstEnumerator(const Array& array)
             : _array{ &array }
             , _index{ 0 }
         {

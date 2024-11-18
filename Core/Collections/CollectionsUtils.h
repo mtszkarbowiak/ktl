@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "../Allocators/HeapAlloc.h"
-#include "../Language/Templates.h"
-#include "../Math/Arithmetic.h"
+#include "Allocators/HeapAlloc.h"
+#include "Language/Templates.h"
+#include "Math/Arithmetic.h"
 
 
 #ifndef ARRAY_DEFAULT_CAPACITY
@@ -29,8 +29,11 @@
     #define ZERO_MEMORY_FOR_CSTYLE 0
 #endif
 
+
 /// <summary> Returns the pointer to the data of the specified type. </summary>
+/// <remarks> In the future, this macro may also be used to add additional checks or operations. </remarks>
 #define DATA_OF(element_type, alloc) static_cast<element_type*>((alloc).Get())
+
 
 class CollectionsUtils
 {
