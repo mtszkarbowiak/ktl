@@ -34,16 +34,17 @@ private:
 
 protected:
     FORCE_INLINE NODISCARD
-    auto Data() const noexcept -> Block*
+    auto Data() noexcept -> Block*
     {
-        return static_cast<Block*>(_allocData.Get());
+        return DATA_OF(Block, _allocData);
     }
 
     FORCE_INLINE NODISCARD
-    auto Data() noexcept -> Block*
+    auto Data() const noexcept -> const Block*
     {
-        return static_cast<Block*>(_allocData.Get());
+        return DATA_OF(const Block, _allocData);
     }
+
 
     /// <summary> Calculates the number of blocks required to store the given number of bits. </summary>
     FORCE_INLINE NODISCARD
@@ -259,9 +260,9 @@ public:
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex = index % BitsPerBlock;
 
-        const Block* srcBlock = static_cast<const Block*>(_allocData.Get()) + blockIndex;
-        const Block  mask = Block{ 1 } << bitIndex;
-        const bool   result = (*srcBlock & mask) != 0;
+        const Block* srcBlock = DATA_OF(const Block, _allocData) + blockIndex;
+        const Block  mask     = Block{ 1 } << bitIndex;
+        const bool   result   = (*srcBlock & mask) != 0;
 
         return result;
     }
@@ -277,7 +278,7 @@ public:
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
 
-        Block* dstBlock  = static_cast<Block*>(_allocData.Get()) + blockIndex;
+        Block* dstBlock  = DATA_OF(Block, _allocData) + blockIndex;
         const Block mask = Block{ 1 } << bitIndex;
 
         if (value)
@@ -296,7 +297,7 @@ public:
         const Block fillValue   = value ? ~Block{} : Block{};
         const int32 blocksCount = BlocksForBits(_bitCount);
 
-        Block* blocks = static_cast<Block*>(_allocData.Get());
+        Block* blocks = DATA_OF(Block, _allocData);
         for (int32 i = 0; i < blocksCount; ++i)
             blocks[i] = fillValue;
     }
@@ -307,7 +308,7 @@ public:
     auto GetBlock(const int32 blockIndex) const -> Block
     {
         ASSERT_INDEX(blockIndex >= 0 && blockIndex < _blockCapacity);
-        const Block* srcBlock = static_cast<const Block*>(_allocData.Get()) + blockIndex;
+        const Block* srcBlock = DATA_OF(Block, _allocData) + blockIndex;
         return *srcBlock;
     }
 
@@ -316,7 +317,7 @@ public:
     void SetBlock(const int32 blockIndex, const Block value)
     {
         ASSERT_INDEX(blockIndex >= 0 && blockIndex < _blockCapacity);
-        Block* dstBlock = static_cast<Block*>(_allocData.Get()) + blockIndex;
+        Block* dstBlock = DATA_OF(Block, _allocData) + blockIndex;
         *dstBlock = value;
     }
 

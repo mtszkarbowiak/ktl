@@ -159,7 +159,7 @@ public:
     auto operator[](const int32 index) -> T&
     {
         ASSERT_INDEX(index >= 0 && index < _count);
-        return static_cast<T*>(_allocData.Get())[index];
+        return DATA_OF(T, _allocData)[index];
     }
 
     /// <summary> Accesses the element at the given index. </summary>
@@ -167,7 +167,7 @@ public:
     auto operator[](const int32 index) const -> const T&
     {
         ASSERT_INDEX(index >= 0 && index < _count);
-        return static_cast<const T*>(_allocData.Get())[index];
+        return DATA_OF(const T, _allocData)[index];
     }
 
 
@@ -184,7 +184,7 @@ public:
         if (_count == _capacity)
             Reserve(_capacity + 1);
 
-        T* target = static_cast<T*>(_allocData.Get()) + _count;
+        T* target = DATA_OF(T, _allocData) + _count;
 
         // Placement new
         new (target) T(FORWARD(U, element));
@@ -202,7 +202,7 @@ public:
         if (_count == _capacity)
             Reserve(_capacity + 1);
 
-        T* target = static_cast<T*>(_allocData.Get()) + _count;
+        T* target = DATA_OF(T, _allocData) + _count;
 
         // Placement new
         new (target) T(FORWARD(Args, args)...);
@@ -227,7 +227,7 @@ public:
         if (_count == _capacity)
             Reserve(_capacity + 1);
 
-        T* target = static_cast<T*>(_allocData.Get()) + index;
+        T* target = DATA_OF(T, _allocData) + index;
 
         // If inserting at the end (_count), no need to move any element.
         if (index == _count)
@@ -238,7 +238,7 @@ public:
         else
         {
             // Move the element that will be replaced (if any).
-            T* displacedElement = static_cast<T*>(_allocData.Get()) + _count - 1;
+            T* displacedElement = DATA_OF(T, _allocData) + _count - 1;
             *target = MOVE(*displacedElement);
 
             // Placement new for the element to be inserted.
@@ -268,7 +268,7 @@ public:
         if (_count == _capacity)
             Reserve(_capacity + 1);
 
-        T* target = static_cast<T*>(_allocData.Get()) + index;
+        T* target = DATA_OF(T, _allocData) + index;
 
         // Shift the elements toward the end.
         for (int32 i = _count; i > index; --i)
@@ -290,7 +290,7 @@ public:
     auto RemoveAt(const int32 index) -> void
     {
         ASSERT_INDEX(index >= 0 && index < _count);
-        T* target = static_cast<T*>(_allocData.Get()) + index;
+        T* target = DATA_OF(T, _allocData) + index;
 
         // Destruct the element.
         target->~T();
@@ -299,7 +299,7 @@ public:
         if (index < _count - 1)
         {
             // Move the last element to the removal spot (only if not at the end).
-            T* lastElement = static_cast<T*>(_allocData.Get()) + _count - 1;
+            T* lastElement = DATA_OF(T, _allocData) + _count - 1;
             *target = MOVE(*lastElement);
         }
 
@@ -317,7 +317,7 @@ public:
     auto RemoveAtStable(const int32 index) -> void
     {
         ASSERT_INDEX(index >= 0 && index < _count);
-        T* target = static_cast<T*>(_allocData.Get()) + index;
+        T* target = DATA_OF(T, _allocData) + index;
 
         // Destruct the element.
         target->~T();
@@ -745,21 +745,21 @@ public:
     FORCE_INLINE NODISCARD
     auto begin() -> T*
     {
-        return static_cast<T*>(_allocData.Get());
+        return DATA_OF(T, _allocData);
     }
 
     /// <summary> STL-style begin iterator. </summary>
     FORCE_INLINE NODISCARD
     auto begin() const -> const T*
     {
-        return static_cast<const T*>(_allocData.Get());
+        return DATA_OF(const T, _allocData);
     }
 
     /// <summary> STL-style const begin iterator. </summary>
     FORCE_INLINE NODISCARD
     auto cbegin() const -> const T*
     {
-        return static_cast<const T*>(_allocData.Get());
+        return DATA_OF(const T, _allocData);
     }
 
 
@@ -767,21 +767,21 @@ public:
     FORCE_INLINE NODISCARD
     auto end() -> T*
     {
-        return static_cast<T*>(_allocData.Get()) + _count;
+        return DATA_OF(T, _allocData) + _count;
     }
 
     /// <summary> STL-style end iterator. </summary>
     FORCE_INLINE NODISCARD
     auto end() const -> const T*
     {
-        return static_cast<const T*>(_allocData.Get()) + _count;
+        return DATA_OF(const T, _allocData) + _count;
     }
 
     /// <summary> STL-style const end iterator. </summary>
     FORCE_INLINE NODISCARD
     auto cend() const -> const T*
     {
-        return static_cast<const T*>(_allocData.Get()) + _count;
+        return DATA_OF(const T, _allocData) + _count;
     }
 
 
