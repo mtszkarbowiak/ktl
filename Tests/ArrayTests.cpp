@@ -108,8 +108,8 @@ TEST(Array_ElementLifecycle, Add)
 {
     LIFECYCLE_TEST_INTO
     {
-        Array<LifecycleTracker> array;
-        array.Add(LifecycleTracker{ 69 });
+        Array<TestTracker> array;
+        array.Add(TestTracker{ 69 });
         GTEST_ASSERT_EQ(array.Count(), 1);
         GTEST_ASSERT_EQ(array[0].Value, 69);
         array.Reset();
@@ -124,7 +124,7 @@ TEST(Array_ElementLifecycle, Emplace)
 {
     LIFECYCLE_TEST_INTO
     {
-        Array<LifecycleTracker> array;
+        Array<TestTracker> array;
         array.Emplace(69);
         GTEST_ASSERT_EQ(array.Count(), 1);
         GTEST_ASSERT_EQ(array[0].Value, 69);

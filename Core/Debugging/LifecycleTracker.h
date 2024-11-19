@@ -13,7 +13,16 @@ struct LifecycleCounters
     int32_t Copies = 0;
 };
 
-template<LifecycleCounters& Counters>
+template<typename Tag>
+struct LifecycleCountersHolder
+{
+    static LifecycleCounters Counters;
+};
+
+template <typename Tag>
+LifecycleCounters LifecycleCountersHolder<Tag>::Counters;
+
+template <class TheTag>
 class LifecycleTracker
 {
 public:
@@ -23,44 +32,50 @@ public:
     {
         Value = value;
 
-        Counters.Instances     += 1;
-        Counters.Constructions += 1;
+        auto& counters = LifecycleCountersHolder<TheTag>::Counters;
+        counters.Instances     += 1;
+        counters.Constructions += 1;
     }
 
     LifecycleTracker(const LifecycleTracker& other) noexcept
     {
         Value = other.Value;
 
-        Counters.Instances     += 1;
-        Counters.Constructions += 1;
-        Counters.Copies        += 1;
+        auto& counters = LifecycleCountersHolder<TheTag>::Counters;
+        counters.Instances     += 1;
+        counters.Constructions += 1;
+        counters.Copies        += 1;
     }
 
     LifecycleTracker(LifecycleTracker&& other) noexcept
     {
         Value = other.Value;
 
-        Counters.Instances     += 1;
-        Counters.Constructions += 1;
-        Counters.Moves         += 1;
+        auto& counters = LifecycleCountersHolder<TheTag>::Counters;
+        counters.Instances     += 1;
+        counters.Constructions += 1;
+        counters.Moves         += 1;
     }
 
     ~LifecycleTracker()
     {
-        Counters.Instances -= 1;
-        Counters.Destructions += 1;
+        auto& counters = LifecycleCountersHolder<TheTag>::Counters;
+        counters.Instances -= 1;
+        counters.Destructions += 1;
     }
 
 
     auto operator=(const LifecycleTracker&) noexcept -> LifecycleTracker&
     {
-        Counters.Copies += 1;
+        auto& counters = LifecycleCountersHolder<TheTag>::Counters;
+        counters.Copies += 1;
         return *this;
     }
 
     auto operator=(LifecycleTracker&&) noexcept -> LifecycleTracker&
     {
-        Counters.Moves += 1;
+        auto& counters = LifecycleCountersHolder<TheTag>::Counters;
+        counters.Moves += 1;
         return *this;
     }
 
@@ -76,9 +91,13 @@ public:
     }
 };
 
+
+// Very hacky macros ahead!
+
 #define LIFECYCLE_TEST_INTO \
-    static LifecycleCounters LifecycleCountersInstance; \
-    using LifecycleTracker = LifecycleTracker<LifecycleCountersInstance>; \
+    using ThisType = std::remove_reference_t<decltype(*this)>; \
+    using TestTracker = LifecycleTracker<ThisType>; \
+    auto& LifecycleCountersInstance = LifecycleCountersHolder<ThisType>::Counters; \
     const int32 instancesBefore     = LifecycleCountersInstance.Instances; \
     const int32 constructionsBefore = LifecycleCountersInstance.Constructions;
 
