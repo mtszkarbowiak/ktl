@@ -513,7 +513,7 @@ public:
     }
 
     /// <summary> Initializes a ring by copying another ring. </summary>
-    template<typename = typename std::enable_if<std::is_copy_constructible_v<T>>::type>
+    template<typename = typename std::enable_if<std::is_copy_constructible<T>::value>::type>
     Ring(const Ring& other)
     {
         CopyFrom<Alloc>(other);
@@ -560,7 +560,7 @@ public:
         return *this;
     }
 
-    template<typename = typename std::enable_if<std::is_copy_constructible_v<T>>::type>
+    template<typename = typename std::enable_if<std::is_copy_constructible<T>::value>::type>
     FORCE_INLINE
     auto operator=(const Ring& other) -> Ring&
     {
