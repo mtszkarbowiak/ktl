@@ -242,7 +242,7 @@ public:
     FORCE_INLINE NODISCARD
     auto PeekFront() -> T&
     {
-        ASSERT(_countCached > 0, "Ring is empty!");
+        ASSERT(_countCached > 0); // Ring must not be empty!
         return DATA_OF(T, _allocData)[_head];
     }
 
@@ -250,7 +250,7 @@ public:
     FORCE_INLINE NODISCARD
     auto PeekFront() const -> const T&
     {
-        ASSERT(_countCached > 0, "Ring is empty!");
+        ASSERT(_countCached > 0); // Ring must not be empty!
         return DATA_OF(const T, _allocData)[_head];
     }
 
@@ -258,7 +258,7 @@ public:
     FORCE_INLINE NODISCARD
     auto PeekBack() -> T&
     {
-        ASSERT(_countCached > 0, "Ring is empty!");
+        ASSERT(_countCached > 0); // Ring must not be empty!
         const int32 index = (_capacity + _tail - 1) % _capacity;
         return DATA_OF(T, _allocData)[index];
     }
@@ -266,7 +266,7 @@ public:
     /// <summary> Accesses the last element in the ring. </summary>
     auto PeekBack() const -> const T&
     {
-        ASSERT(_countCached > 0, "Ring is empty!");
+        ASSERT(_countCached > 0); // Ring must not be empty!
         const int32 index = (_capacity + _tail - 1) % _capacity;
         return DATA_OF(const T, _allocData)[index];
     }
