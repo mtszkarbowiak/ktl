@@ -445,7 +445,7 @@ public:
     }
 
     /// <summary> Initializes an array by copying another array. </summary>
-    template<typename = typename std::enable_if<std::is_copy_constructible_v<T>>::type>
+    template<typename = typename std::enable_if<std::is_copy_constructible<T>::value>::type>
     Array(const Array& other)
     {
         CopyFrom<Alloc>(other);
@@ -489,7 +489,7 @@ public:
         return *this;
     }
 
-    template<typename = typename std::enable_if<std::is_copy_constructible_v<T>>::type>
+    template<typename = typename std::enable_if<std::is_copy_constructible<T>::value>::type>
     auto operator=(const Array& other) -> Array&
     {
         if (this != &other)
@@ -754,14 +754,11 @@ public:
 
 
     // Constraints
-
-    static_assert(std::is_move_constructible<T>        ::value, "Type must be move-constructible.");
-    static_assert(std::is_move_assignable<T>           ::value, "Type must be move-assignable.");
-    static_assert(std::is_destructible<T>              ::value, "Type must be destructible.");
-    static_assert(std::is_nothrow_move_constructible<T>::value, "Type must be nothrow move-constructible.");
-    static_assert(std::is_nothrow_move_assignable<T>   ::value, "Type must be nothrow move-assignable.");
-    static_assert(std::is_nothrow_destructible<T>      ::value, "Type must be nothrow destructible.");
-
     static_assert(!std::is_reference<T>                ::value, "Type must not be a reference type.");
     static_assert(!std::is_const<T>                    ::value, "Type must not be a const-qualified type.");
+
+    static_assert(std::is_move_constructible<T>        ::value, "Type must be move-constructible.");
+    static_assert(std::is_destructible<T>              ::value, "Type must be destructible.");
+    static_assert(std::is_nothrow_move_constructible<T>::value, "Type must be nothrow move-constructible.");
+    static_assert(std::is_nothrow_destructible<T>      ::value, "Type must be nothrow destructible.");
 };
