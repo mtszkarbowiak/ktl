@@ -101,7 +101,7 @@ public:
     }
 
     /// <summary> Replaces the stored element with a new one by moving or copying it. </summary>
-    template<typename U, typename = typename std::enable_if<std::is_same<U, T>::value>::type>
+    template<typename U = T, typename = typename std::enable_if<std::is_same<U, T>::value>::type>
     FORCE_INLINE
     void Set(U&& value)
     {

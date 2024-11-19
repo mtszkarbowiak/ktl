@@ -445,7 +445,7 @@ public:
     }
 
     /// <summary> Initializes an array by copying another array. </summary>
-    template<typename = typename std::enable_if<std::is_copy_constructible<T>::value>::type>
+    template<typename U = T, typename = typename std::enable_if<((std::is_copy_constructible<T>::value && std::is_same<U, T>::value))>::type>
     Array(const Array& other)
     {
         CopyFrom<Alloc>(other);
@@ -489,7 +489,7 @@ public:
         return *this;
     }
 
-    template<typename = typename std::enable_if<std::is_copy_constructible<T>::value>::type>
+    template<typename U = T, typename = typename std::enable_if<((std::is_copy_constructible<T>::value && std::is_same<U, T>::value))>::type>
     auto operator=(const Array& other) -> Array&
     {
         if (this != &other)
