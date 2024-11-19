@@ -101,7 +101,7 @@ public:
     }
 
     /// <summary> Replaces the stored element with a new one by moving or copying it. </summary>
-    template<typename U>
+    template<typename U, typename = typename std::enable_if<std::is_same<U, T>::value>::type>
     FORCE_INLINE
     void Set(U&& value)
     {
@@ -179,6 +179,31 @@ public:
     }
 
 
+    // Identity
+
+    template<typename OtherAlloc>
+    FORCE_INLINE NODISCARD
+    auto operator==(const Box<T, OtherAlloc>& other) const -> bool
+    {
+        if (IsEmpty() && other.IsEmpty())
+        {
+            return true;
+        }
+        if (IsEmpty() || other.IsEmpty())
+        {
+            return false;
+        }
+        return *Get() == *other.Get();
+    }
+
+    template<typename OtherAlloc>
+    FORCE_INLINE NODISCARD
+    auto operator!=(const Box<T, OtherAlloc>& other) const -> bool
+    {
+        return !(*this == other);
+    }
+
+
     // Factorization
 
     /// <summary> Explicitly creates an empty box. </summary>
@@ -218,7 +243,14 @@ public:
 
     // Constraints
 
-    static_assert(Alloc::IsNullable, "Allocator must be nullable.");
-    static_assert(!std::is_reference<T>::value, "Type must not be a reference.");
+    static_assert(Alloc::IsNullable                           , "Allocator must be nullable.");
+
+    static_assert(!std::is_reference<T>                ::value, "Type must not be a reference.");
+    static_assert(!std::is_const<T>                    ::value, "Type must not be a const-qualified type.");
+
+    static_assert(std::is_move_constructible<T>        ::value, "Type must be move-constructible.");
+    static_assert(std::is_destructible<T>              ::value, "Type must be destructible.");
+    static_assert(std::is_nothrow_move_constructible<T>::value, "Type must be nothrow move-constructible.");
+    static_assert(std::is_nothrow_destructible<T>      ::value, "Type must be nothrow destructible.");
 };
 
