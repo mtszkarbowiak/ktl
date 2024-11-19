@@ -112,7 +112,7 @@ public:
 
 
 #define LIFECYCLE_TEST_INTO \
-    using ThisType = std::remove_reference_t<decltype(*this)>; \
+    using ThisType    = std::remove_reference_t<decltype(*this)>; \
     using TestTracker = LifecycleTracker<ThisType>; \
     auto& LifecycleCountersInstance = LifecycleCountersHolder<ThisType>::Counters; \
     const int32 instancesBefore     = LifecycleCountersInstance.Instances; \
