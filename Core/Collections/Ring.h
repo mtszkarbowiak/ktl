@@ -311,7 +311,7 @@ public:
     FORCE_INLINE
     void PopBack()
     {
-        ASSERT(_countCached > 0, "Ring is empty!");
+        ASSERT(_countCached > 0); // Ring must not be empty!
         _tail = (_tail - 1 + _capacity) % _capacity;
         T* target = static_cast<T*>(_allocData.Get()) + _tail;
         target->~T();
@@ -322,7 +322,7 @@ public:
     FORCE_INLINE
     void PopFront()
     {
-        ASSERT(_countCached > 0, "Ring is empty!");
+        ASSERT(_countCached > 0); // Ring must not be empty!
         T* target = static_cast<T*>(_allocData.Get()) + _head;
         target->~T();
         _head = (_head + 1) % _capacity;
