@@ -8,9 +8,6 @@
 #include "Types/Box.h"
 
 
-LIFECYCLE_TEST_TRACK
-
-
 TEST(Box, Init_Empty_ByDefaultConstructor)
 {
     LIFECYCLE_TEST_INTO

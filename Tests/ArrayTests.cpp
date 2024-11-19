@@ -2,16 +2,19 @@
 
 #include <gtest/gtest.h>
 
+#include "Allocators/FixedAlloc.h"
+#include "Debugging/LifecycleTracker.h"
 #include "Collections/Array.h"
 
-// Test Array's ability to set capacity during initialization.
-TEST(Array, Reserving_Init)
-{
-    using Item = int32;
-    constexpr int32 MinReservedCapacity = 128;
 
+// Capacity Management
+
+TEST(Array_Capacity, Reserve_OnInit)
+{
+    constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
-    Array<Item> array{ MinReservedCapacity };
+
+    Array<int32> array{ MinReservedCapacity };
     GTEST_ASSERT_TRUE(array.IsAllocated());
     GTEST_ASSERT_GE(array.Capacity(), MinReservedCapacity);
     GTEST_ASSERT_LE(array.Capacity(), MinReservedCapacity * 2);
@@ -20,15 +23,13 @@ TEST(Array, Reserving_Init)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-// Test Array's ability to set capacity after initialization,
-// without a need to relocate any elements.
-TEST(Array, Reserving_Request_NoReloc)
+TEST(Array_Capacity, Reserve_OnRequest)
 {
-    using Item = int32;
     constexpr int32 MinReservedCapacity = 128;
-
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
-    Array<Item> array;
+
+    Array<int32> array;
+
     array.Reserve(MinReservedCapacity);
     GTEST_ASSERT_TRUE(array.IsAllocated());
     GTEST_ASSERT_GE(array.Capacity(), MinReservedCapacity);
@@ -38,84 +39,24 @@ TEST(Array, Reserving_Request_NoReloc)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-// Test Array's ability to set capacity after initialization,
-// with a need to relocate C-Style elements.
-TEST(Array, Reserving_Request_Reloc_Fast)
+TEST(Array_Capacity, Reserve_OnAdd)
 {
-    using Item = int32;
+    constexpr int32 MinReservedCapacity = 128;
+    GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
 
-    constexpr int32 TestCapacity = 64;
+    Array<int32> array;
+    for (int32 i = 0; i < MinReservedCapacity; ++i)
+        array.Add(i);
 
-    Array<Item> array{ 3 };
-    GTEST_ASSERT_GE(array.Capacity(), 3);
-    GTEST_ASSERT_LT(array.Capacity(), TestCapacity);
+    GTEST_ASSERT_TRUE(array.IsAllocated());
+    GTEST_ASSERT_GE(array.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE(array.Capacity(), MinReservedCapacity * 2);
 
-    array.Add(1);
-    array.Add(2);
-    array.Add(3);
-
-    GTEST_ASSERT_EQ(array.Count(), 3);
-    GTEST_ASSERT_EQ(array[0], 1);
-    GTEST_ASSERT_EQ(array[1], 2);
-    GTEST_ASSERT_EQ(array[2], 3);
-
-    array.Reserve(TestCapacity);
-    GTEST_ASSERT_GE(array.Capacity(), TestCapacity);
-
-    // Is payload preserved?
-    GTEST_ASSERT_EQ(array.Count(), 3);
-    GTEST_ASSERT_EQ(array[0], 1);
-    GTEST_ASSERT_EQ(array[1], 2);
-    GTEST_ASSERT_EQ(array[2], 3);
+    array.Reset();
+    GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-// Test Array's ability to set capacity after initialization,
-// with a need to relocate C++-Style elements.
-TEST(Array, Reserving_Request_Reloc_Full)
-{
-    class Item final
-    {
-    public:
-        int32 Value;
-
-        explicit Item(const int32 value = int32{})
-            : Value{ value } {}
-
-        Item(Item&&)                 = default;
-        Item& operator=(Item&&)      = default;
-        ~Item()                      = default;
-
-        Item(const Item&)            = delete;
-        Item& operator=(const Item&) = delete;
-    };
-
-    constexpr int32 TestCapacity = 64;
-
-    Array<Item> array{ 3 };
-    GTEST_ASSERT_GE(array.Capacity(), 3);
-    GTEST_ASSERT_LT(array.Capacity(), TestCapacity);
-
-    array.Add(Item{ 1 });
-    array.Add(Item{ 2 });
-    array.Add(Item{ 3 });
-
-    GTEST_ASSERT_EQ(array.Count(), 3);
-    GTEST_ASSERT_EQ(array[0].Value, 1);
-    GTEST_ASSERT_EQ(array[1].Value, 2);
-    GTEST_ASSERT_EQ(array[2].Value, 3);
-
-    array.Reserve(TestCapacity);
-    GTEST_ASSERT_GE(array.Capacity(), TestCapacity);
-
-    // Is payload preserved?
-    GTEST_ASSERT_EQ(array.Count(), 3);
-    GTEST_ASSERT_EQ(array[0].Value, 1);
-    GTEST_ASSERT_EQ(array[1].Value, 2);
-    GTEST_ASSERT_EQ(array[2].Value, 3);
-}
-
-// Test Array's ability to free allocation for empty arrays.
-TEST(Array, ShrinkToFit_Free)
+TEST(Array_Capacity, ShrinkToFit_Free)
 {
     using Item = int32;
     Array<Item> array;
@@ -136,7 +77,7 @@ TEST(Array, ShrinkToFit_Free)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Array, ShrinkToFit_Reloc_Any)
+TEST(Array_Capacity, ShrinkToFit_Reloc)
 {
     constexpr int32 TestCapacity1 = 256;
     constexpr int32 TestCapacity2 = 3;
@@ -158,4 +99,38 @@ TEST(Array, ShrinkToFit_Reloc_Any)
     GTEST_ASSERT_EQ(array.Count(),    TestCapacity2);
 
     GTEST_ASSERT_LE(array.Capacity(), TestCapacity1 / 2);
+}
+
+
+// Element Lifecycle Management
+
+TEST(Array_ElementLifecycle, Add)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Array<LifecycleTracker> array;
+        array.Add(LifecycleTracker{ 69 });
+        GTEST_ASSERT_EQ(array.Count(), 1);
+        GTEST_ASSERT_EQ(array[0].Value, 69);
+        array.Reset();
+        GTEST_ASSERT_EQ(array.Count(), 0);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(2) // Include temporary
+}
+
+
+TEST(Array_ElementLifecycle, Emplace)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Array<LifecycleTracker> array;
+        array.Emplace(69);
+        GTEST_ASSERT_EQ(array.Count(), 1);
+        GTEST_ASSERT_EQ(array[0].Value, 69);
+        array.Reset();
+        GTEST_ASSERT_EQ(array.Count(), 0);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(1)
 }
