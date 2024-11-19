@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Debugging/Assertions.h"
 #include "Language/Keywords.h"
 #include "Language/Memory.h"
 #include "Types/Numbers.h"
@@ -63,7 +64,8 @@ public:
         FORCE_INLINE NODISCARD
         constexpr auto Allocate(const int32 size) -> int32
         {
-            return (size <= Size) ? size : 0;
+            ASSERT(size == Size || size == 0);
+            return (size == Size) ? size : 0;
         }
 
         FORCE_INLINE

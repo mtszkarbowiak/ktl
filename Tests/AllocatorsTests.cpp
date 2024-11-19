@@ -8,14 +8,15 @@
 
 TEST(FixedAlloc, AllocationCycle)
 {
-    constexpr int32 Size = 128;
-    using TestInt        = int64;
-    using FixedAllocData = FixedAlloc<Size * sizeof(TestInt)>::Data;
+    using TestInt                  = int64;
+    constexpr int32 BufferCapacity = 128;
+    constexpr int32 BufferMemory   = BufferCapacity * sizeof(TestInt);
+    using FixedAllocData = FixedAlloc<BufferMemory>::Data;
 
     // FixedAlloc isn't very interesting, but it's a good example of basic allocators usage.
 
     FixedAllocData alloc;
-    alloc.Allocate(3 * sizeof(TestInt));   
+    alloc.Allocate(BufferMemory); // Allocation must not have different size than the buffer for fixed alloc.
     GTEST_ASSERT_FALSE(alloc.MovesItems());     
     void* ptr = alloc.Get();
     alloc.Free();
