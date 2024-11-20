@@ -111,7 +111,56 @@ TEST(Ring_Capacity, ShrinkToFit_Reloc)
 
 // Element Lifecycle Management
 
-//TODO
+TEST(Ring_ElementLifecycle, PushBack)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring;
+        ring.PushBack(TestTracker{ 69 });
+        GTEST_ASSERT_EQ(ring.Count(), 1);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(2) // Include temporary
+}
+
+TEST(Ring_ElementLifecycle, PushFront)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring;
+        ring.PushFront(TestTracker{ 69 });
+        GTEST_ASSERT_EQ(ring.Count(), 1);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(2) // Include temporary
+}
+
+TEST(Ring_ElementLifecycle, PopBack)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring;
+        ring.PushBack(TestTracker{ 69 });
+        ring.PopBack();
+        GTEST_ASSERT_EQ(ring.Count(), 0);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(2) // Include temporary
+}
+
+TEST(Ring_ElementLifecycle, PopFront)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring;
+        ring.PushBack(TestTracker{ 69 });
+        ring.PopFront();
+        GTEST_ASSERT_EQ(ring.Count(), 0);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(2) // Include temporary
+}
+
 
 // Element Access
 
