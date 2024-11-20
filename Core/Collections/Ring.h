@@ -27,11 +27,11 @@ class Ring
     int32     _tail; // Points to the next FREE slot (not the last element).
     int32     _countCached;
 
+    //TODO(mtszkarbowiak) Capacity could be stored as a power of 2. This would allow for very fast modulo operations.
 
-
-protected:
     // Internal Integrity
 
+protected:
     /// <summary> Checks if the ring is in a valid state. </summary>
     FORCE_INLINE NODISCARD
     constexpr bool IsValid() const
@@ -47,9 +47,9 @@ protected:
     }
 
 
-public:
     // Capacity Access
 
+public:
     /// <summary> Checks if the ring has an active allocation. </summary>
     FORCE_INLINE NODISCARD
     constexpr bool IsAllocated() const noexcept

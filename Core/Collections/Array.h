@@ -27,9 +27,9 @@ class Array
     int32     _capacity;
     int32     _count;
 
-public:
     // Capacity Access
 
+public:
     /// <summary> Checks if the array has an active allocation. </summary>
     FORCE_INLINE NODISCARD
     constexpr bool IsAllocated() const noexcept
