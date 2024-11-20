@@ -423,7 +423,7 @@ private:
             _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
             _count    = other._count;
 
-            CollectionsUtils::CopyLinearContent<T>(
+            BulkOperations::CopyLinearContent<T>(
                 DATA_OF(const T, other._allocData),
                 DATA_OF(T,       this->_allocData),
                 _count
