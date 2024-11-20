@@ -164,7 +164,30 @@ TEST(Ring_ElementLifecycle, PopFront)
 
 // Element Access
 
-//TODO
+TEST(Ring_ElementAccess, Index)
+{
+    constexpr int32 ElementCount = 12;
+    Ring<int32> ring;
+    for (int32 i = 0; i < ElementCount; ++i)
+        ring.PushBack(i);
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(ring[i], i);
+}
+
+TEST(Ring_ElementAccess, ConstIndex)
+{
+    constexpr int32 ElementCount = 12;
+    const Ring<int32> ring = [&ElementCount]() -> Ring<int32>
+    {
+        Ring<int32> temp;
+        for (int32 i = 0; i < ElementCount; ++i)
+            temp.PushBack(i);
+        return temp;
+    }();
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(ring[i], i);
+}
+
 
 // Element Relocation
 
