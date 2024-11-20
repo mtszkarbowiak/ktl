@@ -28,6 +28,25 @@ class Ring
     int32     _countCached;
 
 
+
+protected:
+    // Internal Integrity
+
+    /// <summary> Checks if the ring is in a valid state. </summary>
+    FORCE_INLINE NODISCARD
+    constexpr bool IsValid() const
+    {
+        // This test is only valid if the capacity is non-zero.
+        if (_capacity == 0)
+        {
+            return true;
+        }
+
+        const int32 expectedTail = (_head + _countCached) % _capacity;
+        return _tail == expectedTail;
+    }
+
+
 public:
     // Capacity Access
 
@@ -158,6 +177,11 @@ public:
 
         _allocData = MOVE(newData);
         _capacity  = allocatedCapacity;
+
+        _head      = 0;
+        _tail      = _countCached;
+
+        ASSERT(IsValid());
     }
 
     /// <summary>
@@ -240,6 +264,8 @@ public:
 
         _allocData = MOVE(newData);
         _capacity  = allocatedCapacity;
+
+        ASSERT(IsValid());
     }
 
 
@@ -317,6 +343,8 @@ public:
         _tail = (_tail + 1) % _capacity;
         _countCached += 1;
 
+        ASSERT(IsValid());
+
         return *target;
     }
 
@@ -333,6 +361,8 @@ public:
         new (target) T(FORWARD(Args, args)...);
         _tail = (_tail + 1) % _capacity;
         _countCached += 1;
+
+        ASSERT(IsValid());
 
         return *target;
     }
@@ -356,6 +386,8 @@ public:
         new (target) T(FORWARD(U, element));
         _countCached += 1;
 
+        ASSERT(IsValid());
+
         return *target;
     }
 
@@ -372,6 +404,8 @@ public:
         new (target) T(FORWARD(Args, args)...);
         _countCached += 1;
 
+        ASSERT(IsValid());
+
         return *target;
     }
 
@@ -386,6 +420,8 @@ public:
         T* target = static_cast<T*>(_allocData.Get()) + _tail;
         target->~T();
         _countCached -= 1;
+
+        ASSERT(IsValid());
     }
 
     /// <summary> Removes the first element from the ring. </summary>
@@ -397,6 +433,8 @@ public:
         target->~T();
         _head = (_head + 1) % _capacity;
         _countCached -= 1;
+
+        ASSERT(IsValid());
     }
 
 
@@ -433,6 +471,8 @@ public:
         _head        = 0;
         _tail        = 0;
         _countCached = 0;
+
+        ASSERT(IsValid());
     }
 
     /// <summary> Removes all elements from the array and frees the allocation. </summary>
