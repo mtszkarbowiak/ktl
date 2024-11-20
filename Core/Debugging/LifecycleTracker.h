@@ -72,8 +72,10 @@ public:
         return *this;
     }
 
-    auto operator=(LifecycleTracker&&) noexcept -> LifecycleTracker&
+    auto operator=(LifecycleTracker&& other) noexcept -> LifecycleTracker&
     {
+        Value = other.Value;
+
         auto& counters = LifecycleCountersHolder<TheTag>::Counters;
         counters.Moves += 1;
         return *this;

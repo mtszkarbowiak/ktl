@@ -227,35 +227,35 @@ public:
     /// <param name="element"> Element to add. </param>
     /// <returns> Reference to the added element. </returns>
     template<typename U>
-    FORCE_INLINE
-    T& Insert(const int32 index, U&& element)
+    T& InsertAt(const int32 index, U&& element)
     {
         ASSERT_INDEX(index >= 0 && index <= _count);  // Allow index == _count for appending
 
         if (_count == _capacity)
             Reserve(_capacity + 1);
 
-        T* target = DATA_OF(T, _allocData) + index;
+        // Pointer to the slot at the insertion point.
+        T* insertPtr = DATA_OF(T, _allocData) + index;
 
-        // If inserting at the end (_count), no need to move any element.
-        if (index == _count)
+        if (index < _count)
         {
-            // Just place the new element at the end.
-            new (target) T(FORWARD(U, element));
+            // Pointer to the newly occupied slot.
+            T* endPtr = DATA_OF(T, _allocData) + _count;
+
+            // Move-construct of the last element to the end.
+            new (endPtr) T(MOVE(*insertPtr));
+
+            // Move-assignment of the inserted element.
+            *insertPtr = T(FORWARD(U, element));
         }
         else
         {
-            // Move the element that will be replaced (if any).
-            T* displacedElement = DATA_OF(T, _allocData) + _count - 1;
-            *target = MOVE(*displacedElement);
-
-            // Placement new for the element to be inserted.
-            new (target) T(FORWARD(U, element));
+            // Move-construct the element at the end.
+            new (insertPtr) T(FORWARD(U, element));
         }
 
         _count += 1;
-
-        return *target;
+        return *insertPtr;
     }
 
     /// <summary>
@@ -268,25 +268,44 @@ public:
     /// This operation is significantly slower than basic insertion. It should be used only when the order of the elements matters.
     /// </remarks>
     template<typename U>
-    FORCE_INLINE
-    T& InsertStable(const int32 index, U&& element)
+    T& InsertAtStable(const int32 index, U&& element)
     {
-        ASSERT_INDEX(index >= 0 && index <= _count);
+        ASSERT_INDEX(index >= 0 && index <= _count);  // Allow index == _count for appending
 
         if (_count == _capacity)
             Reserve(_capacity + 1);
 
-        T* target = DATA_OF(T, _allocData) + index;
+        // Pointer to the first slot.
+        T* dataPtr = DATA_OF(T, _allocData);
 
-        // Shift the elements toward the end.
-        for (int32 i = _count; i > index; --i)
-            target[i] = MOVE(target[i - 1]);
+        // Pointer to the slot at the insertion point.
+        T* insertPtr = dataPtr + index;
 
-        // Placement new
-        new (target) T(FORWARD(U, element));
+        if (index < _count)
+        {
+            // Pointer to the newly occupied slot.
+            T* endPtr = dataPtr + _count;
+
+            // Move-construct of the last element to the end.
+            new (endPtr) T(MOVE(*(endPtr - 1)));
+
+            // Move the elements to make space for the new element.
+            for (int i = _count - 1; i > index; --i)
+            {
+                dataPtr[i] = MOVE(dataPtr[i - 1]);
+            }
+
+            // Move-assignment of the inserted element.
+            dataPtr[index] = T(FORWARD(U, element));
+        }
+        else
+        {
+            // Move-construct the element at the end.
+            new (insertPtr) T(FORWARD(U, element));
+        }
+
         _count += 1;
-
-        return *target;
+        return *insertPtr;
     }
 
 
@@ -294,23 +313,19 @@ public:
     /// Removes element at the specified index, disregarding the order of the elements.
     /// </summary>
     /// <param name="index"> Index of the element to remove. It must be in the range [0, Count). </param>
-    FORCE_INLINE
     void RemoveAt(const int32 index)
     {
-        ASSERT_INDEX(index >= 0 && index < _count);
-        T* target = DATA_OF(T, _allocData) + index;
+        ASSERT_INDEX(index >= 0 && index < _count); // Ensure index is valid
 
-        // Destruct the element.
-        target->~T();
+        T* basePtr    = DATA_OF(T, _allocData);
+        T* removedPtr = basePtr + index;
 
-        // If removing from the end, no need to move elements.
-        if (index < _count - 1)
+        if (index != _count - 1)  // If not removing the last element
         {
-            // Move the last element to the removal spot (only if not at the end).
-            T* lastElement = DATA_OF(T, _allocData) + _count - 1;
-            *target = MOVE(*lastElement);
+            *removedPtr = MOVE(basePtr[_count - 1]); // Replace with the last element
         }
 
+        basePtr[_count - 1].~T(); // Destroy the last element
         _count -= 1;
     }
 
@@ -321,19 +336,19 @@ public:
     /// <remarks>
     /// This operation is significantly slower than basic insertion. It should be used only when the order of the elements matters.
     /// </remarks>
-    FORCE_INLINE
     void RemoveAtStable(const int32 index)
     {
-        ASSERT_INDEX(index >= 0 && index < _count);
-        T* target = DATA_OF(T, _allocData) + index;
+        ASSERT_INDEX(index >= 0 && index < _count); // Ensure index is valid
 
-        // Destruct the element.
-        target->~T();
+        T* basePtr    = DATA_OF(T, _allocData);
 
-        // Shift the elements towarW
+        // Shift all subsequent elements left to fill the gap
         for (int32 i = index; i < _count - 1; ++i)
-            target[i] = MOVE(target[i + 1]);
+        {
+            basePtr[i] = MOVE(basePtr[i + 1]);
+        }
 
+        basePtr[_count - 1].~T(); // Destroy the last (now duplicated) element
         _count -= 1;
     }
 

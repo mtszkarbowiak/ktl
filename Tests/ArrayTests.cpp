@@ -335,3 +335,91 @@ TEST(Array_ElementAccess, ConstIndex)
 
 // Element Manipulation
 
+TEST(Array_ElementManipulation, Insert)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Array<TestTracker> array;
+        for (int32 i = 0; i < 6; ++i)
+            array.Emplace(i);
+
+        array.InsertAt(2, 69);
+
+        ASSERT_EQ(array.Count(), 7);
+
+        ASSERT_EQ(array[0].Value, 0);
+        ASSERT_EQ(array[1].Value, 1);
+        ASSERT_EQ(array[2].Value, 69);
+        ASSERT_EQ(array[3].Value, 3);
+        ASSERT_EQ(array[4].Value, 4);
+        ASSERT_EQ(array[5].Value, 5);
+        ASSERT_EQ(array[6].Value, 2);
+    }
+    LIFECYCLE_TEST_OUT
+}
+
+TEST(Array_ElementManipulation, InsertAt)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Array<TestTracker> array;
+        for (int32 i = 0; i < 6; ++i)
+            array.Emplace(i);
+
+        array.InsertAtStable(2, 69);
+
+        ASSERT_EQ(array.Count(), 7);
+
+        ASSERT_EQ(array[0].Value, 0);
+        ASSERT_EQ(array[1].Value, 1);
+        ASSERT_EQ(array[2].Value, 69);
+        ASSERT_EQ(array[3].Value, 2);
+        ASSERT_EQ(array[4].Value, 3);
+        ASSERT_EQ(array[5].Value, 4);
+        ASSERT_EQ(array[6].Value, 5);
+    }
+    LIFECYCLE_TEST_OUT
+}
+
+TEST(Array_ElementManipulation, Remove)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Array<TestTracker> array;
+        for (int32 i = 0; i < 6; ++i)
+            array.Emplace(i);
+
+        array.RemoveAt(2);
+
+        ASSERT_EQ(array.Count(), 5);
+
+        ASSERT_EQ(array[0].Value, 0);
+        ASSERT_EQ(array[1].Value, 1);
+        ASSERT_EQ(array[2].Value, 5);
+        ASSERT_EQ(array[3].Value, 3);
+        ASSERT_EQ(array[4].Value, 4);
+
+    }
+    LIFECYCLE_TEST_OUT
+}
+
+TEST(Array_ElementManipulation, RemoveStable)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Array<TestTracker> array;
+        for (int32 i = 0; i < 6; ++i)
+            array.Emplace(i);
+
+        array.RemoveAtStable(2);
+
+        ASSERT_EQ(array.Count(), 5);
+
+        ASSERT_EQ(array[0].Value, 0);
+        ASSERT_EQ(array[1].Value, 1);
+        ASSERT_EQ(array[2].Value, 3);
+        ASSERT_EQ(array[3].Value, 4);
+        ASSERT_EQ(array[4].Value, 5);
+    }
+    LIFECYCLE_TEST_OUT
+}
