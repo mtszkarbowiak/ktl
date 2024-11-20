@@ -97,7 +97,7 @@ public:
 
     /// <summary> Ensures that adding items up to the requested capacity will not invoke the allocator. </summary>
     FORCE_INLINE
-    void Reserve(int32 minCapacity)
+    void Reserve(const int32 minCapacity)
     {
         if (minCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
@@ -109,39 +109,48 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData };
 
-        minCapacity = CollectionsUtils::GetAllocCapacity<Alloc, RING_DEFAULT_CAPACITY>(minCapacity);
-
-        const int32 allocatedMemory = newData.Allocate(sizeof(T) * minCapacity);
-        const int32 allocatedCapacity = allocatedMemory / sizeof(T);
+        const int32 requiredCapacity  = CollectionsUtils::GetRequiredCapacity<T, Alloc, RING_DEFAULT_CAPACITY>(minCapacity);
+        const int32 allocatedCapacity = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, requiredCapacity);
 
         // Move the content before reassigning the capacity
-
         const bool isWrapped = _head > _tail;
-        if (isWrapped)
+        if (!isWrapped)
         {
-            // First segment: [head, capacity)
-            const int32 firstBeginIndex  = 0;
-            const int32 firstEndIndex    = _tail;
-
-            CollectionsUtils::MoveLinearContent<T, Alloc, Alloc>(
-                _allocData, newData, firstEndIndex, firstBeginIndex
+            // Straightforward case: continuous data
+            BulkOperations::MoveLinearContent<T>(
+                DATA_OF(T, _allocData) + _head,
+                DATA_OF(T, newData),
+                _countCached
             );
-
-            // Second segment: [0, tail)
-            const int32 secondBeginIndex = _head;
-            const int32 secondEndIndex   = _capacity;
-
-            CollectionsUtils::MoveLinearContent<T, Alloc, Alloc>(
-                _allocData, newData, secondEndIndex, secondBeginIndex
+            BulkOperations::DestroyLinearContent<T>(
+                DATA_OF(T, _allocData) + _head,
+                _countCached
             );
         }
         else
         {
-            const int32 beginIndex = _head;
-            const int32 endIndex   = _tail;
+            const int32 wrapIndex = _capacity - _head;
 
-            CollectionsUtils::MoveLinearContent<T, Alloc, Alloc>(
-                _allocData, newData, endIndex, beginIndex
+            // Move and destroy the first wrapped segment
+            BulkOperations::MoveLinearContent<T>(
+                DATA_OF(T, _allocData) + _head,
+                DATA_OF(T, newData),
+                wrapIndex
+            );
+            BulkOperations::DestroyLinearContent<T>(
+                DATA_OF(T, _allocData) + _head,
+                wrapIndex
+            );
+
+            // Move and destroy the second segment
+            BulkOperations::MoveLinearContent<T>(
+                DATA_OF(T, _allocData),
+                DATA_OF(T, newData) + wrapIndex,
+                _tail
+            );
+            BulkOperations::DestroyLinearContent<T>(
+                DATA_OF(T, _allocData),
+                _tail
             );
         }
 
@@ -169,9 +178,8 @@ public:
         }
 
         // Test required capacity against the current capacity.
-        const int32 requiredCapacity = CollectionsUtils::GetAllocCapacity<Alloc, RING_DEFAULT_CAPACITY>(
-            _countCached
-        );
+        const int32 requiredCapacity
+            = CollectionsUtils::GetRequiredCapacity<T, Alloc, RING_DEFAULT_CAPACITY>(_countCached);
 
         if (_capacity <= requiredCapacity)
             return;
@@ -180,35 +188,49 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData };
 
-        const int32 allocatedMemory   = newData.Allocate(sizeof(T) * requiredCapacity);
-        const int32 allocatedCapacity = allocatedMemory / sizeof(T);
+        const int32 allocatedCapacity
+            = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, _countCached);
 
         // Move the content before reassigning the capacity
         const bool isWrapped = _head > _tail;
-        if (isWrapped)
+        if (!isWrapped)
         {
-            const int32 wrapIndex = _capacity - _head;
-
-            CollectionsUtils::MoveLinearContent<T>(
+            // Straightforward case: continuous data
+            BulkOperations::MoveLinearContent<T>(
                 DATA_OF(T, _allocData) + _head,
                 DATA_OF(T, newData),
-                wrapIndex
+                _countCached
             );
-
-            CollectionsUtils::MoveLinearContent<T>(
-                DATA_OF(T, _allocData),
-                DATA_OF(T, newData) + wrapIndex,
-                _tail
+            BulkOperations::DestroyLinearContent<T>(
+                DATA_OF(T, _allocData) + _head,
+                _countCached
             );
         }
         else
         {
-            CollectionsUtils::MoveLinearContent<T>(
+            const int32 wrapIndex = _capacity - _head;
+
+            // Move and destroy the first wrapped segment
+            BulkOperations::MoveLinearContent<T>(
                 DATA_OF(T, _allocData) + _head,
-                DATA_OF(T, newData), // Move to the beginning.
-                _countCached
+                DATA_OF(T, newData),
+                wrapIndex
+            );
+            BulkOperations::DestroyLinearContent<T>(
+                DATA_OF(T, _allocData) + _head,
+                wrapIndex
             );
 
+            // Move and destroy the second segment
+            BulkOperations::MoveLinearContent<T>(
+                DATA_OF(T, _allocData),
+                DATA_OF(T, newData) + wrapIndex,
+                _tail
+            );
+            BulkOperations::DestroyLinearContent<T>(
+                DATA_OF(T, _allocData),
+                _tail
+            );
         }
 
         _head = 0;
