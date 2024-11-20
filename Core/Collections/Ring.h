@@ -33,14 +33,14 @@ public:
 
     /// <summary> Checks if the ring has an active allocation. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto IsAllocated() const noexcept -> bool
+    constexpr bool IsAllocated() const noexcept
     {
         return _capacity > 0;
     }
 
     /// <summary> Number of elements that can be stored without invoking the allocator. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto Capacity() const noexcept -> int32
+    constexpr int32 Capacity() const noexcept
     {
         return _capacity;
     }
@@ -50,21 +50,21 @@ public:
 
     /// <summary> Checks if the ring has any elements. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto IsEmpty() const noexcept -> bool
+    constexpr bool IsEmpty() const noexcept
     {
         return _head == _tail;
     }
 
     /// <summary> Number of currently stored elements. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto Count() const noexcept -> int32
+    constexpr int32 Count() const noexcept
     {
         return _countCached;
     }
 
     /// <summary> Number of elements that can be added without invoking the allocator. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto Slack() const noexcept -> int32
+    constexpr int32 Slack() const noexcept
     {
         return _capacity - _countCached;
     }
@@ -72,14 +72,14 @@ public:
 protected:
     /// <summary> Index of the first element in the ring. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto Head() const noexcept -> int32
+    constexpr int32 Head() const noexcept
     {
         return _head;
     }
 
     /// <summary> Index of the next free slot in the ring. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto Tail() const noexcept -> int32
+    constexpr int32 Tail() const noexcept
     {
         return _tail;
     }
@@ -87,7 +87,7 @@ protected:
 public:
     /// <summary> Checks if the ring is wrapped around the capacity, meaning that elements are stored in two segments. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto IsWrapped() const noexcept -> bool
+    constexpr bool IsWrapped() const noexcept
     {
         return _head > _tail;
     }
@@ -246,7 +246,7 @@ public:
     // Element Access
 
     /// <summary> Accesses the element at the given index. </summary>
-    auto operator[](const int32 index) -> T&
+    T& operator[](const int32 index)
     {
         ASSERT_INDEX(index >= 0 && index < _countCached);
         const int32 realIndex = (_head + index) % _capacity;
@@ -254,7 +254,7 @@ public:
     }
 
     /// <summary> Accesses the element at the given index. </summary>
-    auto operator[](const int32 index) const -> const T&
+    const T& operator[](const int32 index) const
     {
         ASSERT_INDEX(index >= 0 && index < _countCached);
         const int32 realIndex = (_head + index) % _capacity;
@@ -263,24 +263,24 @@ public:
 
 
     /// <summary> Accesses the first element in the ring. </summary>
-    FORCE_INLINE NODISCARD
-    auto PeekFront() -> T&
+    FORCE_INLINE
+    T& PeekFront()
     {
         ASSERT(_countCached > 0); // Ring must not be empty!
         return DATA_OF(T, _allocData)[_head];
     }
 
     /// <summary> Accesses the first element in the ring. </summary>
-    FORCE_INLINE NODISCARD
-    auto PeekFront() const -> const T&
+    FORCE_INLINE
+    const T& PeekFront() const
     {
         ASSERT(_countCached > 0); // Ring must not be empty!
         return DATA_OF(const T, _allocData)[_head];
     }
 
     /// <summary> Accesses the last element in the ring. </summary>
-    FORCE_INLINE NODISCARD
-    auto PeekBack() -> T&
+    FORCE_INLINE
+    T& PeekBack()
     {
         ASSERT(_countCached > 0); // Ring must not be empty!
         const int32 index = (_capacity + _tail - 1) % _capacity;
@@ -288,7 +288,7 @@ public:
     }
 
     /// <summary> Accesses the last element in the ring. </summary>
-    auto PeekBack() const -> const T&
+    const T& PeekBack() const
     {
         ASSERT(_countCached > 0); // Ring must not be empty!
         const int32 index = (_capacity + _tail - 1) % _capacity;
@@ -301,7 +301,7 @@ public:
     /// <summary> Adds an element to the end of the ring. </summary>
     template<typename U>
     FORCE_INLINE
-    auto PushBack(U&& element) -> U&
+    U& PushBack(U&& element)
     {
         if (_countCached == _capacity)
             Reserve(_capacity + 1);
@@ -318,7 +318,7 @@ public:
     /// <summary> Removes the last element from the ring. </summary>
     template<typename U>
     FORCE_INLINE
-    auto PushFront(U&& element) -> U&
+    U& PushFront(U&& element)
     {
         if (_countCached == _capacity)
             Reserve(_capacity + 1);
@@ -586,7 +586,7 @@ public:
     // Collection Lifecycle - Assignments
 
     FORCE_INLINE
-    auto operator=(Ring&& other) noexcept -> Ring&
+    Ring& operator=(Ring&& other) noexcept
     {
         if (this != &other) 
         {
@@ -599,7 +599,7 @@ public:
 
     template<typename U = T, typename = typename std::enable_if<((std::is_copy_constructible<T>::value&& std::is_same<U, T>::value))>::type>
     FORCE_INLINE
-    auto operator=(const Ring& other) -> Ring&
+    Ring& operator=(const Ring& other)
     {
         if (this != &other) 
         {
@@ -639,33 +639,33 @@ public:
 
         // Access
 
-        FORCE_INLINE NODISCARD
-        auto operator*() -> T&
+        FORCE_INLINE
+        T& operator*()
         {
             return DATA_OF(T, _ring->_allocData)[_indexOfSlot];
         }
 
-        FORCE_INLINE NODISCARD
-        auto operator->() -> T*
+        FORCE_INLINE
+        T* operator->()
         {
             return DATA_OF(T, _ring->_allocData) + _indexOfSlot;
         }
 
-        FORCE_INLINE NODISCARD
-        auto operator*() const -> const T&
+        FORCE_INLINE
+        const T& operator*() const
         {
             return DATA_OF(const T, _ring->_allocData)[_indexOfSlot];
         }
 
-        FORCE_INLINE NODISCARD
-        auto operator->() const -> const T*
+        FORCE_INLINE
+        const T* operator->() const
         {
             return DATA_OF(const T, _ring->_allocData) + _indexOfSlot;
         }
 
         /// <summary> Returns the index of the current element. </summary>
         FORCE_INLINE NODISCARD
-        auto Index() const noexcept -> int32
+        int32 Index() const noexcept
         {
             return _indexOfElement;
         }
@@ -683,7 +683,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         FORCE_INLINE
-        auto operator++() -> MutEnumerator&
+        MutEnumerator& operator++()
         {
             _indexOfElement += 1;
             _indexOfSlot = (_indexOfSlot + 1) % _ring->_capacity;
@@ -692,7 +692,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
-        auto operator++(int) -> MutEnumerator
+        MutEnumerator operator++(int)
         {
             MutEnumerator copy{ *this };
             _indexOfElement += 1;
@@ -703,19 +703,22 @@ public:
 
         // Identity
 
-        auto operator==(const MutEnumerator& other) const -> bool
+        FORCE_INLINE NODISCARD
+        bool operator==(const MutEnumerator& other) const
         {
             ASSERT(_ring == other._ring);
             return _indexOfElement == other._indexOfElement;
         }
 
-        auto operator!=(const MutEnumerator& other) const -> bool
+        FORCE_INLINE NODISCARD
+        bool operator!=(const MutEnumerator& other) const
         {
             ASSERT(_ring == other._ring);
             return _indexOfElement != other._indexOfElement;
         }
 
-        auto operator<(const MutEnumerator& other) const -> bool
+        FORCE_INLINE NODISCARD
+        bool operator<(const MutEnumerator& other) const
         {
             ASSERT(_ring == other._ring);
             return _indexOfElement < other._indexOfElement;
@@ -747,20 +750,20 @@ public:
         // Access
 
         FORCE_INLINE NODISCARD
-        auto operator*() const -> const T&
+        const T& operator*() const
         {
             return DATA_OF(const T, _ring->_allocData)[_indexOfSlot];
         }
 
-        FORCE_INLINE NODISCARD
-        auto operator->() const -> const T*
+        FORCE_INLINE
+        const T* operator->() const
         {
             return DATA_OF(const T, _ring->_allocData) + _indexOfSlot;
         }
 
         /// <summary> Returns the index of the current element. </summary>
         FORCE_INLINE NODISCARD
-        auto Index() const noexcept -> int32
+        int32 Index() const noexcept
         {
             return _indexOfElement;
         }
@@ -778,7 +781,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         FORCE_INLINE
-        auto operator++() -> ConstEnumerator&
+        ConstEnumerator& operator++()
         {
             _indexOfElement += 1;
             _indexOfSlot = (_indexOfSlot + 1) % _ring->_capacity;
@@ -787,7 +790,8 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
-        auto operator++(int) -> ConstEnumerator
+        FORCE_INLINE
+        ConstEnumerator operator++(int)
         {
             ConstEnumerator copy{ *this };
             _indexOfElement += 1;
@@ -798,19 +802,22 @@ public:
 
         // Identity
 
-        auto operator==(const ConstEnumerator& other) const -> bool
+        FORCE_INLINE NODISCARD
+        bool operator==(const ConstEnumerator& other) const
         {
             ASSERT(_ring == other._ring);
             return _indexOfElement == other._indexOfElement;
         }
 
-        auto operator!=(const ConstEnumerator& other) const -> bool
+        FORCE_INLINE NODISCARD
+        bool operator!=(const ConstEnumerator& other) const
         {
             ASSERT(_ring == other._ring);
             return _indexOfElement != other._indexOfElement;
         }
 
-        auto operator<(const ConstEnumerator& other) const -> bool
+        FORCE_INLINE NODISCARD
+        bool operator<(const ConstEnumerator& other) const
         {
             ASSERT(_ring == other._ring);
             return _indexOfElement < other._indexOfElement;
@@ -819,14 +826,14 @@ public:
 
     /// <summary> Creates an enumerator for the array. </summary>
     FORCE_INLINE NODISCARD
-    auto Enumerate() -> MutEnumerator
+    MutEnumerator Enumerate()
     {
         return MutEnumerator{ *this };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
     FORCE_INLINE NODISCARD
-    auto Enumerate() const -> ConstEnumerator
+    ConstEnumerator Enumerate() const
     {
         return ConstEnumerator{ *this };
     }
