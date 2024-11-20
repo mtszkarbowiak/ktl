@@ -380,77 +380,142 @@ TEST(Ring_Relocation, MoveAssignment_DragAlloc)
 
 TEST(Array_ElementManipulation, PushBack_PopBack)
 {
+    const int32 Cycles = 3;
     const int32 ElementCount = 100;
 
     LIFECYCLE_TEST_INTO
     {
         Ring<TestTracker> ring;
+        for (auto cycle = 0; cycle < Cycles; ++cycle)
+        {
+            // Add n elements
+            for (int32 i = 0; i < ElementCount; ++i)
+                ring.PushBack(TestTracker{ i });
+            GTEST_ASSERT_EQ(ring.Count(), ElementCount);
+            GTEST_ASSERT_FALSE(ring.IsEmpty());
 
-        for (int32 i = 0; i < ElementCount; ++i)
-            ring.PushBack(TestTracker{ i });
-        GTEST_ASSERT_EQ(ring.Count(), ElementCount);
-
-        for (int32 i = 0; i < ElementCount; ++i)
-            ring.PopBack();
-        GTEST_ASSERT_EQ(ring.IsEmpty(), 0);
+            // Remove n elements
+            for (int32 i = 0; i < ElementCount; ++i)
+                ring.PopBack();
+            GTEST_ASSERT_EQ(ring.Count(), 0);
+            GTEST_ASSERT_TRUE(ring.IsEmpty());
+        }
     }
     LIFECYCLE_TEST_OUT
 }
 
 TEST(Array_ElementManipulation, PushBack_PopFront)
 {
+    const int32 Cycles = 3;
     const int32 ElementCount = 100;
 
     LIFECYCLE_TEST_INTO
     {
         Ring<TestTracker> ring;
+        for (auto cycle = 0; cycle < Cycles; ++cycle)
+        {
+            for (int32 i = 0; i < ElementCount; ++i)
+                ring.PushBack(TestTracker{ i });
+            GTEST_ASSERT_EQ(ring.Count(), ElementCount);
 
-        for (int32 i = 0; i < ElementCount; ++i)
-            ring.PushBack(TestTracker{ i });
-        GTEST_ASSERT_EQ(ring.Count(), ElementCount);
-
-        for (int32 i = 0; i < ElementCount; ++i)
-            ring.PopFront();
-        GTEST_ASSERT_EQ(ring.IsEmpty(), 0);
+            for (int32 i = 0; i < ElementCount; ++i)
+                ring.PopFront();
+            GTEST_ASSERT_EQ(ring.Count(), 0);
+            GTEST_ASSERT_TRUE(ring.IsEmpty());
+        }
     }
     LIFECYCLE_TEST_OUT
 }
 
 TEST(Array_ElementManipulation, PushFront_PopBack)
 {
+    const int32 Cycles = 3;
     const int32 ElementCount = 100;
 
     LIFECYCLE_TEST_INTO
     {
         Ring<TestTracker> ring;
+        for (auto cycle = 0; cycle < Cycles; ++cycle)
+        {
+            for (int32 i = 0; i < ElementCount; ++i)
+                ring.PushFront(TestTracker{ i });
+            GTEST_ASSERT_EQ(ring.Count(), ElementCount);
 
-        for (int32 i = 0; i < ElementCount; ++i)
-            ring.PushFront(TestTracker{ i });
-        GTEST_ASSERT_EQ(ring.Count(), ElementCount);
-
-        for (int32 i = 0; i < ElementCount; ++i)
-            ring.PopBack();
-        GTEST_ASSERT_EQ(ring.IsEmpty(), 0);
+            for (int32 i = 0; i < ElementCount; ++i)
+                ring.PopBack();
+            GTEST_ASSERT_EQ(ring.Count(), 0);
+            GTEST_ASSERT_TRUE(ring.IsEmpty());
+        }
     }
     LIFECYCLE_TEST_OUT
 }
 
 TEST(Array_ElementManipulation, PushFront_PopFront)
 {
+    const int32 Cycles = 3;
     const int32 ElementCount = 100;
 
     LIFECYCLE_TEST_INTO
     {
         Ring<TestTracker> ring;
+        for (auto cycle = 0; cycle < Cycles; ++cycle)
+        {
+            for (int32 i = 0; i < ElementCount; ++i)
+                ring.PushFront(TestTracker{ i });
+            GTEST_ASSERT_EQ(ring.Count(), ElementCount);
 
-        for (int32 i = 0; i < ElementCount; ++i)
-            ring.PushFront(TestTracker{ i });
-        GTEST_ASSERT_EQ(ring.Count(), ElementCount);
-
-        for (int32 i = 0; i < ElementCount; ++i)
-            ring.PopFront();
-        GTEST_ASSERT_EQ(ring.IsEmpty(), 0);
+            for (int32 i = 0; i < ElementCount; ++i)
+                ring.PopFront();
+            GTEST_ASSERT_EQ(ring.Count(), 0);
+            GTEST_ASSERT_TRUE(ring.IsEmpty());
+        }
     }
     LIFECYCLE_TEST_OUT
 }
 
+
+TEST(Array_ElementManipulation, EmplaceBack_PopBack)
+{
+    const int32 Cycles = 3;
+    const int32 ElementCount = 1000;
+
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring;
+        for (auto cycle = 0; cycle < Cycles; ++cycle)
+        {
+            for (int32 i = 0; i < ElementCount; ++i)
+                ring.EmplaceBack(i);
+            GTEST_ASSERT_EQ(ring.Count(), ElementCount);
+
+            for (int32 i = 0; i < ElementCount; ++i)
+                ring.PopBack();
+            GTEST_ASSERT_EQ(ring.Count(), 0);
+            GTEST_ASSERT_TRUE(ring.IsEmpty());
+        }
+    }
+    LIFECYCLE_TEST_OUT
+}
+
+TEST(Array_ElementManipulation, EmplaceFront_PopFront)
+{
+    const int32 Cycles = 3;
+    const int32 ElementCount = 1000;
+
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring;
+        for (auto cycle = 0; cycle < Cycles; ++cycle)
+        {
+            for (int32 i = 0; i < ElementCount; ++i)
+                ring.EmplaceFront(i);
+            GTEST_ASSERT_EQ(ring.Count(), ElementCount);
+
+            for (int32 i = 0; i < ElementCount; ++i)
+                ring.PopFront();
+            GTEST_ASSERT_EQ(ring.Count(), 0);
+            GTEST_ASSERT_TRUE(ring.IsEmpty());
+        }
+    }
+    LIFECYCLE_TEST_OUT
+}
