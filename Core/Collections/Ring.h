@@ -109,8 +109,10 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData };
 
-        const int32 requiredCapacity  = CollectionsUtils::GetRequiredCapacity<T, Alloc, RING_DEFAULT_CAPACITY>(minCapacity);
-        const int32 allocatedCapacity = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, requiredCapacity);
+        const int32 requiredCapacity
+            = CollectionsUtils::GetRequiredCapacity<T, Alloc, RING_DEFAULT_CAPACITY>(minCapacity);
+        const int32 allocatedCapacity
+            = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, requiredCapacity);
 
         // Move the content before reassigning the capacity
         const bool isWrapped = _head > _tail;
@@ -360,15 +362,27 @@ public:
             return;
 
         const bool isWrapped = _head > _tail;
-        if (isWrapped)
+        if (!isWrapped)
         {
-            BulkOperations::DestroyLinearContent<T>(DATA_OF(T, _allocData),  _tail);
-            BulkOperations::DestroyLinearContent<T>(DATA_OF(T, _allocData) + _head, _capacity);
+            BulkOperations::DestroyLinearContent<T>(
+                DATA_OF(T, _allocData) + _head,
+                _countCached
+            );
         }
         else
         {
-            BulkOperations::DestroyLinearContent<T>(DATA_OF(T, _allocData) + _head, _countCached);
+            const int32 wrapIndex = _capacity - _head;
+
+            BulkOperations::DestroyLinearContent<T>(
+                DATA_OF(T, _allocData) + _head,
+                wrapIndex
+            );
+            BulkOperations::DestroyLinearContent<T>(
+                DATA_OF(T, _allocData),
+                _tail
+            );
         }
+
 
         _head        = 0;
         _tail        = 0;
@@ -426,8 +440,8 @@ private:
             _head        = 0;
             _tail        = other._countCached;
 
-            CollectionsUtils::MoveLinearContent<T>(
-                DATA_OF(const T, other._allocData) + other._head,
+            BulkOperations::MoveLinearContent<T>(
+                DATA_OF(T, other._allocData) + other._head,
                 DATA_OF(T, _allocData),
                 other._countCached
             );
@@ -446,17 +460,19 @@ private:
 
             const int32 wrapIndex = other._capacity - other._head;
 
-            CollectionsUtils::MoveLinearContent<T>(
-                DATA_OF(const T, other._allocData) + other._head,
+            BulkOperations::MoveLinearContent<T>(
+                DATA_OF(T, other._allocData) + other._head,
                 DATA_OF(T, _allocData),
                 wrapIndex
             );
 
-            CollectionsUtils::MoveLinearContent<T>(
-                DATA_OF(const T, other._allocData),
+            BulkOperations::MoveLinearContent<T>(
+                DATA_OF(T, other._allocData),
                 DATA_OF(T, _allocData) + wrapIndex,
                 other._tail
             );
+
+            other.Reset();
         }
     }
 
@@ -483,9 +499,9 @@ private:
             _head        = 0;
             _tail        = other._countCached;
 
-            CollectionsUtils::CopyLinearContent<T>(
+            BulkOperations::CopyLinearContent<T>(
                 DATA_OF(const T, other._allocData) + other._head,
-                DATA_OF(T, _allocData),
+                DATA_OF(T, this->_allocData),
                 other._countCached
             );
         }
@@ -500,15 +516,15 @@ private:
 
             const int32 wrapIndex = other._capacity - other._head;
 
-            CollectionsUtils::CopyLinearContent<T>(
+            BulkOperations::CopyLinearContent<T>(
                 DATA_OF(const T, other._allocData) + other._head,
-                DATA_OF(T, _allocData),
+                DATA_OF(T, this->_allocData),
                 wrapIndex
             );
 
-            CollectionsUtils::CopyLinearContent<T>(
+            BulkOperations::CopyLinearContent<T>(
                 DATA_OF(const T, other._allocData),
-                DATA_OF(T, _allocData) + wrapIndex,
+                DATA_OF(T, this->_allocData) + wrapIndex,
                 other._tail
             );
         }
