@@ -32,14 +32,14 @@ public:
 
     /// <summary> Checks if the array has an active allocation. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto IsAllocated() const noexcept -> bool
+    constexpr bool IsAllocated() const noexcept
     {
         return _capacity > 0;
     }
 
     /// <summary> Number of elements that can be stored without invoking the allocator. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto Capacity() const noexcept -> int32
+    constexpr int32 Capacity() const noexcept
     {
         return _capacity;
     }
@@ -49,21 +49,21 @@ public:
 
     /// <summary> Checks if the array has any elements. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto IsEmpty() const noexcept -> bool
+    constexpr bool IsEmpty() const noexcept
     {
         return _count == 0;
     }
 
     /// <summary> Number of currently stored elements. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto Count() const noexcept -> int32
+    constexpr int32 Count() const noexcept
     {
         return _count;
     }
 
     /// <summary> Number of elements that can be added without invoking the allocator. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto Slack() const noexcept -> int32
+    constexpr int32 Slack() const noexcept
     {
         return _capacity - _count;
     }
@@ -163,16 +163,16 @@ public:
     // Element Access
 
     /// <summary> Accesses the element at the given index. </summary>
-    FORCE_INLINE NODISCARD
-    auto operator[](const int32 index) -> T&
+    FORCE_INLINE
+    T& operator[](const int32 index)
     {
         ASSERT_INDEX(index >= 0 && index < _count);
         return DATA_OF(T, _allocData)[index];
     }
 
     /// <summary> Accesses the element at the given index. </summary>
-    FORCE_INLINE NODISCARD
-    auto operator[](const int32 index) const -> const T&
+    FORCE_INLINE
+    const T& operator[](const int32 index) const
     {
         ASSERT_INDEX(index >= 0 && index < _count);
         return DATA_OF(const T, _allocData)[index];
@@ -187,7 +187,7 @@ public:
     /// <param name="element"> Element to add. </param>
     template<typename U>
     FORCE_INLINE
-    auto Add(U&& element) -> T&
+    T& Add(U&& element)
     {
         if (_count == _capacity)
             Reserve(_capacity + 1);
@@ -205,7 +205,7 @@ public:
     /// <param name="args"> Arguments to forward to the constructor. </param>
     template<typename... Args>
     FORCE_INLINE
-    auto Emplace(Args&&... args) -> T&
+    T& Emplace(Args&&... args)
     {
         if (_count == _capacity)
             Reserve(_capacity + 1);
@@ -228,7 +228,7 @@ public:
     /// <returns> Reference to the added element. </returns>
     template<typename U>
     FORCE_INLINE
-    auto Insert(const int32 index, U&& element) -> T&
+    T& Insert(const int32 index, U&& element)
     {
         ASSERT_INDEX(index >= 0 && index <= _count);  // Allow index == _count for appending
 
@@ -269,7 +269,7 @@ public:
     /// </remarks>
     template<typename U>
     FORCE_INLINE
-    auto InsertStable(const int32 index, U&& element) -> T&
+    T& InsertStable(const int32 index, U&& element)
     {
         ASSERT_INDEX(index >= 0 && index <= _count);
 
@@ -295,7 +295,7 @@ public:
     /// </summary>
     /// <param name="index"> Index of the element to remove. It must be in the range [0, Count). </param>
     FORCE_INLINE
-    auto RemoveAt(const int32 index) -> void
+    void RemoveAt(const int32 index)
     {
         ASSERT_INDEX(index >= 0 && index < _count);
         T* target = DATA_OF(T, _allocData) + index;
@@ -322,7 +322,7 @@ public:
     /// This operation is significantly slower than basic insertion. It should be used only when the order of the elements matters.
     /// </remarks>
     FORCE_INLINE
-    auto RemoveAtStable(const int32 index) -> void
+    void RemoveAtStable(const int32 index)
     {
         ASSERT_INDEX(index >= 0 && index < _count);
         T* target = DATA_OF(T, _allocData) + index;
@@ -534,21 +534,17 @@ public:
 
         // Access
 
-        FORCE_INLINE NODISCARD
-        auto operator*() -> T& { return (*_array)[_index]; }
+        FORCE_INLINE T& operator*()  { return (*_array)[_index]; }
 
-        FORCE_INLINE NODISCARD
-        auto operator->() -> T* { return &(*_array)[_index]; }
+        FORCE_INLINE T* operator->() { return &(*_array)[_index]; }
 
-        FORCE_INLINE NODISCARD
-        auto operator*() const -> const T& { return (*_array)[_index]; }
+        FORCE_INLINE const T& operator*() const  { return (*_array)[_index]; }
 
-        FORCE_INLINE NODISCARD
-        auto operator->() const -> const T* { return &(*_array)[_index]; }
+        FORCE_INLINE const T* operator->() const { return &(*_array)[_index]; }
 
         /// <summary> Returns the index of the current element. </summary>
         FORCE_INLINE NODISCARD
-        auto Index() const noexcept -> int32
+        int32 Index() const noexcept
         {
             return _index;
         }
@@ -566,7 +562,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         FORCE_INLINE
-        auto operator++() -> MutEnumerator&
+        MutEnumerator& operator++()
         {
             _index += 1;
             return *this;
@@ -575,7 +571,7 @@ public:
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
         FORCE_INLINE
-        auto operator++(int) -> MutEnumerator
+        MutEnumerator operator++(int)
         {
             MutEnumerator copy{ *this };
             _index += 1;
@@ -586,21 +582,21 @@ public:
         // Identity
 
         FORCE_INLINE NODISCARD
-        auto operator==(const MutEnumerator& other) const -> bool
+        bool operator==(const MutEnumerator& other) const
         {
             ASSERT(_array == other._array);
             return _index == other._index;
         }
 
         FORCE_INLINE NODISCARD
-        auto operator!=(const MutEnumerator& other) const -> bool
+        bool operator!=(const MutEnumerator& other) const
         {
             ASSERT(_array == other._array);
             return _index != other._index;
         }
 
         FORCE_INLINE NODISCARD
-        auto operator<(const MutEnumerator& other) const -> bool
+        bool operator<(const MutEnumerator& other) const
         {
             ASSERT(_array == other._array);
             return _index < other._index;
@@ -631,15 +627,15 @@ public:
 
         // Access
 
-        FORCE_INLINE NODISCARD
-        auto operator*() const -> const T& { return (*_array)[_index]; }
+        FORCE_INLINE
+        const T& operator*() const  { return (*_array)[_index]; }
 
-        FORCE_INLINE NODISCARD
-        auto operator->() const -> const T* { return &(*_array)[_index]; }
+        FORCE_INLINE
+        const T* operator->() const { return &(*_array)[_index]; }
 
         /// <summary> Returns the index of the current element. </summary>
         FORCE_INLINE NODISCARD
-        auto Index() const noexcept -> int32
+        int32 Index() const noexcept
         {
             return _index;
         }
@@ -657,7 +653,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         FORCE_INLINE
-        auto operator++() -> ConstEnumerator&
+        ConstEnumerator& operator++()
         {
             _index += 1;
             return *this;
@@ -666,7 +662,7 @@ public:
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
         FORCE_INLINE
-        auto operator++(int) -> ConstEnumerator
+        ConstEnumerator operator++(int)
         {
             ConstEnumerator copy{ *this };
             _index += 1;
@@ -677,21 +673,21 @@ public:
         // Identity
 
         FORCE_INLINE NODISCARD
-        auto operator==(const ConstEnumerator& other) const -> bool
+        bool operator==(const ConstEnumerator& other) const
         {
             ASSERT(_array == other._array);
             return _index == other._index;
         }
 
         FORCE_INLINE NODISCARD
-        auto operator!=(const ConstEnumerator& other) const -> bool
+        bool operator!=(const ConstEnumerator& other) const
         {
             ASSERT(_array == other._array);
             return _index != other._index;
         }
 
         FORCE_INLINE NODISCARD
-        auto operator<(const ConstEnumerator& other) const -> bool
+        bool operator<(const ConstEnumerator& other) const
         {
             ASSERT(_array == other._array);
             return _index < other._index;
@@ -700,14 +696,14 @@ public:
 
     /// <summary> Creates an enumerator for the array. </summary>
     FORCE_INLINE NODISCARD
-    auto Enumerate() -> MutEnumerator
+    MutEnumerator Enumerate()
     {
         return MutEnumerator{ *this };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
     FORCE_INLINE NODISCARD
-    auto Enumerate() const -> ConstEnumerator
+    ConstEnumerator Enumerate() const
     {
         return ConstEnumerator{ *this };
     }
@@ -716,21 +712,21 @@ public:
 
     /// <summary> STL-style begin iterator. </summary>
     FORCE_INLINE NODISCARD
-    auto begin() -> T*
+    T* begin()
     {
         return DATA_OF(T, _allocData);
     }
 
     /// <summary> STL-style begin iterator. </summary>
     FORCE_INLINE NODISCARD
-    auto begin() const -> const T*
+    const T* begin() const
     {
         return DATA_OF(const T, _allocData);
     }
 
     /// <summary> STL-style const begin iterator. </summary>
     FORCE_INLINE NODISCARD
-    auto cbegin() const -> const T*
+    const T* cbegin() const
     {
         return DATA_OF(const T, _allocData);
     }
@@ -738,21 +734,21 @@ public:
 
     /// <summary> STL-style end iterator. </summary>
     FORCE_INLINE NODISCARD
-    auto end() -> T*
+    T* end()
     {
         return DATA_OF(T, _allocData) + _count;
     }
 
     /// <summary> STL-style end iterator. </summary>
     FORCE_INLINE NODISCARD
-    auto end() const -> const T*
+    const T* end() const
     {
         return DATA_OF(const T, _allocData) + _count;
     }
 
     /// <summary> STL-style const end iterator. </summary>
     FORCE_INLINE NODISCARD
-    auto cend() const -> const T*
+    const T* cend() const
     {
         return DATA_OF(const T, _allocData) + _count;
     }
