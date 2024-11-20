@@ -103,7 +103,10 @@ public:
         if (minBitsCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
 
-        const int32 minBlocksCapacity = BlocksForBits(minBitsCapacity);
+        const int32 blocksCount = BlocksForBits(_bitCount);
+        const int32 minBlocksCapacity
+            = CollectionsUtils::GetRequiredCapacity<Block, Alloc, ARRAY_DEFAULT_CAPACITY>(blocksCount);
+
         if (minBlocksCapacity <= _blockCapacity)
             return; // Reserving the same capacity would not increase the capacity.
 
@@ -111,8 +114,10 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData }; // Copy the binding
 
-        const int32 allocatedMemory = newData.Allocate(minBlocksCapacity * BytesPerBlock);
-        const int32 allocatedBlocksCapacity = allocatedMemory / BytesPerBlock;
+        const int32 requiredBlocksCapacity
+            = CollectionsUtils::GetRequiredCapacity<Block, Alloc, ARRAY_DEFAULT_CAPACITY>(minBlocksCapacity);
+        const int32 allocatedBlocksCapacity
+            = CollectionsUtils::AllocateCapacity<Block, Alloc>(newData, requiredBlocksCapacity);
 
         if (_blockCapacity > 0)
         {
@@ -147,7 +152,9 @@ public:
             return;
         }
 
-        const int32 requiredBlocksCapacity = BlocksForBits(_bitCount);
+        const int32 blocksCount = BlocksForBits(_bitCount);
+        const int32 requiredBlocksCapacity
+            = CollectionsUtils::GetRequiredCapacity<Block, Alloc, ARRAY_DEFAULT_CAPACITY>(blocksCount);
 
         if (_blockCapacity <= requiredBlocksCapacity)
             return;
@@ -156,15 +163,19 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData }; // Copy the binding
 
-        const int32 allocatedMemory = newData.Allocate(requiredBlocksCapacity * BytesPerBlock);
-        const int32 allocatedBlocksCapacity = allocatedMemory / BytesPerBlock;
-        ASSERT_MEMORY(allocatedBlocksCapacity >= requiredBlocksCapacity);
+        const int32 allocatedBlocksCapacity
+            = CollectionsUtils::AllocateCapacity<Block, Alloc>(newData, requiredBlocksCapacity);
 
-        CollectionsUtils::MoveLinearContent<Block>(
+        BulkOperations::MoveLinearContent<Block>(
             DATA_OF(Block, _allocData), 
             DATA_OF(Block, newData), 
             BlocksForBits(_bitCount)
         );
+        BulkOperations::DestroyLinearContent<Block>(
+            DATA_OF(Block, _allocData),
+            BlocksForBits(_bitCount)
+        );
+
         _allocData.Free();
 
         _allocData = MOVE(newData);
@@ -389,7 +400,7 @@ private:
 
             _blockCapacity = allocatedMemory / BytesPerBlock;
 
-            CollectionsUtils::MoveLinearContent<Block>(
+            BulkOperations::MoveLinearContent<Block>(
                 DATA_OF(Block, other._allocData),
                 DATA_OF(Block, this->_allocData),
                 requiredBlocks
