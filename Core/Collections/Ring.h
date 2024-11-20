@@ -320,7 +320,25 @@ public:
         return *target;
     }
 
-    /// <summary> Removes the last element from the ring. </summary>
+    /// <summary> Adds an element to the end of the ring. </summary>
+    template<typename... Args>
+    FORCE_INLINE
+    T& EmplaceBack(Args&&... args)
+    {
+        if (_countCached == _capacity)
+            Reserve(_capacity + 1);
+
+        T* target = static_cast<T*>(_allocData.Get()) + _tail;
+
+        new (target) T(FORWARD(Args, args)...);
+        _tail = (_tail + 1) % _capacity;
+        _countCached += 1;
+
+        return *target;
+    }
+
+
+    /// <summary> Adds an element to the beginning of the ring. </summary>
     template<typename U>
     FORCE_INLINE
     T& PushFront(U&& element)
@@ -340,6 +358,24 @@ public:
 
         return *target;
     }
+
+    /// <summary> Adds an element to the beginning of the ring. </summary>
+    template<typename... Args>
+    FORCE_INLINE
+    T& EmplaceFront(Args&&... args)
+    {
+        if (_countCached == _capacity)
+            Reserve(_capacity + 1);
+
+        _head = (_head - 1 + _capacity) % _capacity;
+        T* target = static_cast<T*>(_allocData.Get()) + _head;
+        new (target) T(FORWARD(Args, args)...);
+        _countCached += 1;
+
+        return *target;
+    }
+
+
 
     /// <summary> Removes the last element from the ring. </summary>
     FORCE_INLINE

@@ -135,6 +135,30 @@ TEST(Ring_ElementLifecycle, PushFront)
     LIFECYCLE_TEST_DIFF(2) // Include temporary
 }
 
+TEST(Ring_ElementLifecycle, EmplaceBack)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring;
+        ring.EmplaceBack(69);
+        GTEST_ASSERT_EQ(ring.Count(), 1);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(1) // No temporary
+}
+
+TEST(Ring_ElementLifecycle, EmplaceFront)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring;
+        ring.EmplaceFront(69);
+        GTEST_ASSERT_EQ(ring.Count(), 1);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(1) // No temporary
+}
+
 TEST(Ring_ElementLifecycle, PopBack)
 {
     LIFECYCLE_TEST_INTO
