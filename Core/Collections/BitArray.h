@@ -103,9 +103,7 @@ public:
         if (minBitsCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
 
-        const int32 blocksCount = BlocksForBits(_bitCount);
-        const int32 minBlocksCapacity
-            = CollectionsUtils::GetRequiredCapacity<Block, Alloc, ARRAY_DEFAULT_CAPACITY>(blocksCount);
+        const int32 minBlocksCapacity = BlocksForBits(minBitsCapacity);
 
         if (minBlocksCapacity <= _blockCapacity)
             return; // Reserving the same capacity would not increase the capacity.
@@ -178,7 +176,7 @@ public:
 
         _allocData.Free();
 
-        _allocData = MOVE(newData);
+        _allocData     = MOVE(newData);
         _blockCapacity = allocatedBlocksCapacity;
     }
 
@@ -470,7 +468,7 @@ public:
         : _allocData{ FORWARD(AllocContext, context) }
         , _bitCount{}
     {
-        const int32 requiredBlocks = BlocksForBits(bitCapacity);
+        const int32 requiredBlocks  = BlocksForBits(bitCapacity);
         const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
         _blockCapacity = allocatedMemory / BytesPerBlock;
     }
