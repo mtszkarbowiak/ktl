@@ -277,6 +277,8 @@ public:
     {
         ASSERT_INDEX(index >= 0 && index <= _count);  // Allow index == _count for appending
 
+        // Technically, we could reduce number of moves for relocation.
+        // However, it would complicate the code even more. A task for another day.
         if (_count == _capacity)
             Reserve(_capacity + 1);
 
