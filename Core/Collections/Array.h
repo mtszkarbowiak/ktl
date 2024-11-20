@@ -73,7 +73,7 @@ public:
 
     /// <summary> Ensures that adding items up to the requested capacity will not invoke the allocator. </summary>
     FORCE_INLINE
-    void Reserve(int32 minCapacity)
+    void Reserve(const int32 minCapacity)
     {
         if (minCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
@@ -85,8 +85,10 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData };
 
-        const int32 requiredCapacity  = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(minCapacity);
-        const int32 allocatedCapacity = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, requiredCapacity);
+        const int32 requiredCapacity
+            = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(minCapacity);
+        const int32 allocatedCapacity
+            = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, requiredCapacity);
 
         // Move the content before reassigning the capacity
         if (_capacity > 0)
@@ -96,7 +98,11 @@ public:
                 DATA_OF(T, newData), 
                 _count
             );
-            BulkOperations::DestroyLinearContent<T>(DATA_OF(T, _allocData), _count);
+            BulkOperations::DestroyLinearContent<T>(
+                DATA_OF(T, _allocData), 
+                _count
+            );
+
             _allocData.Free();
         }
 
@@ -142,7 +148,11 @@ public:
             DATA_OF(T, newData), 
             _count
         );
-        BulkOperations::DestroyLinearContent<T>(DATA_OF(T, _allocData), _count);
+        BulkOperations::DestroyLinearContent<T>(
+            DATA_OF(T, _allocData),
+            _count
+        );
+
         _allocData.Free();
 
         _allocData = MOVE(newData);
