@@ -396,10 +396,10 @@ private:
         }
         else if (!other.IsWrapped())
         {
-            _allocData = AllocData{};
-            const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * other._countCached); // Minimal allocation
+            const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
 
-            _capacity    = allocatedMemory / sizeof(T);
+            _allocData   = AllocData{};
+            _capacity    = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
@@ -414,10 +414,10 @@ private:
         }
         else
         {
-            _allocData = AllocData{};
-            const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * other._countCached); // Minimal allocation
+            const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
 
-            _capacity    = allocatedMemory / sizeof(T);
+            _allocData   = AllocData{};
+            _capacity    = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
@@ -453,9 +453,10 @@ private:
         }
         else if (!other.IsWrapped())
         {
-            _allocData = AllocData{};
-            const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * other._countCached); // Minimal allocation
-            _capacity    = allocatedMemory / sizeof(T);
+
+            const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
+            _allocData   = AllocData{};
+            _capacity    = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
@@ -468,9 +469,9 @@ private:
         }
         else
         {
-            _allocData = AllocData{};
-            const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * other._countCached); // Minimal allocation
-            _capacity    = allocatedMemory / sizeof(T);
+            const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
+            _allocData   = AllocData{};
+            _capacity    = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
@@ -527,9 +528,8 @@ public:
         , _tail{}
         , _countCached{}
     {
-        const int32 requiredCapacity = CollectionsUtils::GetAllocCapacity<Alloc, RING_DEFAULT_CAPACITY>(capacity);
-        const int32 allocatedMemory  = _allocData.Allocate(requiredCapacity * sizeof(T));
-        _capacity = allocatedMemory / sizeof(T);
+        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, RING_DEFAULT_CAPACITY>(capacity);
+        _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
     }
 
     /// <summary> Initializes an empty ring with an active allocation of the specified capacity and context. </summary>
@@ -540,9 +540,8 @@ public:
         , _tail{}
         , _countCached{}
     {
-        const int32 requiredCapacity = CollectionsUtils::GetAllocCapacity<Alloc, RING_DEFAULT_CAPACITY>(capacity);
-        const int32 allocatedMemory = _allocData.Allocate(requiredCapacity * sizeof(T));
-        _capacity = allocatedMemory / sizeof(T);
+        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, RING_DEFAULT_CAPACITY>(capacity);
+        _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
     }
 
 

@@ -39,25 +39,39 @@ class CollectionsUtils
 {
 public:
     /// <summary>
-    /// Calculates allocation size for the given number of elements.
-    /// The operation takes into account the size of the element and the limits of the allocator.
+    /// Calculates the minimal legal capacity for given number of elements for the specified allocator.
     /// </summary>
     /// <remarks>
-    /// Remember that this function calculates number of elements, not bytes!
+    /// The allocator accepts only a specific range of capacities.
+    /// This function ensures that the requested capacity is within the valid range.
     /// </remarks>
-    template<typename Alloc, int32 Default>
+    template<typename Element, typename Alloc, int32 Default>
     FORCE_INLINE NODISCARD
-    static auto GetAllocCapacity(const int32 minCapacity) -> int32
+    static auto GetRequiredCapacity(const int32 minCount) -> int32
     {
-        ASSERT_INDEX(minCapacity > 0); // Allocating 0 elements is not allowed.
-        ASSERT_INDEX(minCapacity <= Alloc::MaxCapacity); // Requested capacity is too high for the allocator.
+        constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
+        constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
+        constexpr static int32 DefaultCapped = Math::Clamp(Default, MinElements, MaxElements);
 
-        // First, calculate default capacity but with respect to the allocator limits.
-        constexpr static int32 CappedDefault = Math::Clamp<int32>(
-            Default, Alloc::MinCapacity, Alloc::MaxCapacity
-        );
+        return Math::Max<int32>(minCount, DefaultCapped);
+    }
 
-        return Math::Max<int32>(minCapacity, CappedDefault);
+    template<typename Element, typename Alloc>
+    FORCE_INLINE NODISCARD
+    static auto AllocateCapacity(typename Alloc::Data& data, const int32 capacity) -> int32
+    {
+        constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
+        constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
+
+        ASSERT(capacity >= MinElements); // Requested capacity is too low for the allocator.
+        ASSERT(capacity <= MaxElements); // Requested capacity is too high for the allocator.
+
+        const int32 requestedMemory   = Math::NextPow2(capacity) * sizeof(Element);
+        const int32 allocatedCapacity = data.Allocate(requestedMemory) / sizeof(Element);
+
+        ASSERT(allocatedCapacity >= capacity);
+
+        return allocatedCapacity;
     }
 
 private:
@@ -73,7 +87,6 @@ private:
         for (int32 i = 0; i < count; ++i)
         {
             new (target + i) Element(MOVE(source[i]));
-            source[i].~Element();
         }
     }
 

@@ -85,10 +85,8 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData };
 
-        minCapacity = CollectionsUtils::GetAllocCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(minCapacity);
-
-        const int32 allocatedMemory   = newData.Allocate(sizeof(T) * minCapacity);
-        const int32 allocatedCapacity = allocatedMemory / sizeof(T);
+        const int32 requiredCapacity  = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(minCapacity);
+        const int32 allocatedCapacity = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, requiredCapacity);
 
         // Move the content before reassigning the capacity
         if (_capacity > 0)
@@ -98,6 +96,7 @@ public:
                 DATA_OF(T, newData), 
                 _count
             );
+            CollectionsUtils::DestroyLinearContent<T>(DATA_OF(T, _allocData), _count);
             _allocData.Free();
         }
 
@@ -125,9 +124,8 @@ public:
         }
 
         // Test required capacity against the current capacity.
-        const int32 requiredCapacity = CollectionsUtils::GetAllocCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(
-            _count
-        );
+        const int32 requiredCapacity
+            = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(_count);
 
         if (_capacity <= requiredCapacity)
             return;
@@ -136,15 +134,15 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData }; // Copy the binding
 
-        const int32 allocatedMemory   = newData.Allocate(_count * sizeof(T));
-        const int32 allocatedCapacity = allocatedMemory / sizeof(T);
-        ASSERT_MEMORY(allocatedCapacity >= _count);
+        const int32 allocatedCapacity
+            = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, _count);
 
         CollectionsUtils::MoveLinearContent<T>(
             DATA_OF(T, _allocData), 
             DATA_OF(T, newData), 
             _count
         );
+        CollectionsUtils::DestroyLinearContent<T>(DATA_OF(T, _allocData), _count);
         _allocData.Free();
 
         _allocData = MOVE(newData);
@@ -378,10 +376,10 @@ private:
         }
         else
         {
-            _allocData = AllocData{};
-            const int32 allocatedMemory = _allocData.Allocate(sizeof(T) * other._count); // Minimal allocation
+            const int32 requestedCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
 
-            _capacity = allocatedMemory / sizeof(T);
+            _allocData = AllocData{};
+            _capacity  = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requestedCapacity);
             _count     = other._count;
 
             CollectionsUtils::MoveLinearContent<T>(
@@ -410,10 +408,9 @@ private:
         {
             _allocData = AllocData{};
 
-            const int32 requiredCapacity = CollectionsUtils::GetAllocCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
-            const int32 allocatedMemory  = _allocData.Allocate(requiredCapacity * sizeof(T));
+            const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
 
-            _capacity = allocatedMemory / sizeof(T);
+            _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
             _count    = other._count;
 
             CollectionsUtils::CopyLinearContent<T>(
@@ -458,9 +455,8 @@ public:
         : _allocData{}
         , _count{}
     {
-        const int32 requiredCapacity = CollectionsUtils::GetAllocCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(capacity);
-        const int32 allocatedMemory  = _allocData.Allocate(requiredCapacity * sizeof(T));
-        _capacity = allocatedMemory / sizeof(T);
+        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(capacity);
+        _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
     }
 
     /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
@@ -470,9 +466,8 @@ public:
         : _allocData{ FORWARD(AllocContext, context) }
         , _count{}
     {
-        const int32 requiredCapacity = CollectionsUtils::GetAllocCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(capacity);
-        const int32 allocatedMemory  = _allocData.Allocate(requiredCapacity * sizeof(T));
-        _capacity = allocatedMemory / sizeof(T);
+        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(capacity);
+        _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
     }
 
     
