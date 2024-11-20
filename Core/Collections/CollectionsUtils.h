@@ -47,7 +47,7 @@ public:
     /// </remarks>
     template<typename Element, typename Alloc, int32 Default>
     FORCE_INLINE NODISCARD
-    static auto GetRequiredCapacity(const int32 minCount) -> int32
+        static auto GetRequiredCapacity(const int32 minCount) -> int32
     {
         constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
         constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
@@ -58,7 +58,7 @@ public:
 
     template<typename Element, typename Alloc>
     FORCE_INLINE NODISCARD
-    static auto AllocateCapacity(typename Alloc::Data& data, const int32 capacity) -> int32
+        static auto AllocateCapacity(typename Alloc::Data& data, const int32 capacity) -> int32
     {
         constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
         constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
@@ -66,14 +66,17 @@ public:
         ASSERT(capacity >= MinElements); // Requested capacity is too low for the allocator.
         ASSERT(capacity <= MaxElements); // Requested capacity is too high for the allocator.
 
-        const int32 requestedMemory   = Math::NextPow2(capacity) * sizeof(Element);
+        const int32 requestedMemory = Math::NextPow2(capacity) * sizeof(Element);
         const int32 allocatedCapacity = data.Allocate(requestedMemory) / sizeof(Element);
 
         ASSERT(allocatedCapacity >= capacity);
 
         return allocatedCapacity;
     }
+};
 
+class BulkOperations
+{
 private:
     template<typename Element>
     FORCE_INLINE

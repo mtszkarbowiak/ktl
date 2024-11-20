@@ -91,12 +91,12 @@ public:
         // Move the content before reassigning the capacity
         if (_capacity > 0)
         {
-            CollectionsUtils::MoveLinearContent<T>(
+            BulkOperations::MoveLinearContent<T>(
                 DATA_OF(T, _allocData), 
                 DATA_OF(T, newData), 
                 _count
             );
-            CollectionsUtils::DestroyLinearContent<T>(DATA_OF(T, _allocData), _count);
+            BulkOperations::DestroyLinearContent<T>(DATA_OF(T, _allocData), _count);
             _allocData.Free();
         }
 
@@ -137,12 +137,12 @@ public:
         const int32 allocatedCapacity
             = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, _count);
 
-        CollectionsUtils::MoveLinearContent<T>(
+        BulkOperations::MoveLinearContent<T>(
             DATA_OF(T, _allocData), 
             DATA_OF(T, newData), 
             _count
         );
-        CollectionsUtils::DestroyLinearContent<T>(DATA_OF(T, _allocData), _count);
+        BulkOperations::DestroyLinearContent<T>(DATA_OF(T, _allocData), _count);
         _allocData.Free();
 
         _allocData = MOVE(newData);
@@ -335,7 +335,7 @@ public:
         if (_count == 0)
             return;
 
-        CollectionsUtils::DestroyLinearContent<T>(DATA_OF(T, _allocData), _count);
+        BulkOperations::DestroyLinearContent<T>(DATA_OF(T, _allocData), _count);
         _count = 0;
     }
 
@@ -382,7 +382,7 @@ private:
             _capacity  = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requestedCapacity);
             _count     = other._count;
 
-            CollectionsUtils::MoveLinearContent<T>(
+            BulkOperations::MoveLinearContent<T>(
                 DATA_OF(T, other._allocData), 
                 DATA_OF(T, this->_allocData), 
                 _count

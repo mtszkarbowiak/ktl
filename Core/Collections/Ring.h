@@ -340,12 +340,12 @@ public:
         const bool isWrapped = _head > _tail;
         if (isWrapped)
         {
-            CollectionsUtils::DestroyLinearContent<T>(DATA_OF(T, _allocData),  _tail);
-            CollectionsUtils::DestroyLinearContent<T>(DATA_OF(T, _allocData) + _head, _capacity);
+            BulkOperations::DestroyLinearContent<T>(DATA_OF(T, _allocData),  _tail);
+            BulkOperations::DestroyLinearContent<T>(DATA_OF(T, _allocData) + _head, _capacity);
         }
         else
         {
-            CollectionsUtils::DestroyLinearContent<T>(DATA_OF(T, _allocData) + _head, _countCached);
+            BulkOperations::DestroyLinearContent<T>(DATA_OF(T, _allocData) + _head, _countCached);
         }
 
         _head        = 0;

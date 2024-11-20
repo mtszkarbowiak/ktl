@@ -117,7 +117,7 @@ public:
         if (_blockCapacity > 0)
         {
             const int32 oldBlocksCount = BlocksForBits(_bitCount);
-            CollectionsUtils::MoveLinearContent<Block>(
+            BulkOperations::MoveLinearContent<Block>(
                 DATA_OF(Block, _allocData),
                 DATA_OF(Block, newData),
                 oldBlocksCount
@@ -340,7 +340,7 @@ public:
             return;
 
         const int32 blocksCount = BlocksForBits(_bitCount);
-        CollectionsUtils::DestroyLinearContent<Block>(DATA_OF(Block, _allocData), blocksCount);
+        BulkOperations::DestroyLinearContent<Block>(DATA_OF(Block, _allocData), blocksCount);
         _bitCount = 0;
     }
 
@@ -412,7 +412,7 @@ private:
             const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
             _blockCapacity = allocatedMemory / BytesPerBlock;
             _bitCount = other._bitCount;
-            CollectionsUtils::CopyLinearContent<Block>(
+            BulkOperations::CopyLinearContent<Block>(
                 DATA_OF(const Block, other._allocData),
                 DATA_OF(Block, this->_allocData),
                 requiredBlocks
