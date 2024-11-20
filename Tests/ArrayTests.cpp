@@ -209,16 +209,16 @@ TEST(Array_ElementLifecycle, MoveConstruct_NoDragAlloc)
 
     LIFECYCLE_TEST_INTO
     {
-        using TheAlloc = FixedAlloc<sizeof(TestTracker) * 32>;
+        using NoDragAlloc = FixedAlloc<sizeof(TestTracker) * 32>;
 
-        Array<TestTracker, TheAlloc> movedArray;
+        Array<TestTracker, NoDragAlloc> movedArray;
 
         // Init: n constructions
         for (int32 i = 0; i < ElementCount; ++i)
             movedArray.Emplace(i);
 
         // Move Construct (no-drag alloc): n + n = 2n constructions
-        Array<TestTracker, TheAlloc> targetArray{ MOVE(movedArray) };
+        Array<TestTracker, NoDragAlloc> targetArray{ MOVE(movedArray) };
 
         GTEST_ASSERT_EQ(targetArray.Count(), ElementCount);
     }
@@ -232,15 +232,15 @@ TEST(Array_ElementLifecycle, MoveAssignment_NoDragAlloc)
 
     LIFECYCLE_TEST_INTO
     {
-        using TheAlloc = FixedAlloc<sizeof(TestTracker) * 32>;
+        using NoDragAlloc = FixedAlloc<sizeof(TestTracker) * 32>;
 
-        Array<TestTracker, TheAlloc> movedArray;
+        Array<TestTracker, NoDragAlloc> movedArray;
 
         // Init: n constructions
         for (int32 i = 0; i < ElementCount; ++i)
             movedArray.Emplace(i);
 
-        Array<TestTracker, TheAlloc> targetArray;
+        Array<TestTracker, NoDragAlloc> targetArray;
         // Dummy init: n + 1 = (n + 1) constructions
         targetArray.Add(69);
 
@@ -252,3 +252,86 @@ TEST(Array_ElementLifecycle, MoveAssignment_NoDragAlloc)
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(2 * ElementCount + 1)
 }
+
+TEST(Array_ElementLifecycle, MoveConstruct_DragAlloc)
+{
+    constexpr int32 ElementCount = 12;
+
+    LIFECYCLE_TEST_INTO
+    {
+        using NoDragAlloc = HeapAlloc;
+
+        Array<TestTracker, NoDragAlloc> movedArray{ ElementCount };
+
+        // Init: n constructions
+        for (int32 i = 0; i < ElementCount; ++i)
+            movedArray.Emplace(i);
+
+        // Move Construct (drag alloc): n + 0 = n constructions
+        Array<TestTracker, NoDragAlloc> targetArray{ MOVE(movedArray) };
+
+        GTEST_ASSERT_EQ(targetArray.Count(), ElementCount);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(1 * ElementCount)
+}
+
+TEST(Array_ElementLifecycle, MoveAssignment_DragAlloc)
+{
+    constexpr int32 ElementCount = 12;
+
+    LIFECYCLE_TEST_INTO
+    {
+        using NoDragAlloc = HeapAlloc;
+
+        Array<TestTracker, NoDragAlloc> movedArray{ ElementCount };
+
+        // Init: n constructions
+        for (int32 i = 0; i < ElementCount; ++i)
+            movedArray.Emplace(i);
+
+        Array<TestTracker, NoDragAlloc> targetArray;
+        // Dummy init: n + 1 = (n + 1) constructions
+        targetArray.Add(69);
+
+        // Move Assignment (no-drag alloc): n + 1 = n + 1 constructions
+        targetArray = MOVE(movedArray);
+
+        GTEST_ASSERT_EQ(targetArray.Count(), ElementCount);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(1 * ElementCount + 1)
+}
+
+
+// Element Access
+
+TEST(Array_ElementAccess, Index)
+{
+    constexpr int32 ElementCount = 12;
+    Array<int32> array;
+    for (int32 i = 0; i < ElementCount; ++i)
+        array.Add(i);
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(array[i], i);
+}
+
+TEST(Array_ElementAccess, ConstIndex)
+{
+    constexpr int32 ElementCount = 12;
+
+    const Array<int32> array = [&ElementCount]() -> Array<int32>
+    {
+        Array<int32> temp;
+        for (int32 i = 0; i < ElementCount; ++i)
+            temp.Add(i);
+        return temp;
+    }();
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(array[i], i);
+}
+
+
+// Element Manipulation
+
