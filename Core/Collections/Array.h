@@ -162,6 +162,27 @@ public:
 
     // Element Access
 
+    /// <summary>
+    /// Accesses the first element of the array.
+    /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
+    /// </summary>
+    FORCE_INLINE NODISCARD
+    T* Data()
+    {
+        return DATA_OF(T, _allocData);
+    }
+
+    /// <summary>
+    /// Accesses the first element of the array.
+    /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
+    /// </summary>
+    FORCE_INLINE NODISCARD
+    const T* Data() const
+    {
+        return DATA_OF(const T, _allocData);
+    }
+
+
     /// <summary> Accesses the element at the given index. </summary>
     FORCE_INLINE
     T& operator[](const int32 index)
