@@ -166,9 +166,11 @@ TEST(Array_ElementLifecycle, RemoveAt)
 TEST(Array_ElementAccess, Index)
 {
     constexpr int32 ElementCount = 12;
+
     Array<int32> array;
     for (int32 i = 0; i < ElementCount; ++i)
         array.Add(i);
+
     for (int32 i = 0; i < ElementCount; ++i)
         GTEST_ASSERT_EQ(array[i], i);
 }
@@ -178,12 +180,12 @@ TEST(Array_ElementAccess, ConstIndex)
     constexpr int32 ElementCount = 12;
 
     const Array<int32> array = [&ElementCount]() -> Array<int32>
-        {
-            Array<int32> temp;
-            for (int32 i = 0; i < ElementCount; ++i)
-                temp.Add(i);
-            return temp;
-        }();
+    {
+        Array<int32> temp;
+        for (int32 i = 0; i < ElementCount; ++i)
+            temp.Add(i);
+        return temp;
+    }();
 
     for (int32 i = 0; i < ElementCount; ++i)
         GTEST_ASSERT_EQ(array[i], i);
@@ -192,7 +194,7 @@ TEST(Array_ElementAccess, ConstIndex)
 
 // Element Relocation
 
-TEST(Array_ElementLifecycle, Reserve)
+TEST(Array_Relocation, Reserve)
 {
     constexpr int32 ElementCount = 12;
 
@@ -201,23 +203,25 @@ TEST(Array_ElementLifecycle, Reserve)
         Array<TestTracker> array{ ElementCount };
         GTEST_ASSERT_GE(array.Capacity(), ElementCount);
 
-        // Init: n constructions
+        // Init: n constructions (emplace, no temporary)
         for (int32 i = 0; i < ElementCount; ++i)
             array.Emplace(i);
 
-        // Relocation: n + n = 2n constructions
+        // Reloc: n constructions
         array.Reserve(ElementCount * 3);
         // Note: This reservation forces reallocation. Element are obligated to be moved.
 
-        // 2n Init: 2n + n = 3n constructions
+        // Init: n constructions (emplace, no temporary)
         for (int32 i = ElementCount; i < ElementCount * 2; ++i)
             array.Emplace(i);
+
+        // Total: 3n constructions
     }
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Array_ElementLifecycle, ShrinkToFit)
+TEST(Array_Relocation, ShrinkToFit)
 {
     constexpr int32 InitCapacity = 128;
     constexpr int32 ElementCount = 12;
@@ -234,14 +238,16 @@ TEST(Array_ElementLifecycle, ShrinkToFit)
         GTEST_ASSERT_GE(array.Capacity(), InitCapacity);
         GTEST_ASSERT_EQ(array.Count(),    ElementCount);
 
-        // Shrink: n + n = 2n constructions
+        // Reloc: n constructions
         array.ShrinkToFit();
+
+        // Total: 2n constructions
     }
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(2 * ElementCount)
 }
 
-TEST(Array_ElementLifecycle, MoveConstruct_NoDragAlloc)
+TEST(Array_Relocation, MoveConstruct_NoDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -255,16 +261,17 @@ TEST(Array_ElementLifecycle, MoveConstruct_NoDragAlloc)
         for (int32 i = 0; i < ElementCount; ++i)
             movedArray.Emplace(i);
 
-        // Move Construct (no-drag alloc): n + n = 2n constructions
+        // Reloc: n constructions
         Array<TestTracker, NoDragAlloc> targetArray{ MOVE(movedArray) };
-
         GTEST_ASSERT_EQ(targetArray.Count(), ElementCount);
+
+        // Total: 2n constructions
     }
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(2 * ElementCount)
 }
 
-TEST(Array_ElementLifecycle, MoveAssignment_NoDragAlloc)
+TEST(Array_Relocation, MoveAssignment_NoDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -279,19 +286,21 @@ TEST(Array_ElementLifecycle, MoveAssignment_NoDragAlloc)
             movedArray.Emplace(i);
 
         Array<TestTracker, NoDragAlloc> targetArray;
-        // Dummy init: n + 1 = (n + 1) constructions
-        targetArray.Add(69);
 
-        // Move Assignment (no-drag alloc): (n + 1) + n = 2n + 1 constructions
+        // Init: 1 construction
+        targetArray.Add(69); // To be overriden
+
+        // Reloc: n constructions
         targetArray = MOVE(movedArray);
-
         GTEST_ASSERT_EQ(targetArray.Count(), ElementCount);
+
+        // Total: 2n + 1 constructions
     }
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(2 * ElementCount + 1)
 }
 
-TEST(Array_ElementLifecycle, MoveConstruct_DragAlloc)
+TEST(Array_Relocation, MoveConstruct_DragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -305,16 +314,17 @@ TEST(Array_ElementLifecycle, MoveConstruct_DragAlloc)
         for (int32 i = 0; i < ElementCount; ++i)
             movedArray.Emplace(i);
 
-        // Move Construct (drag alloc): n + 0 = n constructions
+        // Reloc: 0 constructions
         Array<TestTracker, NoDragAlloc> targetArray{ MOVE(movedArray) };
-
         GTEST_ASSERT_EQ(targetArray.Count(), ElementCount);
+
+        // Total: n constructions
     }
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(1 * ElementCount)
 }
 
-TEST(Array_ElementLifecycle, MoveAssignment_DragAlloc)
+TEST(Array_Relocation, MoveAssignment_DragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -329,17 +339,20 @@ TEST(Array_ElementLifecycle, MoveAssignment_DragAlloc)
             movedArray.Emplace(i);
 
         Array<TestTracker, NoDragAlloc> targetArray;
-        // Dummy init: n + 1 = (n + 1) constructions
-        targetArray.Add(69);
 
-        // Move Assignment (no-drag alloc): n + 1 = n + 1 constructions
+        // Init: 1 construction
+        targetArray.Add(69); // To be overriden
+
+        // Reloc: 0 constructions
         targetArray = MOVE(movedArray);
-
         GTEST_ASSERT_EQ(targetArray.Count(), ElementCount);
+
+        // Total: n + 1 constructions
     }
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(1 * ElementCount + 1)
 }
+
 
 // Element Manipulation
 
