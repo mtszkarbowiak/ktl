@@ -191,7 +191,166 @@ TEST(Ring_ElementAccess, ConstIndex)
 
 // Element Relocation
 
-//TODO
+TEST(Ring_Relocation, Reserve)
+{
+    constexpr int32 ElementCount = 12;
+
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring{ ElementCount };
+        const int32 initCapacity = ring.Capacity();
+
+        // Init: 2n constructions (1 for the ring, 1 for the temporary)
+        for (int32 i = 0; i < ElementCount; ++i)
+            ring.PushBack(TestTracker{ i });
+
+        // Reloc: n constructions
+        ring.Reserve(RING_DEFAULT_CAPACITY * 2);
+
+        const int32 newCapacity = ring.Capacity();
+        GTEST_ASSERT_GT(newCapacity, initCapacity); // Relocation must occur
+
+        // Init: 2n constructions (1 for the ring, 1 for the temporary)
+        for (int32 i = 0; i < ElementCount; ++i)
+            ring.PushBack(TestTracker{ i });
+
+        // Total: 5n constructions
+    }
+
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(5 * ElementCount)
+}
+
+TEST(Ring_Relocation, ShrinkToFit)
+{
+    constexpr int32 ElementCount = 12;
+
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring{ RING_DEFAULT_CAPACITY * 2 };
+        const int32 initCapacity = ring.Capacity();
+
+        // Init: 2n constructions (1 for the ring, 1 for the temporary)
+        for (int32 i = 0; i < ElementCount; ++i)
+            ring.PushBack(TestTracker{ i });
+
+        // Reloc: n constructions
+        ring.ShrinkToFit();
+
+        const int32 newCapacity = ring.Capacity();
+        GTEST_ASSERT_LT(newCapacity, initCapacity); // Relocation must occur
+        // Total: 3n constructions
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(3 * ElementCount)
+}
+
+TEST(Ring_Relocation, MoveConstruct_NoDragAlloc)
+{
+    const int32 ElementCount = 12;
+
+    LIFECYCLE_TEST_INTO
+    {
+        using NoDragAlloc = FixedAlloc<sizeof(TestTracker) * 32>;
+
+        Ring<TestTracker, NoDragAlloc> movedRing;
+
+        // Init: 2n constructions (1 for the ring, 1 for the temporary)
+        for (int32 i = 0; i < ElementCount; ++i)
+            movedRing.PushBack(TestTracker{ i });
+
+        // Reloc: n constructions
+        Ring<TestTracker, NoDragAlloc> targetRing{ MOVE(movedRing) };
+        GTEST_ASSERT_EQ(targetRing.Count(), ElementCount);
+
+        // Total: 3n constructions
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(3 * ElementCount)
+}
+
+TEST(Ring_Relocation, MoveAssignment_NoDragAlloc)
+{
+    constexpr int32 ElementCount = 12;
+
+    LIFECYCLE_TEST_INTO
+    {
+        using NoDragAlloc = FixedAlloc<sizeof(TestTracker) * 32>;
+
+        Ring<TestTracker, NoDragAlloc> movedRing;
+
+        // Init: 2n constructions (1 for the ring, 1 for the temporary)
+        for (int32 i = 0; i < ElementCount; ++i)
+            movedRing.PushBack(TestTracker{ i });
+
+        Ring<TestTracker, NoDragAlloc> targetRing;
+
+        // Init: 1 construction (1 for the ring)
+        targetRing.PushBack(TestTracker{ 69 });// To be overriden
+
+        // Reloc: n constructions
+        targetRing = MOVE(movedRing);
+        GTEST_ASSERT_EQ(targetRing.Count(), ElementCount);
+
+        // Total: 3n + 2 constructions
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(3 * ElementCount + 2)
+}
+
+TEST(Ring_Relocation, MoveConstruct_DragAlloc)
+{
+    const int32 ElementCount = 12;
+
+    LIFECYCLE_TEST_INTO
+    {
+        using DragAlloc = HeapAlloc;
+
+        Ring<TestTracker, DragAlloc> movedRing{ ElementCount };
+
+        // Init: 2n constructions (1 for the ring, 1 for the temporary)
+        for (int32 i = 0; i < ElementCount; ++i)
+            movedRing.PushBack(TestTracker{ i });
+
+        // Reloc: 0 constructions
+        Ring<TestTracker, DragAlloc> targetRing{ MOVE(movedRing) };
+        GTEST_ASSERT_EQ(targetRing.Count(), ElementCount);
+
+        // Total: 2n constructions
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(2 * ElementCount)
+}
+
+TEST(Ring_Relocation, MoveAssignment_DragAlloc)
+{
+    const int32 ElementCount = 12;
+
+    LIFECYCLE_TEST_INTO
+    {
+        using DragAlloc = HeapAlloc;
+
+        Ring<TestTracker, DragAlloc> movedRing{ ElementCount };
+
+        // Init: 2n constructions (1 for the ring, 1 for the temporary)
+        for (int32 i = 0; i < ElementCount; ++i)
+            movedRing.PushBack(TestTracker{ i });
+
+        Ring<TestTracker, DragAlloc> targetRing;
+
+        // Init: 2 construction
+        targetRing.PushBack(TestTracker{ 69 }); // To be overriden
+
+        // Reloc: 0 constructions
+        targetRing = MOVE(movedRing);
+        GTEST_ASSERT_EQ(targetRing.Count(), ElementCount);
+
+        // Total: 2n + 2 constructions
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(2 * ElementCount + 2)
+}
+
 
 // Element Manipulation
 
