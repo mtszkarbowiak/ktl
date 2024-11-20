@@ -288,7 +288,7 @@ TEST(Array_Relocation, MoveAssignment_NoDragAlloc)
         Array<TestTracker, NoDragAlloc> targetArray;
 
         // Init: 1 construction
-        targetArray.Add(69); // To be overriden
+        targetArray.Emplace(69); // To be overriden
 
         // Reloc: n constructions
         targetArray = MOVE(movedArray);
@@ -341,7 +341,7 @@ TEST(Array_Relocation, MoveAssignment_DragAlloc)
         Array<TestTracker, NoDragAlloc> targetArray;
 
         // Init: 1 construction
-        targetArray.Add(69); // To be overriden
+        targetArray.Emplace(69); // To be overriden
 
         // Reloc: 0 constructions
         targetArray = MOVE(movedArray);

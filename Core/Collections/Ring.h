@@ -301,8 +301,13 @@ public:
     /// <summary> Adds an element to the end of the ring. </summary>
     template<typename U>
     FORCE_INLINE
-    U& PushBack(U&& element)
+    T& PushBack(U&& element)
     {
+        static_assert(
+            std::is_same<typename std::decay<U>::type, T>::value,
+            "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
+        );
+
         if (_countCached == _capacity)
             Reserve(_capacity + 1);
 
@@ -318,8 +323,13 @@ public:
     /// <summary> Removes the last element from the ring. </summary>
     template<typename U>
     FORCE_INLINE
-    U& PushFront(U&& element)
+    T& PushFront(U&& element)
     {
+        static_assert(
+            std::is_same<typename std::decay<U>::type, T>::value,
+            "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
+        );
+
         if (_countCached == _capacity)
             Reserve(_capacity + 1);
 

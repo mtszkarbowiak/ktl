@@ -189,6 +189,11 @@ public:
     FORCE_INLINE
     T& Add(U&& element)
     {
+        static_assert(
+            std::is_same<typename std::decay<U>::type, T>::value,
+            "Add requires explicit usage of element type. If not intended, consider using emplacement."
+        );
+
         if (_count == _capacity)
             Reserve(_capacity + 1);
 
