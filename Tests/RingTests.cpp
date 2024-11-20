@@ -354,4 +354,79 @@ TEST(Ring_Relocation, MoveAssignment_DragAlloc)
 
 // Element Manipulation
 
-//TODO
+TEST(Array_ElementManipulation, PushBack_PopBack)
+{
+    const int32 ElementCount = 100;
+
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring;
+
+        for (int32 i = 0; i < ElementCount; ++i)
+            ring.PushBack(TestTracker{ i });
+        GTEST_ASSERT_EQ(ring.Count(), ElementCount);
+
+        for (int32 i = 0; i < ElementCount; ++i)
+            ring.PopBack();
+        GTEST_ASSERT_EQ(ring.IsEmpty(), 0);
+    }
+    LIFECYCLE_TEST_OUT
+}
+
+TEST(Array_ElementManipulation, PushBack_PopFront)
+{
+    const int32 ElementCount = 100;
+
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring;
+
+        for (int32 i = 0; i < ElementCount; ++i)
+            ring.PushBack(TestTracker{ i });
+        GTEST_ASSERT_EQ(ring.Count(), ElementCount);
+
+        for (int32 i = 0; i < ElementCount; ++i)
+            ring.PopFront();
+        GTEST_ASSERT_EQ(ring.IsEmpty(), 0);
+    }
+    LIFECYCLE_TEST_OUT
+}
+
+TEST(Array_ElementManipulation, PushFront_PopBack)
+{
+    const int32 ElementCount = 100;
+
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring;
+
+        for (int32 i = 0; i < ElementCount; ++i)
+            ring.PushFront(TestTracker{ i });
+        GTEST_ASSERT_EQ(ring.Count(), ElementCount);
+
+        for (int32 i = 0; i < ElementCount; ++i)
+            ring.PopBack();
+        GTEST_ASSERT_EQ(ring.IsEmpty(), 0);
+    }
+    LIFECYCLE_TEST_OUT
+}
+
+TEST(Array_ElementManipulation, PushFront_PopFront)
+{
+    const int32 ElementCount = 100;
+
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> ring;
+
+        for (int32 i = 0; i < ElementCount; ++i)
+            ring.PushFront(TestTracker{ i });
+        GTEST_ASSERT_EQ(ring.Count(), ElementCount);
+
+        for (int32 i = 0; i < ElementCount; ++i)
+            ring.PopFront();
+        GTEST_ASSERT_EQ(ring.IsEmpty(), 0);
+    }
+    LIFECYCLE_TEST_OUT
+}
+
