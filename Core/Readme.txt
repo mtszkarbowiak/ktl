@@ -30,3 +30,9 @@ II. Rules
     2.1. Collections may assume that every object is moveable but not necessarily copyable.
     2.2. Collections must expose API for reserving or reducing capacity.
     2.3. Collections should treat C-style types with fast memory operations.
+
+
+III. Workflow
+
+1. Test
+    1.1. Tests must be ordered by complexity.

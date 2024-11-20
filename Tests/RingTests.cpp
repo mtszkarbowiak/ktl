@@ -42,7 +42,6 @@ TEST(Ring_Capacity, Reserve_OnRequest)
     GTEST_ASSERT_FALSE(ring.IsAllocated());
 }
 
-
 TEST(Ring_Capacity, Reserve_OnAdd)
 {
     constexpr int32 MinReservedCapacity = 128;
@@ -108,3 +107,20 @@ TEST(Ring_Capacity, ShrinkToFit_Reloc)
     GTEST_ASSERT_GE  (array.Capacity(), TestCapacity2);
     GTEST_ASSERT_LE  (array.Capacity(), TestCapacity1 / 2);
 }
+
+
+// Element Lifecycle Management
+
+//TODO
+
+// Element Access
+
+//TODO
+
+// Element Relocation
+
+//TODO
+
+// Element Manipulation
+
+//TODO

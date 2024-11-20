@@ -118,12 +118,10 @@ TEST(Array_ElementLifecycle, Add)
         Array<TestTracker> array;
         array.Add(TestTracker{ 69 });
         GTEST_ASSERT_EQ(array.Count(), 1);
-        GTEST_ASSERT_EQ(array[0].Value, 69);
     }
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(2) // Include temporary
 }
-
 
 TEST(Array_ElementLifecycle, Emplace)
 {
@@ -132,7 +130,18 @@ TEST(Array_ElementLifecycle, Emplace)
         Array<TestTracker> array;
         array.Emplace(69);
         GTEST_ASSERT_EQ(array.Count(), 1);
-        GTEST_ASSERT_EQ(array[0].Value, 69);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(1)
+}
+
+TEST(Array_ElementLifecycle, InsertAt)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Array<TestTracker> array;
+        array.InsertAt(0, 69);
+        GTEST_ASSERT_EQ(array.Count(), 1);
     }
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(1)
@@ -149,6 +158,35 @@ TEST(Array_ElementLifecycle, RemoveAt)
     }
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(1)
+}
+
+
+// Element Access
+
+TEST(Array_ElementAccess, Index)
+{
+    constexpr int32 ElementCount = 12;
+    Array<int32> array;
+    for (int32 i = 0; i < ElementCount; ++i)
+        array.Add(i);
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(array[i], i);
+}
+
+TEST(Array_ElementAccess, ConstIndex)
+{
+    constexpr int32 ElementCount = 12;
+
+    const Array<int32> array = [&ElementCount]() -> Array<int32>
+        {
+            Array<int32> temp;
+            for (int32 i = 0; i < ElementCount; ++i)
+                temp.Add(i);
+            return temp;
+        }();
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(array[i], i);
 }
 
 
@@ -302,36 +340,6 @@ TEST(Array_ElementLifecycle, MoveAssignment_DragAlloc)
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(1 * ElementCount + 1)
 }
-
-
-// Element Access
-
-TEST(Array_ElementAccess, Index)
-{
-    constexpr int32 ElementCount = 12;
-    Array<int32> array;
-    for (int32 i = 0; i < ElementCount; ++i)
-        array.Add(i);
-    for (int32 i = 0; i < ElementCount; ++i)
-        GTEST_ASSERT_EQ(array[i], i);
-}
-
-TEST(Array_ElementAccess, ConstIndex)
-{
-    constexpr int32 ElementCount = 12;
-
-    const Array<int32> array = [&ElementCount]() -> Array<int32>
-    {
-        Array<int32> temp;
-        for (int32 i = 0; i < ElementCount; ++i)
-            temp.Add(i);
-        return temp;
-    }();
-
-    for (int32 i = 0; i < ElementCount; ++i)
-        GTEST_ASSERT_EQ(array[i], i);
-}
-
 
 // Element Manipulation
 
