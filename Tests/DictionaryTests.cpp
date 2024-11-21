@@ -4,16 +4,6 @@
 
 #include "Collections/Dictionary.h"
 
-
-namespace
-{
-    int32 GetHash(const int32& key)
-    {
-        return key;
-    }
-}
-
-
 TEST(DictionaryTests, Construct)
 {
     Dictionary<int32, int32, HeapAlloc, Probing::Linear> dict;

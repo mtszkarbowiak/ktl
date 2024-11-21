@@ -4,8 +4,9 @@
 
 #include "Allocators/HeapAlloc.h"
 #include "Collections/CollectionsUtils.h"
-#include "Math/Probing.h"
 #include "Language/TypeInfo.h"
+#include "Math/HashingFunctions.h"
+#include "Math/Probing.h"
 
 template<
     typename K,
