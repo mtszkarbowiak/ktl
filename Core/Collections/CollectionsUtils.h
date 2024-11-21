@@ -59,8 +59,20 @@ public:
     /// </summary>
     enum class BucketState
     {
+        /// <summary>
+        /// The bucket is empty and can be used.
+        /// </summary>
         Empty,
+
+        /// <summary>
+        /// The bucket is occupied and contains a valid key-value pair.
+        /// </summary>
         Occupied,
+
+        /// <summary>
+        /// The bucket was occupied, but the key-value pair was deleted.
+        /// </summary>
+        /// <remarks> This value works as a tombstone. </remarks>
         Deleted,
     };
 
@@ -193,7 +205,7 @@ private:
 
 public:
     /// <summary>
-    /// Moves the content from the source allocation to the target allocation.
+    /// Moves to construct the content from the source allocation to the target allocation.
     /// If necessary, objects lifetimes are managed. Otherwise, fast memory operations are used.
     /// </summary>
     template<typename Element>
@@ -210,7 +222,7 @@ public:
     }
 
     /// <summary>
-    /// Copies the content from the source allocation to the target allocation.
+    /// Copies to construct the content from the source allocation to the target allocation.
     /// If necessary, objects lifetimes are managed. Otherwise, fast memory operations are used.
     /// </summary>
     /// <remarks>
