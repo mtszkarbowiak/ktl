@@ -20,7 +20,7 @@ class Dictionary;
 /// The bucket must be predeclared to allow for type traits.
 /// </remarks>
 template<typename K, typename V>
-class Bucket final
+class DictionaryBucket final
 {
 public:
     using BucketState = CollectionsUtils::BucketState;
@@ -44,17 +44,17 @@ public:
     V& Value() { return _value; }
 
 
-    Bucket() : _state{ BucketState::Empty } {}
+    DictionaryBucket() : _state{ BucketState::Empty } {}
 
     template<typename K_, typename V_>
-    explicit Bucket(K_&& key, V_&& value) noexcept
+    explicit DictionaryBucket(K_&& key, V_&& value) noexcept
         : _value{ FORWARD(V_, value) }
         , _key{ FORWARD(K_, key) }
         , _state{ BucketState::Occupied }
     {
     }
 
-    Bucket(Bucket&& other) noexcept
+    DictionaryBucket(DictionaryBucket&& other) noexcept
         : _value{ MOVE(other._value) }
         , _key{ MOVE(other._key) }
         , _state{ other._state }
@@ -64,7 +64,7 @@ public:
         other._key.  ~K();
     }
 
-    Bucket(const Bucket& other) = delete;
+    DictionaryBucket(const DictionaryBucket& other) = delete;
 
     void Reset()
     {
@@ -76,7 +76,7 @@ public:
         _state = BucketState::Empty;
     }
 
-    Bucket& operator=(Bucket&& other) noexcept
+    DictionaryBucket& operator=(DictionaryBucket&& other) noexcept
     {
         if (this == &other)
             return *this;
@@ -93,9 +93,9 @@ public:
         return *this;
     }
 
-    Bucket& operator=(const Bucket& other) = delete;
+    DictionaryBucket& operator=(const DictionaryBucket& other) = delete;
 
-    ~Bucket()
+    ~DictionaryBucket()
     {
         Reset();
     }
@@ -108,7 +108,7 @@ public:
 /// Allow the dictionary to use optimized memory operations.
 /// </remarks>
 template<typename K, typename V>
-struct TIsCStyle<Bucket<K, V>>
+struct TIsCStyle<DictionaryBucket<K, V>>
 {
     static constexpr bool Value = TIsCStyle<K>::Value && TIsCStyle<V>::Value;
 };
@@ -123,7 +123,7 @@ template<
 class Dictionary 
 {
     using AllocData          = typename Alloc::Data;
-    using Bucket             = Bucket<K, V>;
+    using Bucket             = DictionaryBucket<K, V>;
     using BucketSearchResult = CollectionsUtils::BucketSearchResult;
     using BucketState        = CollectionsUtils::BucketState;
     using HashType           = int32; //TODO Fix this.
