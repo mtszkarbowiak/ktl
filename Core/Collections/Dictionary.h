@@ -117,8 +117,8 @@ struct TIsCStyle<Bucket<K, V>>
 template<
     typename K,
     typename V,
-    typename Alloc = HeapAlloc,
-    int32(&Probe)(int32, int32) = Probing::Linear
+    typename Alloc,
+    int32(&Probe)(int32, int32)
 >
 class Dictionary 
 {
