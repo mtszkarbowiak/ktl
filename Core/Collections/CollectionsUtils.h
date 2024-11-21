@@ -17,6 +17,11 @@
     #define HASH_MAPS_DEFAULT_CAPACITY 64
 #endif
 
+#ifndef HASH_MAPS_DEFAULT_SLACK_RATIO
+    /// <summary> Default capacity for any hash-based collection. </summary>
+#define HASH_MAPS_DEFAULT_SLACK_RATIO 4
+#endif
+
 #ifndef RING_DEFAULT_CAPACITY
     /// <summary> Default capacity for any ring collection. </summary>
     #define RING_DEFAULT_CAPACITY 16
@@ -35,9 +40,30 @@
 #define DATA_OF(element_type, alloc) static_cast<element_type*>((alloc).Get())
 
 
+
 class CollectionsUtils
 {
 public:
+    /// <summary>
+    /// Helper object for searching for a bucket in a hash-based collection.
+    /// -1 means the object was not found.
+    /// </summary>
+    struct BucketSearchResult final
+    {
+        int32 FoundObject;
+        int32 FreeBucket;
+    };
+
+    /// <summary>
+    /// Signifies stage of life of a bucket in a hash-based collection.
+    /// </summary>
+    enum class BucketState
+    {
+        Empty,
+        Occupied,
+        Deleted,
+    };
+
     /// <summary>
     /// Calculates the minimal legal capacity for given number of elements for the specified allocator.
     /// </summary>
