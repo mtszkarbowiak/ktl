@@ -116,7 +116,7 @@ public:
 
     /// <summary> Ensures that adding items up to the requested capacity will not invoke the allocator. </summary>
     FORCE_INLINE
-    void Reserve(const int32 minCapacity)
+    void EnsureCapacity(const int32 minCapacity)
     {
         if (minCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
@@ -189,7 +189,7 @@ public:
     /// If the ring is empty, the allocation will be freed.
     /// </summary>
     FORCE_INLINE
-    void ShrinkToFit()
+    void Compact()
     {
         // Check if there is possibility of relocation.
         if (_countCached == 0)
@@ -335,7 +335,7 @@ public:
         );
 
         if (_countCached == _capacity)
-            Reserve(_capacity + 1);
+            EnsureCapacity(_capacity + 1);
 
         T* target = static_cast<T*>(_allocData.Get()) + _tail;
 
@@ -354,7 +354,7 @@ public:
     T& EmplaceBack(Args&&... args)
     {
         if (_countCached == _capacity)
-            Reserve(_capacity + 1);
+            EnsureCapacity(_capacity + 1);
 
         T* target = static_cast<T*>(_allocData.Get()) + _tail;
 
@@ -379,7 +379,7 @@ public:
         );
 
         if (_countCached == _capacity)
-            Reserve(_capacity + 1);
+            EnsureCapacity(_capacity + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
         T* target = static_cast<T*>(_allocData.Get()) + _head;
@@ -397,7 +397,7 @@ public:
     T& EmplaceFront(Args&&... args)
     {
         if (_countCached == _capacity)
-            Reserve(_capacity + 1);
+            EnsureCapacity(_capacity + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
         T* target = static_cast<T*>(_allocData.Get()) + _head;

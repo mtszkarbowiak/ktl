@@ -73,7 +73,7 @@ public:
 
     /// <summary> Ensures that adding items up to the requested capacity will not invoke the allocator. </summary>
     FORCE_INLINE
-    void Reserve(const int32 minCapacity)
+    void EnsureCapacity(const int32 minCapacity)
     {
         if (minCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
@@ -115,7 +115,7 @@ public:
     /// If the array is empty, the allocation will be freed.
     /// </summary>
     FORCE_INLINE
-    void ShrinkToFit()
+    void Compact()
     {
         // Check if there is possibility of relocation.
         if (_count == 0)
@@ -216,7 +216,7 @@ public:
         );
 
         if (_count == _capacity)
-            Reserve(_capacity + 1);
+            EnsureCapacity(_capacity + 1);
 
         T* target = DATA_OF(T, _allocData) + _count;
 
@@ -234,7 +234,7 @@ public:
     T& Emplace(Args&&... args)
     {
         if (_count == _capacity)
-            Reserve(_capacity + 1);
+            EnsureCapacity(_capacity + 1);
 
         T* target = DATA_OF(T, _allocData) + _count;
 
@@ -258,7 +258,7 @@ public:
         ASSERT_INDEX(index >= 0 && index <= _count);  // Allow index == _count for appending
 
         if (_count == _capacity)
-            Reserve(_capacity + 1);
+            EnsureCapacity(_capacity + 1);
 
         // Pointer to the slot at the insertion point.
         T* insertPtr = DATA_OF(T, _allocData) + index;
@@ -301,7 +301,7 @@ public:
         // Technically, we could reduce number of moves for relocation.
         // However, it would complicate the code even more. A task for another day.
         if (_count == _capacity)
-            Reserve(_capacity + 1);
+            EnsureCapacity(_capacity + 1);
 
         // Pointer to the first slot.
         T* dataPtr = DATA_OF(T, _allocData);

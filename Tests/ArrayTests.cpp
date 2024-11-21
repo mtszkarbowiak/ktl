@@ -31,7 +31,7 @@ TEST(Array_Capacity, Reserve_OnRequest)
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
 
     Array<int32> array;
-    array.Reserve(MinReservedCapacity);
+    array.EnsureCapacity(MinReservedCapacity);
 
     GTEST_ASSERT_TRUE(array.IsAllocated());
     GTEST_ASSERT_GE  (array.Capacity(), MinReservedCapacity);
@@ -78,7 +78,7 @@ TEST(Array_Capacity, ShrinkToFit_Free)
     GTEST_ASSERT_TRUE(array.IsEmpty());
     GTEST_ASSERT_TRUE(array.IsAllocated());
 
-    array.ShrinkToFit();
+    array.Compact();
 
     GTEST_ASSERT_TRUE (array.IsEmpty());
     GTEST_ASSERT_FALSE(array.IsAllocated());
@@ -100,7 +100,7 @@ TEST(Array_Capacity, ShrinkToFit_Reloc)
     while (array.Count() > TestCapacity2)
         array.RemoveAt(0);
 
-    array.ShrinkToFit();
+    array.Compact();
 
     GTEST_ASSERT_TRUE(array.IsAllocated());
     GTEST_ASSERT_EQ  (array.Count(),    TestCapacity2);
@@ -208,7 +208,7 @@ TEST(Array_Relocation, Reserve)
             array.Emplace(i);
 
         // Reloc: n constructions
-        array.Reserve(ElementCount * 3);
+        array.EnsureCapacity(ElementCount * 3);
         // Note: This reservation forces reallocation. Element are obligated to be moved.
 
         // Init: n constructions (emplace, no temporary)
@@ -239,7 +239,7 @@ TEST(Array_Relocation, ShrinkToFit)
         GTEST_ASSERT_EQ(array.Count(),    ElementCount);
 
         // Reloc: n constructions
-        array.ShrinkToFit();
+        array.Compact();
 
         // Total: 2n constructions
     }

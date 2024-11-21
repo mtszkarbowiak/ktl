@@ -31,7 +31,7 @@ TEST(Ring_Capacity, Reserve_OnRequest)
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
 
     Ring<int32> ring;
-    ring.Reserve(MinReservedCapacity);
+    ring.EnsureCapacity(MinReservedCapacity);
 
     GTEST_ASSERT_TRUE(ring.IsAllocated());
     GTEST_ASSERT_GE  (ring.Capacity(), MinReservedCapacity);
@@ -78,7 +78,7 @@ TEST(Ring_Capacity, ShrinkToFit_Free)
     GTEST_ASSERT_TRUE(array.IsEmpty());
     GTEST_ASSERT_TRUE(array.IsAllocated());
 
-    array.ShrinkToFit();
+    array.Compact();
 
     GTEST_ASSERT_TRUE (array.IsEmpty());
     GTEST_ASSERT_FALSE(array.IsAllocated());
@@ -100,7 +100,7 @@ TEST(Ring_Capacity, ShrinkToFit_Reloc)
     while (array.Count() > TestCapacity2)
         array.PopBack();
 
-    array.ShrinkToFit();
+    array.Compact();
 
     GTEST_ASSERT_TRUE(array.IsAllocated());
     GTEST_ASSERT_EQ  (array.Count(),    TestCapacity2);
@@ -229,7 +229,7 @@ TEST(Ring_Relocation, Reserve)
             ring.PushBack(TestTracker{ i });
 
         // Reloc: n constructions
-        ring.Reserve(RING_DEFAULT_CAPACITY * 2);
+        ring.EnsureCapacity(RING_DEFAULT_CAPACITY * 2);
 
         const int32 newCapacity = ring.Capacity();
         GTEST_ASSERT_GT(newCapacity, initCapacity); // Relocation must occur
@@ -259,7 +259,7 @@ TEST(Ring_Relocation, ShrinkToFit)
             ring.PushBack(TestTracker{ i });
 
         // Reloc: n constructions
-        ring.ShrinkToFit();
+        ring.Compact();
 
         const int32 newCapacity = ring.Capacity();
         GTEST_ASSERT_LT(newCapacity, initCapacity); // Relocation must occur
