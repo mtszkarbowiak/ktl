@@ -119,6 +119,30 @@ private:
     template<typename Element>
     FORCE_INLINE
     static std::enable_if_t<!TIsCStyle<Element>::Value, void>
+    DefaultLinearContentImpl(
+        Element* elements,
+        const int32 count
+    )
+    {
+        for (int32 i = 0; i < count; ++i)
+            new (elements + i) Element();
+    }
+    
+    template<typename Element>
+    FORCE_INLINE
+    static std::enable_if_t<TIsCStyle<Element>::Value, void>
+    DefaultLinearContentImpl(
+        Element* elements,
+        const int32 count
+    )
+    {
+        memset(elements, 0, count * sizeof(Element));
+    }
+
+
+    template<typename Element>
+    FORCE_INLINE
+    static std::enable_if_t<!TIsCStyle<Element>::Value, void>
     MoveLinearContentImpl(
         Element*    source,
         Element*    target,
@@ -126,9 +150,7 @@ private:
     )
     {
         for (int32 i = 0; i < count; ++i)
-        {
             new (target + i) Element(MOVE(source[i]));
-        }
     }
 
     template<typename Element>
@@ -157,9 +179,7 @@ private:
     )
     {
         for (int32 i = 0; i < count; ++i)
-        {
             new (target + i) Element(source[i]);
-        }
     }
 
     template<typename Element>
@@ -205,6 +225,20 @@ private:
 
 public:
     /// <summary>
+    /// Default-construct the content of the target allocation.
+    /// If necessary, objects lifetimes are managed. Otherwise, fast memory operations are used.
+    /// </summary>
+    template<typename Element>
+    FORCE_INLINE
+    static void DefaultLinearContent(
+        Element*    elements,
+        const int32 count
+    )
+    {
+        DefaultLinearContentImpl<Element>(elements, count);
+    }
+
+    /// <summary>
     /// Moves to construct the content from the source allocation to the target allocation.
     /// If necessary, objects lifetimes are managed. Otherwise, fast memory operations are used.
     /// </summary>
@@ -241,6 +275,10 @@ public:
         );
     }
 
+    /// <summary>
+    /// Destroys the content from the source allocation.
+    /// If necessary, objects lifetimes are managed. Otherwise, fast memory operations are used.
+    /// </summary>
     template<typename Element>
     FORCE_INLINE
     static void DestroyLinearContent(
