@@ -209,23 +209,53 @@ protected:
     /// </summary>
     void Rebuild(const int32 minCapacity)
     {
-        // Prepare new allocation
-        const AllocData& oldData = _allocData;
-        AllocData newData = oldData; // Copy the binding
+        // The rebuilding process consists of several steps:
+        // 1. Move the items to a temporary storage, if possible drag the content.
+        // 2. Allocate the new storage, reset the collection capacity.
+        // 3. Iterate over the temporary storage, adding the items to the new storage and repositioning them.
+        // 4. Destroy the temporary storage.
+
+
+        // 1.1. Prepare intermediate bucket storage.
+        AllocData tempAlloc{ _allocData }; // Copy the binding
+
+        // 1.2. Transfer the items to the temporary storage.
+        if (_allocData.MovesItems())
+        {
+            // If the allocator can move the items, we can just move the data.
+            tempAlloc = MOVE(_allocData);
+        }
+        else
+        {
+            // If the allocator cannot move the items, we need to manually move the content.
+            tempAlloc.Allocate(_capacity * sizeof(Bucket));
+            BulkOperations::MoveLinearContent<Bucket>(
+                DATA_OF(Bucket, _allocData),
+                DATA_OF(Bucket, tempAlloc),
+                _capacity
+            );
+        }
+
+        // 2. Allocate the new storage.
+        const int32 oldCapacity = _capacity;
 
         const int32 requestedCapacity =
             CollectionsUtils::GetRequiredCapacity<Bucket, Alloc, HASH_MAPS_DEFAULT_CAPACITY>(minCapacity);
-        const int32 newCapacity =
-            CollectionsUtils::AllocateCapacity<Bucket, Alloc>(newData, requestedCapacity);
+        _capacity =
+            CollectionsUtils::AllocateCapacity<Bucket, Alloc>(_allocData, requestedCapacity);
 
-        // Initialize the new data
-        for (int32 i = 0; i < newCapacity; ++i)
-            new (DATA_OF(Bucket, _allocData) + i) Bucket();
+        // 2.1. We have raw memory, so we need to manually call the constructors.
+        // This is necessary, as the memory is not zeroed. If the bucket is C-style, we can skip this step.
+        BulkOperations::DefaultLinearContent<Bucket>(
+            DATA_OF(Bucket, _allocData),
+            _capacity
+        );
 
-        // Rebuilt the dictionary
-        for (int32 i = 0; i < _capacity; ++i)
+
+        // 3. Iterate over the temporary storage, adding the items to the new storage and repositioning them.
+        for (int32 i = 0; i < oldCapacity; ++i)
         {
-            Bucket& oldBucket = DATA_OF(Bucket, _allocData)[i];
+            Bucket& oldBucket = DATA_OF(Bucket, tempAlloc)[i];
 
             if (oldBucket.State() != BucketState::Occupied)
                 continue;
@@ -233,51 +263,21 @@ protected:
             BucketSearchResult searchResult;
             FindBucket(oldBucket.Key(), searchResult);
 
-            ASSERT(searchResult.FoundObject == -1);
-            ASSERT(searchResult.FreeBucket != -1);
+            ASSERT(searchResult.FoundObject == -1); // It would make no sense, if the object was found.
+            ASSERT(searchResult.FreeBucket  != -1); // We should always find a free bucket, as we have just allocated the new storage.
 
-            Bucket& newBucket = DATA_OF(Bucket, newData)[searchResult.FreeBucket];
+            Bucket& newBucket = DATA_OF(Bucket, _allocData)[searchResult.FreeBucket];
             newBucket = MOVE(oldBucket);
         }
+        // The collection itself is now rebuilt, time for cleaning...
 
-        // Destroy the old data
-        BulkOperations::DestroyLinearContent<Bucket>(DATA_OF(Bucket, _allocData), _capacity);
-
-
-        // The dictionary has been rebuilt into the new allocation.
-        // Now we need to check if the new allocation can actually drag items to replace the old allocation.
-        // If not, we need to manually move the content, and treat the new allocation as temporary storage.
-
-        if (newData.MovesItems())
-        {
-            // If yes, we can just move the new data to the old data.
-            // New, rebuilt data is ready to be used.
-            _allocData = MOVE(newData);
-            _capacity  = newCapacity;
-            return;
-        }
-
-        // If not, we need to manually move the content back to the old allocation.
-
-        // To be fully correct, we should reduce the size of original allocation:
-        // oldData.Free();
-        // oldData.Allocate(newCapacity * sizeof(Bucket));
-        // But non-dragging allocators have generally fixed size, so we can assume,
-        // this action will not bring any changes to the allocation size.
-
-        BulkOperations::MoveLinearContent<Bucket>(
-            DATA_OF(Bucket, newData),
-            DATA_OF(Bucket, _allocData),
-            newCapacity
-        );
-
+        // 4. Destroy the temporary storage.
         BulkOperations::DestroyLinearContent<Bucket>(
-            DATA_OF(Bucket, newData),
-            newCapacity
+            DATA_OF(Bucket, tempAlloc),
+            oldCapacity
         );
 
-        newData.Free();
-        // No need to update the capacity, as the old allocation size remains the same.
+        tempAlloc.Free();
     }
 
 public:
