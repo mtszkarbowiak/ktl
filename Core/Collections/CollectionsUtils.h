@@ -19,7 +19,7 @@
 
 #ifndef HASH_MAPS_DEFAULT_SLACK_RATIO
     /// <summary> Default capacity for any hash-based collection. </summary>
-#define HASH_MAPS_DEFAULT_SLACK_RATIO 4
+#define HASH_MAPS_DEFAULT_SLACK_RATIO 3
 #endif
 
 #ifndef RING_DEFAULT_CAPACITY

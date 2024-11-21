@@ -19,6 +19,24 @@ TEST(DictionaryTest, Add)
     GTEST_ASSERT_EQ(dict.Count(), 2);
 }
 
+TEST(DictionaryTest, AddMany)
+{
+    Dictionary<int32, int32> dict;
+
+    for (int32 i = 0; i < 1000; ++i)
+    {
+        dict.Add(i, i);
+    }
+
+    GTEST_ASSERT_EQ(dict.Count(), 1000);
+
+    for (int32 i = 0; i < 1000; ++i)
+    {
+        GTEST_ASSERT_TRUE(dict.Contains(i));
+        GTEST_ASSERT_EQ(*dict.TryGet(i), i);
+    }
+}
+
 TEST(DictionaryTest, AddAndGet)
 {
     Dictionary<int32, int32> dict;
