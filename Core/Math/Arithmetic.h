@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "../Language/Keywords.h"
-#include "../Types/Numbers.h"
+#include "Language/Keywords.h"
+#include "Types/Numbers.h"
 
 namespace Math
 {
