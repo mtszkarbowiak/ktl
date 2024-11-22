@@ -502,9 +502,9 @@ public:
 
     // Iteration
 
-    auto Enumerate() = delete; //TODO Implement this.
+    auto Buckets() = delete; //TODO Implement this.
 
-    auto EnumerateKeys() = delete; //TODO Implement this.
+    auto Keys() = delete; //TODO Implement this.
 
-    auto EnumerateValues() = delete; //TODO Implement this.
+    auto Vals() = delete; //TODO Implement this.
 };

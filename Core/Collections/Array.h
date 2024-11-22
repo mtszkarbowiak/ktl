@@ -755,14 +755,14 @@ public:
 
     /// <summary> Creates an enumerator for the array. </summary>
     FORCE_INLINE NODISCARD
-    MutEnumerator Enumerate()
+    MutEnumerator Vals()
     {
         return MutEnumerator{ *this };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
     FORCE_INLINE NODISCARD
-    ConstEnumerator Enumerate() const
+    ConstEnumerator Vals() const
     {
         return ConstEnumerator{ *this };
     }

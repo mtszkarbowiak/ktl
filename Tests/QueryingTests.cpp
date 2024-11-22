@@ -11,13 +11,13 @@
 TEST(QueryingTests, ArrayHeap_Count)
 {
     const auto array = Array<int32, HeapAlloc>::Of({ 1, 2, 3 });
-    ASSERT_EQ(Querying::Count(array.Enumerate()), 3);
+    ASSERT_EQ(Querying::Count(array.Vals()), 3);
 }
 
 TEST(QueryingTests, ArrayFixed_Count)
 {
     const auto array = Array<int32, FixedAlloc<4 * sizeof(int32)>>::Of({ 1, 2, 3 });
-    ASSERT_EQ(Querying::Count(array.Enumerate()), 3);
+    ASSERT_EQ(Querying::Count(array.Vals()), 3);
 }
 
 TEST(QueryingTests, RingHeap_Count)

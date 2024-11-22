@@ -18,7 +18,7 @@ TEST(ArrayIterators, ConstEnumerator)
     }
 
     int32 actualSum = 0;
-    for (auto enumerator = array.Enumerate(); enumerator; ++enumerator)
+    for (auto enumerator = array.Vals(); enumerator; ++enumerator)
         actualSum += *enumerator;
     
     ASSERT_EQ(expectedSum, actualSum);
@@ -37,11 +37,11 @@ TEST(ArrayIterators, MutableEnumerator)
         expectedSum += i;
     }
 
-    for (auto enumerator = array.Enumerate(); enumerator; ++enumerator)
+    for (auto enumerator = array.Vals(); enumerator; ++enumerator)
         *enumerator = TestElements - *enumerator;
     
     int32 actualSum = 0;
-    for (auto enumerator = array.Enumerate(); enumerator; ++enumerator)
+    for (auto enumerator = array.Vals(); enumerator; ++enumerator)
         actualSum += *enumerator;
 }
 
@@ -53,8 +53,8 @@ TEST(ArrayIterators, EnumeratorEquality)
     for (int32 i = 0; i < TestElements; ++i)
         array.Add(i);
 
-    auto enumerator1 = array.Enumerate();
-    auto enumerator2 = array.Enumerate();
+    auto enumerator1 = array.Vals();
+    auto enumerator2 = array.Vals();
 
     ASSERT_EQ(enumerator1, enumerator2);
     ++enumerator1;
