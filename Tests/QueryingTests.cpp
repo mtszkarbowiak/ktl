@@ -87,12 +87,23 @@ TEST(QueryingTests_SelectWhere, Array)
     const auto selector  = [](const int32 value) { return value * 2; };
     const auto predicate = [](const int32 value) { return value % 4 == 0; };
 
-    auto vals = array.Vals()
-        | Select<decltype(selector)>(selector)
-        | Where<decltype(predicate)>(predicate);
+    {
+        auto query = array.Vals()
+            | Select<decltype(selector)>(selector)
+            | Where<decltype(predicate)>(predicate);
 
-    GTEST_ASSERT_EQ(
-        Sum(MOVE(vals)),
-        (2 * 2) + (4 * 2)
-    );
+        GTEST_ASSERT_EQ(
+            Sum(MOVE(query)),
+            (2 * 2) + (4 * 2)
+        );
+    }
+
+    {
+        const int32 query = array.Vals()
+            | Select<decltype(selector)>(selector)
+            | Where<decltype(predicate)>(predicate)
+            | CountElements();
+
+        GTEST_ASSERT_EQ(query, 2);
+    }
 }

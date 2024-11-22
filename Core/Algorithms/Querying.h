@@ -25,6 +25,9 @@ namespace Querying
 
     // Transformation Queries
 
+    struct CountElements {}; // Only a tag to indicate the query.
+
+
     template<typename Selector>
     struct Select final
     {
@@ -180,5 +183,12 @@ namespace Querying
             FORWARD(Producer, producer), //TODO This should be r-value, never l-value.
             MOVE(where)
         );
+    }
+
+
+    template<typename Producer>
+    auto operator|(Producer&& producer, CountElements ce)
+    {
+        return Count(FORWARD(Producer, producer));
     }
 };
