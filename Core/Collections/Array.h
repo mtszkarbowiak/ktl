@@ -523,7 +523,23 @@ public:
         _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
     }
 
-    
+
+    // Factorization
+
+    /// <summary> Creates an array with the specified elements. </summary>
+    template<typename U>
+    static Array<T> Of(std::initializer_list<U> list)
+    {
+        Array<T> result;
+        result.EnsureCapacity(list.size());
+
+        for (const auto& element : list)
+            result.Add(element);
+
+        return result;
+    }
+
+
     // Collection Lifecycle  - Assignments
 
     FORCE_INLINE

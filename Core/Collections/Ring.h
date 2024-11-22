@@ -708,6 +708,22 @@ public:
     }
 
 
+    // Factorization
+
+    /// <summary> Creates an array with the specified elements. </summary>
+    template<typename U>
+    static Ring<T> Of(std::initializer_list<U> list)
+    {
+        Ring<T> result;
+        result.EnsureCapacity(list.size());
+
+        for (const auto& element : list)
+            result.PushBack(element);
+
+        return result;
+    }
+
+
     // Iterators
 
     class MutEnumerator
