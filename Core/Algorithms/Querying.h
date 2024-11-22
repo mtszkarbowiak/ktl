@@ -8,6 +8,8 @@
 
 namespace Querying
 {
+    // Evaluation Queries
+
     /// <summary>
     /// Counts the number of elements in the enumerator.
     /// </summary>
@@ -20,8 +22,11 @@ namespace Querying
         return count;
     }
 
+
+    // Transformation Queries
+
     template<typename Selector>
-    struct Select
+    struct Select final
     {
         Selector selector;
 
@@ -34,31 +39,27 @@ namespace Querying
     };
 
     template<typename Producer, typename Selector>
-    class SelectEnumerator
+    class SelectEnumerator final
     {
-        Producer&& _producer;
-        Selector   _selector;
+        Producer _producer; // It must not be a reference, as it would be invalidated.
+        Selector _selector;
 
     public:
         explicit SelectEnumerator(
             Producer&& producer, 
-            Selector selector)
-            : _producer{ FORWARD(Producer, producer) }
-            , _selector{ selector }
+            Selector&& selector)
+            : _producer{ MOVE(producer) }
+            , _selector{ MOVE(selector) }
         {
         }
 
         explicit SelectEnumerator(
             Producer&& producer, 
             Select<Selector> selector)
-            : _producer{ FORWARD(Producer, producer) }
-            , _selector{ selector.selector }
+            : _producer{ MOVE(producer) }
+            , _selector{ MOVE(selector.selector) }
         {
         }
-
-
-        using InputElement  = decltype(*_producer);
-        using OutputElement = decltype(_selector(*_producer));
 
         FORCE_INLINE NODISCARD
         explicit operator bool() const noexcept
@@ -88,13 +89,12 @@ namespace Querying
         }
     };
 
-
     template<typename Producer, typename Selector>
     auto operator|(Producer&& producer, Select<Selector> selector)
     {
         return SelectEnumerator<Producer, Selector>(
-            FORWARD(Producer, producer),
-            selector
+            FORWARD(Producer, producer), //TODO This should be r-value, never l-value.
+            MOVE(selector)
         );
     }
 };
