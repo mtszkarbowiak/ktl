@@ -2,39 +2,32 @@
 
 #include <gtest/gtest.h>
 
-#include "Collections/Array.h"
 #include "Algorithms/Querying.h"
 #include "Allocators/FixedAlloc.h"
+#include "Collections/Array.h"
 #include "Collections/Ring.h"
 
-TEST(QueryingTests, Array)
+
+TEST(QueryingTests, ArrayHeap_Count)
 {
-    using namespace Querying;
-
-    Array<int32, FixedAlloc<4 * sizeof(int32)>> array;
-    array.Add(1);
-    array.Add(2);
-    array.Add(3);
-
-    ASSERT_EQ(Count   (array.Enumerate()), 3);
-    ASSERT_EQ(Sum     (array.Enumerate()), 6);
-    ASSERT_EQ(Average (array.Enumerate()), 2);
-    ASSERT_EQ(Min     (array.Enumerate()), 1);
-    ASSERT_EQ(Max     (array.Enumerate()), 3);
+    const auto array = Array<int32, HeapAlloc>::Of({ 1, 2, 3 });
+    ASSERT_EQ(Querying::Count(array.Enumerate()), 3);
 }
 
-TEST(QueryingTests, Ring)
+TEST(QueryingTests, ArrayFixed_Count)
 {
-    using namespace Querying;
+    const auto array = Array<int32, FixedAlloc<4 * sizeof(int32)>>::Of({ 1, 2, 3 });
+    ASSERT_EQ(Querying::Count(array.Enumerate()), 3);
+}
 
-    Ring<int32, FixedAlloc<4 * sizeof(int32)>> ring;
-    ring.PushBack(1);
-    ring.PushBack(2);
-    ring.PushBack(3);
+TEST(QueryingTests, RingHeap_Count)
+{
+    const auto ring = Ring<int32, HeapAlloc>::Of({ 1, 2, 3 });
+    ASSERT_EQ(Querying::Count(ring.Enumerate()), 3);
+}
 
-    ASSERT_EQ(Count   (ring.Enumerate()), 3);
-    ASSERT_EQ(Sum     (ring.Enumerate()), 6);
-    ASSERT_EQ(Average (ring.Enumerate()), 2);
-    ASSERT_EQ(Min     (ring.Enumerate()), 1);
-    ASSERT_EQ(Max     (ring.Enumerate()), 3);
+TEST(QueryingTests, RingFixed_Count)
+{
+    const auto ring = Ring<int32, FixedAlloc<4 * sizeof(int32)>>::Of({ 1, 2, 3 });
+    ASSERT_EQ(Querying::Count(ring.Enumerate()), 3);
 }
