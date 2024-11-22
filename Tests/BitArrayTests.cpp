@@ -37,7 +37,7 @@ TEST(BitArray, ConstEnumerator)
     array.Add(true);
     array.Add(false);
 
-    auto enumerator = array.Enumerate();
+    auto enumerator = array.Vals();
     GTEST_ASSERT_EQ(true, *enumerator);
     GTEST_ASSERT_TRUE(static_cast<bool>(enumerator));
     ++enumerator;

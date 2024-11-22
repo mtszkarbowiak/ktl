@@ -23,11 +23,11 @@ TEST(QueryingTests, ArrayFixed_Count)
 TEST(QueryingTests, RingHeap_Count)
 {
     const auto ring = Ring<int32, HeapAlloc>::Of({ 1, 2, 3 });
-    ASSERT_EQ(Querying::Count(ring.Enumerate()), 3);
+    ASSERT_EQ(Querying::Count(ring.Vals()), 3);
 }
 
 TEST(QueryingTests, RingFixed_Count)
 {
     const auto ring = Ring<int32, FixedAlloc<4 * sizeof(int32)>>::Of({ 1, 2, 3 });
-    ASSERT_EQ(Querying::Count(ring.Enumerate()), 3);
+    ASSERT_EQ(Querying::Count(ring.Vals()), 3);
 }

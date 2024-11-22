@@ -675,13 +675,13 @@ public:
     };
 
     FORCE_INLINE NODISCARD
-    auto Enumerate() -> MutEnumerator
+    auto Vals() -> MutEnumerator
     {
         return MutEnumerator{ *this };
     }
 
     FORCE_INLINE NODISCARD
-    auto Enumerate() const -> ConstEnumerator
+    auto Vals() const -> ConstEnumerator
     {
         return ConstEnumerator{ *this };
     }

@@ -26,10 +26,10 @@ TEST(StatisticsTests, DescribeRing)
 
     const auto ring = Ring<int32, FixedAlloc<4 * sizeof(int32)>>::Of({ 1, 2, 3 });
 
-    ASSERT_EQ(    Sum(ring.Enumerate()), 6);
-    ASSERT_EQ(Average(ring.Enumerate()), 2);
-    ASSERT_EQ(    Min(ring.Enumerate()), 1);
-    ASSERT_EQ(    Max(ring.Enumerate()), 3);
+    ASSERT_EQ(    Sum(ring.Vals()), 6);
+    ASSERT_EQ(Average(ring.Vals()), 2);
+    ASSERT_EQ(    Min(ring.Vals()), 1);
+    ASSERT_EQ(    Max(ring.Vals()), 3);
 }
 
 
