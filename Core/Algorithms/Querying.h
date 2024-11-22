@@ -191,4 +191,12 @@ namespace Querying
     {
         return Count(FORWARD(Producer, producer));
     }
-};
+
+    //TODO Implement First with Array<T> 
+    //TODO Implement Last with Ring<T>
+    //TODO Implement Skip with int32
+    //TODO Implement GroupBy with Dictionary<TKey, Array<TValue>>
+    //TODO Implement OrderBy with Array<T>
+    //TODO Implement Reverse with Array<T>
+    //TODO Implement Distinct with HashSet<T>
+}
