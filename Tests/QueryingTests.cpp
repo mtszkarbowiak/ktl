@@ -42,16 +42,57 @@ TEST(QueryingTests_Select, Array)
     const auto array = Array<int32, HeapAlloc>::Of({ 1, 2, 3 });
     const auto selector = [](const int32 value) { return value * 2; };
 
-    using SelectX2 = Select<decltype(selector)>;
+    using SelectDoubled = Select<decltype(selector)>;
 
     auto selected = array.Vals()
         | Select<decltype(selector)>(selector)
-        | SelectX2(selector);
+        | SelectDoubled(selector);
 
     const auto expected = Array<int32, HeapAlloc>::Of({ 4, 8, 12 });
 
     GTEST_ASSERT_EQ(
         Sum(MOVE(selected)), 
         Sum(expected.Vals())
+    );
+}
+
+TEST(QueryingTests_Where, Array)
+{
+    using namespace Querying;
+    using namespace Statistics;
+
+    const auto array = Array<int32, HeapAlloc>::Of({ 1, 2, 3 });
+    const auto predicate = [](const int32 value) { return value % 2 == 0; };
+
+    using WhereEven = Where<decltype(predicate)>;
+
+    auto selected = array.Vals()
+        | Where<decltype(predicate)>(predicate)
+        | WhereEven(predicate);
+
+    const auto expected = Array<int32, HeapAlloc>::Of({ 2 });
+    GTEST_ASSERT_EQ(
+        Sum(MOVE(selected)),
+        Sum(expected.Vals())
+    );
+}
+
+TEST(QueryingTests_SelectWhere, Array)
+{
+    using namespace Querying;
+    using namespace Statistics;
+
+    const auto array = Array<int32, HeapAlloc>::Of({ 1, 2, 3, 4, 5 });
+
+    const auto selector  = [](const int32 value) { return value * 2; };
+    const auto predicate = [](const int32 value) { return value % 4 == 0; };
+
+    auto vals = array.Vals()
+        | Select<decltype(selector)>(selector)
+        | Where<decltype(predicate)>(predicate);
+
+    GTEST_ASSERT_EQ(
+        Sum(MOVE(vals)),
+        (2 * 2) + (4 * 2)
     );
 }
