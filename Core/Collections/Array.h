@@ -530,8 +530,8 @@ public:
     template<typename U>
     static Array<T> Of(std::initializer_list<U> list)
     {
-        Array<T> result;
-        result.EnsureCapacity(list.size());
+        const int32 capacity = static_cast<int32>(list.size());
+        Array<T> result{ capacity };
 
         for (const auto& element : list)
             result.Add(element);

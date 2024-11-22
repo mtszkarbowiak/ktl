@@ -714,8 +714,8 @@ public:
     template<typename U>
     static Ring<T> Of(std::initializer_list<U> list)
     {
-        Ring<T> result;
-        result.EnsureCapacity(list.size());
+        const int32 capacity = static_cast<int32>(list.size());
+        Ring<T> result{ capacity };
 
         for (const auto& element : list)
             result.PushBack(element);
