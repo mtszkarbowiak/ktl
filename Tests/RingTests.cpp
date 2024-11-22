@@ -378,7 +378,7 @@ TEST(Ring_Relocation, MoveAssignment_DragAlloc)
 
 // Element Manipulation
 
-TEST(Array_ElementManipulation, PushBack_PopBack)
+TEST(Ring_ElementManipulation, PushBack_PopBack)
 {
     const int32 Cycles = 3;
     const int32 ElementCount = 100;
@@ -404,7 +404,7 @@ TEST(Array_ElementManipulation, PushBack_PopBack)
     LIFECYCLE_TEST_OUT
 }
 
-TEST(Array_ElementManipulation, PushBack_PopFront)
+TEST(Ring_ElementManipulation, PushBack_PopFront)
 {
     const int32 Cycles = 3;
     const int32 ElementCount = 100;
@@ -427,7 +427,7 @@ TEST(Array_ElementManipulation, PushBack_PopFront)
     LIFECYCLE_TEST_OUT
 }
 
-TEST(Array_ElementManipulation, PushFront_PopBack)
+TEST(Ring_ElementManipulation, PushFront_PopBack)
 {
     const int32 Cycles = 3;
     const int32 ElementCount = 100;
@@ -450,7 +450,7 @@ TEST(Array_ElementManipulation, PushFront_PopBack)
     LIFECYCLE_TEST_OUT
 }
 
-TEST(Array_ElementManipulation, PushFront_PopFront)
+TEST(Ring_ElementManipulation, PushFront_PopFront)
 {
     const int32 Cycles = 3;
     const int32 ElementCount = 100;
@@ -474,7 +474,7 @@ TEST(Array_ElementManipulation, PushFront_PopFront)
 }
 
 
-TEST(Array_ElementManipulation, EmplaceBack_PopBack)
+TEST(Ring_ElementManipulation, EmplaceBack_PopBack)
 {
     const int32 Cycles = 3;
     const int32 ElementCount = 1000;
@@ -497,7 +497,7 @@ TEST(Array_ElementManipulation, EmplaceBack_PopBack)
     LIFECYCLE_TEST_OUT
 }
 
-TEST(Array_ElementManipulation, EmplaceFront_PopFront)
+TEST(Ring_ElementManipulation, EmplaceFront_PopFront)
 {
     const int32 Cycles = 3;
     const int32 ElementCount = 1000;
