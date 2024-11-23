@@ -470,22 +470,177 @@ public:
     }
 
 
+    // Collections Lifecycle - Overriding Content
+
+private:
+    FORCE_INLINE
+    void MoveFrom(Dictionary&& other) noexcept
+    {
+        ASSERT(!IsAllocated()); // The dictionary must be empty!
+
+        if (!other.IsAllocated())
+        {
+            _allocData = AllocData{};
+            _capacity = 0;
+            _elementsCount = 0;
+            _deletedCount = 0;
+        }
+        else if (other._allocData.MovesItems())
+        {
+            _allocData = MOVE(other._allocData);
+            _capacity      = other._capacity;
+            _elementsCount = other._elementsCount;
+            _deletedCount  = other._deletedCount;
+            other._capacity      = 0; // The allocation has been moved - reset the capacity!
+            other._elementsCount = 0;
+            other._deletedCount  = 0;
+        }
+        else
+        {
+            const int32 requestedCapacity = 
+                CollectionsUtils::GetRequiredCapacity<Bucket, Alloc, HASH_MAPS_DEFAULT_CAPACITY>(other._elementsCount);
+
+            _allocData     = AllocData{};
+            _capacity      = CollectionsUtils::AllocateCapacity<Bucket, Alloc>(_allocData, requestedCapacity);
+            _elementsCount = other._elementsCount;
+            _deletedCount  = other._deletedCount;
+
+            // No dictionary rebuilding, because moving is supposed to be as cheap as possible.
+
+            BulkOperations::MoveLinearContent<Bucket>(
+                DATA_OF(Bucket, other._allocData),
+                DATA_OF(Bucket, this->_allocData),
+                _capacity
+            );
+
+            other.Reset();
+        }
+    }
+
+    template<typename OtherAlloc>
+    void CopyFrom(const Dictionary<K, V, OtherAlloc, Probe>& other)
+    {
+        static_assert(std::is_copy_constructible<K>::value, "Type must be copy-constructible.");
+        static_assert(std::is_copy_constructible<V>::value, "Type must be copy-constructible.");
+
+        ASSERT(!IsAllocated()); // The dictionary must be empty!
+
+        if (other._capacity == 0)
+        {
+            // If no allocation is active, just zero the members.
+            _allocData = AllocData{};
+            _capacity = 0;
+            _elementsCount = 0;
+            _deletedCount = 0;
+        }
+        else
+        {
+            // Copy is expensive - Let's rebuild the dictionary.
+            // Note: If we weren't rebuilding, we could have used BulkOperations::CopyLinearContent.
+
+            EnsureCapacity(other.Capacity());
+
+            for (auto iterator = other.Buckets(); iterator; ++iterator)
+                Add(iterator->Key(), iterator->Value());
+        }
+    }
+
+
+
     // Collection Lifecycle - Constructors
 
+public:
+    /// <summary> Initializes an empty dictionary with no active allocation. </summary>
+    FORCE_INLINE
     Dictionary()
-        : _capacity{ 0 }
+        : _allocData{}
+        , _capacity{ 0 }
         , _elementsCount{ 0 }
         , _deletedCount{ 0 }
     {
-        
     }
 
-    //TODO Implement this.
+    /// <summary> Initializes a dictionary by moving the allocation from another array. </summary>
+    FORCE_INLINE
+    Dictionary(Dictionary&& other) noexcept
+    {
+        MoveFrom(MOVE(other));
+    }
+
+    /// <summary> Initializes a dictionary by copying another dictionary. </summary>
+    template<
+        typename K_ = K,
+        typename V_ = V,
+        typename = typename std::enable_if<((
+            std::is_copy_constructible<K>::value &&
+            std::is_copy_constructible<V>::value &&
+            std::is_same<K, K_>::value &&
+            std::is_same<V, V_>::value
+        ))>::type>
+    Dictionary(const Dictionary& other)
+        : _allocData{}
+        , _capacity{ 0 }
+        , _elementsCount{ 0 }
+        , _deletedCount{ 0 }
+    {
+        CopyFrom<Alloc>(other);
+    }
+
+    /// <summary> Initializes an dictionary array with an active context-less allocation of the specified capacity. </summary>
+    FORCE_INLINE
+    explicit Dictionary(const int32 capacity)
+        : _allocData{}
+        , _elementsCount{ 0 }
+        , _deletedCount{ 0 }
+    {
+        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Bucket, Alloc, HASH_MAPS_DEFAULT_CAPACITY>(capacity);
+        _capacity = CollectionsUtils::AllocateCapacity<Bucket, Alloc>(_allocData, requiredCapacity);
+    }
+
+    /// <summary> Initializes an empty dictionary with an active allocation of the specified capacity and context. </summary>
+    template<typename AllocContext>
+    FORCE_INLINE
+    explicit Dictionary(const int32 capacity, AllocContext&& context)
+        : _allocData{ FORWARD(AllocContext, context) }
+        , _elementsCount{ 0 }
+        , _deletedCount{ 0 }
+    {
+        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Bucket, Alloc, HASH_MAPS_DEFAULT_CAPACITY>(capacity);
+        _capacity = CollectionsUtils::AllocateCapacity<Bucket, Alloc>(_allocData, requiredCapacity);
+    }
 
 
     // Collection Lifecycle - Assignments
 
-    //TODO Implement this.
+    FORCE_INLINE
+    auto operator=(Dictionary&& other) noexcept -> Dictionary&
+    {
+        if (this != &other)
+        {
+            Reset();
+            MoveFrom(MOVE(other));
+        }
+        return *this;
+    }
+
+    template<
+        typename K_ = K,
+        typename V_ = V,
+        typename = typename std::enable_if<((
+            std::is_copy_constructible<K>::value&&
+            std::is_copy_constructible<V>::value&&
+            std::is_same<K, K_>::value&&
+            std::is_same<V, V_>::value
+        ))>::type>
+    auto operator=(const Dictionary& other) -> Dictionary&
+    {
+        if (this != &other)
+        {
+            Reset();
+            CopyFrom<Alloc>(other);
+        }
+        return *this;
+    }
 
 
     // Collection Lifecycle - Destructor
@@ -498,6 +653,11 @@ public:
         BulkOperations::DestroyLinearContent<Bucket>(DATA_OF(Bucket, _allocData), _capacity);
         _allocData.Free();
     }
+
+
+    // Factorization
+
+    //TODO Implement Of(std::initializer_list<U> list)
 
 
     // Iteration
