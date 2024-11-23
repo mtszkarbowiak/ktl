@@ -502,9 +502,355 @@ public:
 
     // Iteration
 
-    auto Buckets() = delete; //TODO Implement this.
+    // Note: Dictionary is a complex collection, thus it has so many different enumerators.
 
-    auto Keys() = delete; //TODO Implement this.
+    class KeyEnumerator
+    {
+        const Dictionary* _dictionary;
+        int32 _index;
 
-    auto Vals() = delete; //TODO Implement this.
+    public:
+        explicit KeyEnumerator(const Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ 0 }
+        {
+        }
+
+        // Access
+
+        FORCE_INLINE NODISCARD
+        const K& operator*() const
+        {
+            return DATA_OF(const K, _dictionary->_allocData)[_index].Key();
+        }
+
+        FORCE_INLINE NODISCARD
+        const K* operator->() const
+        {
+            return &DATA_OF(const K, _dictionary->_allocData)[_index].Key();
+        }
+
+
+        // Iteration
+
+        FORCE_INLINE NODISCARD
+        explicit operator bool() const noexcept
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        FORCE_INLINE
+        KeyEnumerator& operator++()
+        {
+            ++_index;
+            return *this;
+        }
+
+        FORCE_INLINE
+        KeyEnumerator operator++(int)
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+    };
+
+    class MutValEnumerator
+    {
+        Dictionary* _dictionary;
+        int32 _index;
+
+    public:
+        explicit MutValEnumerator(Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ 0 }
+        {
+        }
+
+
+        // Access
+
+        FORCE_INLINE NODISCARD
+        V& operator*()
+        {
+            return DATA_OF(V, _dictionary->_allocData)[_index].Value();
+        }
+
+        FORCE_INLINE NODISCARD
+        const V& operator*() const
+        {
+            return DATA_OF(const V, _dictionary->_allocData)[_index].Value();
+        }
+
+        FORCE_INLINE NODISCARD
+        V* operator->()
+        {
+            return &DATA_OF(V, _dictionary->_allocData)[_index].Value();
+        }
+
+        FORCE_INLINE NODISCARD
+        const V* operator->() const
+        {
+            return &DATA_OF(const V, _dictionary->_allocData)[_index].Value();
+        }
+
+
+        // Iteration
+
+        FORCE_INLINE NODISCARD
+        explicit operator bool() const noexcept
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        FORCE_INLINE
+        MutValEnumerator& operator++()
+        {
+            ++_index;
+            return *this;
+        }
+
+        FORCE_INLINE
+        MutValEnumerator operator++(int)
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+    };
+
+    class ConstValEnumerator
+    {
+        const Dictionary* _dictionary;
+        int32 _index;
+
+    public:
+        explicit ConstValEnumerator(const Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ 0 }
+        {
+        }
+
+
+        // Access
+
+        FORCE_INLINE NODISCARD
+        const V& operator*() const
+        {
+            return DATA_OF(const V, _dictionary->_allocData)[_index].Value();
+        }
+
+        FORCE_INLINE NODISCARD
+        const V* operator->() const
+        {
+            return &DATA_OF(const V, _dictionary->_allocData)[_index].Value();
+        }
+
+        // Iteration
+
+        FORCE_INLINE NODISCARD
+        explicit operator bool() const noexcept
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        FORCE_INLINE
+        ConstValEnumerator& operator++()
+        {
+            ++_index;
+            return *this;
+        }
+
+        FORCE_INLINE
+        ConstValEnumerator operator++(int)
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+    };
+
+    class MutBucketEnumerator
+    {
+        Dictionary* _dictionary;
+        int32 _index;
+
+
+    public:
+        explicit MutBucketEnumerator(Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ 0 }
+        {
+        }
+
+
+        // Access
+
+        /// <summary> Accesses the bucket at the current index. </summary>
+        /// <remarks>
+        /// The bucket itself must not be modified, as it would break the dictionary.
+        /// Use <c>Value</c> and <c>Key</c> to access the bucket content.
+        /// </remarks>
+        FORCE_INLINE NODISCARD
+        Bucket& operator*() = delete;
+
+        FORCE_INLINE NODISCARD
+        const Bucket& operator*() const
+        {
+            return DATA_OF(const Bucket, _dictionary->_allocData)[_index];
+        }
+
+        /// <summary> Accesses the bucket at the current index. </summary>
+        /// <remarks>
+        /// The bucket itself must not be modified, as it would break the dictionary.
+        /// Use <c>Value</c> and <c>Key</c> to access the bucket content.
+        /// </remarks>
+        FORCE_INLINE NODISCARD
+        Bucket* operator->() = delete;
+
+        FORCE_INLINE NODISCARD
+        const Bucket* operator->() const
+        {
+            return &DATA_OF(const Bucket, _dictionary->_allocData)[_index];
+        }
+
+
+        FORCE_INLINE NODISCARD
+        const K& Key() const
+        {
+            return DATA_OF(const K, _dictionary->_allocData)[_index].Key();
+        }
+
+        FORCE_INLINE NODISCARD
+        V& Value()
+        {
+            return DATA_OF(V, _dictionary->_allocData)[_index].Value();
+        }
+
+        FORCE_INLINE NODISCARD
+        const V& Value() const
+        {
+            return DATA_OF(const V, _dictionary->_allocData)[_index].Value();
+        }
+
+
+        // Iteration
+
+        FORCE_INLINE NODISCARD
+        explicit operator bool() const noexcept
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        FORCE_INLINE
+        MutBucketEnumerator& operator++()
+        {
+            ++_index;
+            return *this;
+        }
+
+        FORCE_INLINE
+        MutBucketEnumerator operator++(int)
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+    };
+
+    class ConstBucketEnumerator
+    {
+        const Dictionary* _dictionary;
+        int32 _index;
+
+    public:
+        explicit ConstBucketEnumerator(const Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ 0 }
+        {
+        }
+        
+
+        // Access
+
+        FORCE_INLINE NODISCARD
+        const Bucket& operator*() const
+        {
+            return DATA_OF(const Bucket, _dictionary->_allocData)[_index];
+        }
+
+        FORCE_INLINE NODISCARD
+        const Bucket* operator->() const
+        {
+            return &DATA_OF(const Bucket, _dictionary->_allocData)[_index];
+        }
+
+
+        FORCE_INLINE NODISCARD
+        const K& Key() const
+        {
+            return DATA_OF(const K, _dictionary->_allocData)[_index].Key();
+        }
+
+        FORCE_INLINE NODISCARD
+        const V& Value() const
+        {
+            return DATA_OF(const V, _dictionary->_allocData)[_index].Value();
+        }
+
+
+        // Iteration
+
+        FORCE_INLINE NODISCARD
+        explicit operator bool() const noexcept
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        FORCE_INLINE
+        ConstBucketEnumerator& operator++()
+        {
+            ++_index;
+            return *this;
+        }
+
+        FORCE_INLINE
+        ConstBucketEnumerator operator++(int)
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+    };
+
+
+    FORCE_INLINE NODISCARD
+    KeyEnumerator Keys() const
+    {
+        return KeyEnumerator{ *this };
+    }
+    
+    FORCE_INLINE NODISCARD
+    MutValEnumerator Vals()
+    {
+        return MutValEnumerator{ *this };
+    }
+
+    FORCE_INLINE NODISCARD
+    ConstValEnumerator Vals() const
+    {
+        return ConstValEnumerator{ *this };
+    }
+
+    FORCE_INLINE NODISCARD
+    MutBucketEnumerator Buckets()
+    {
+        return MutBucketEnumerator{ this };
+    }
+
+    FORCE_INLINE NODISCARD
+    ConstBucketEnumerator Buckets() const
+    {
+        return ConstBucketEnumerator{ this };
+    }
 };
