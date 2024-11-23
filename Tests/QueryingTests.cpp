@@ -13,25 +13,25 @@
 TEST(QueryingTests_Count, ArrayHeap)
 {
     const auto array = Array<int32, HeapAlloc>::Of({ 1, 2, 3 });
-    GTEST_ASSERT_EQ(Querying::Count(array.Vals()), 3);
+    GTEST_ASSERT_EQ(Querying::Count(array.Values()), 3);
 }
 
 TEST(QueryingTests_Count, ArrayFixed)
 {
     const auto array = Array<int32, FixedAlloc<4 * sizeof(int32)>>::Of({ 1, 2, 3 });
-    GTEST_ASSERT_EQ(Querying::Count(array.Vals()), 3);
+    GTEST_ASSERT_EQ(Querying::Count(array.Values()), 3);
 }
 
 TEST(QueryingTests_Count, RingHeap)
 {
     const auto ring = Ring<int32, HeapAlloc>::Of({ 1, 2, 3 });
-    GTEST_ASSERT_EQ(Querying::Count(ring.Vals()), 3);
+    GTEST_ASSERT_EQ(Querying::Count(ring.Values()), 3);
 }
 
 TEST(QueryingTests_Count, RingFixed)
 {
     const auto ring = Ring<int32, FixedAlloc<4 * sizeof(int32)>>::Of({ 1, 2, 3 });
-    GTEST_ASSERT_EQ(Querying::Count(ring.Vals()), 3);
+    GTEST_ASSERT_EQ(Querying::Count(ring.Values()), 3);
 }
 
 
@@ -45,7 +45,7 @@ TEST(QueryingTests_Select, Array)
 
     using SelectDoubled = Select<decltype(selector)>;
 
-    auto selected = array.Vals()
+    auto selected = array.Values()
         | Select<decltype(selector)>(selector)
         | SelectDoubled(selector);
 
@@ -53,7 +53,7 @@ TEST(QueryingTests_Select, Array)
 
     GTEST_ASSERT_EQ(
         Sum(MOVE(selected)), 
-        Sum(expected.Vals())
+        Sum(expected.Values())
     );
 }
 
@@ -67,14 +67,14 @@ TEST(QueryingTests_Where, Array)
 
     using WhereEven = Where<decltype(predicate)>;
 
-    auto selected = array.Vals()
+    auto selected = array.Values()
         | Where<decltype(predicate)>(predicate)
         | WhereEven(predicate);
 
     const auto expected = Array<int32, HeapAlloc>::Of({ 2 });
     GTEST_ASSERT_EQ(
         Sum(MOVE(selected)),
-        Sum(expected.Vals())
+        Sum(expected.Values())
     );
 }
 
@@ -89,7 +89,7 @@ TEST(QueryingTests_SelectWhere, Array)
     const auto predicate = [](const int32 value) { return value % 4 == 0; };
 
     {
-        auto query = array.Vals()
+        auto query = array.Values()
             | Select<decltype(selector)>(selector)
             | Where<decltype(predicate)>(predicate);
 
@@ -100,7 +100,7 @@ TEST(QueryingTests_SelectWhere, Array)
     }
 
     {
-        const int32 query = array.Vals()
+        const int32 query = array.Values()
             | Select<decltype(selector)>(selector)
             | Where<decltype(predicate)>(predicate)
             | CountElements();
@@ -120,7 +120,7 @@ TEST(QueryingTest_Sum, Dictionary)
     dict.Add(3, 17);
 
     const int32 keysSum = Sum(dict.Keys());
-    const int32 valuesSum = Sum(dict.Vals());
+    const int32 valuesSum = Sum(dict.Values());
 
     GTEST_ASSERT_EQ(keysSum, 6);
     GTEST_ASSERT_EQ(valuesSum, 30);

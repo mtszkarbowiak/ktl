@@ -855,13 +855,13 @@ public:
     }
     
     FORCE_INLINE NODISCARD
-    MutValEnumerator Vals()
+    MutValEnumerator Values()
     {
         return MutValEnumerator{ *this };
     }
 
     FORCE_INLINE NODISCARD
-    ConstValEnumerator Vals() const
+    ConstValEnumerator Values() const
     {
         return ConstValEnumerator{ *this };
     }
