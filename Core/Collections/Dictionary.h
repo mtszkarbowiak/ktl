@@ -504,6 +504,20 @@ public:
 
     // Note: Dictionary is a complex collection, thus it has so many different enumerators.
 
+private:
+    FORCE_INLINE NODISCARD
+    int32 SkipToOccupied(const int32 index) const
+    {
+        for (int32 i = index; i < _capacity; ++i)
+        {
+            if (DATA_OF(const Bucket, _allocData)[i].State() == BucketState::Occupied)
+                return i;
+        }
+        return _capacity;
+    }
+
+
+public:
     class KeyEnumerator
     {
         const Dictionary* _dictionary;
@@ -514,6 +528,7 @@ public:
             : _dictionary{ &dictionary }
             , _index{ 0 }
         {
+            _index = _dictionary->SkipToOccupied(_index);
         }
 
         // Access
@@ -521,13 +536,13 @@ public:
         FORCE_INLINE NODISCARD
         const K& operator*() const
         {
-            return DATA_OF(const K, _dictionary->_allocData)[_index].Key();
+            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Key();
         }
 
         FORCE_INLINE NODISCARD
         const K* operator->() const
         {
-            return &DATA_OF(const K, _dictionary->_allocData)[_index].Key();
+            return &DATA_OF(const Bucket, _dictionary->_allocData)[_index].Key();
         }
 
 
@@ -543,6 +558,7 @@ public:
         KeyEnumerator& operator++()
         {
             ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
             return *this;
         }
 
@@ -565,6 +581,7 @@ public:
             : _dictionary{ &dictionary }
             , _index{ 0 }
         {
+            _index = _dictionary->SkipToOccupied(_index);
         }
 
 
@@ -573,25 +590,25 @@ public:
         FORCE_INLINE NODISCARD
         V& operator*()
         {
-            return DATA_OF(V, _dictionary->_allocData)[_index].Value();
+            return DATA_OF(Bucket, _dictionary->_allocData)[_index].Value();
         }
 
         FORCE_INLINE NODISCARD
         const V& operator*() const
         {
-            return DATA_OF(const V, _dictionary->_allocData)[_index].Value();
+            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
         }
 
         FORCE_INLINE NODISCARD
         V* operator->()
         {
-            return &DATA_OF(V, _dictionary->_allocData)[_index].Value();
+            return &DATA_OF(Bucket, _dictionary->_allocData)[_index].Value();
         }
 
         FORCE_INLINE NODISCARD
         const V* operator->() const
         {
-            return &DATA_OF(const V, _dictionary->_allocData)[_index].Value();
+            return &DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
         }
 
 
@@ -607,6 +624,7 @@ public:
         MutValEnumerator& operator++()
         {
             ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
             return *this;
         }
 
@@ -629,6 +647,7 @@ public:
             : _dictionary{ &dictionary }
             , _index{ 0 }
         {
+            _index = _dictionary->SkipToOccupied(_index);
         }
 
 
@@ -637,13 +656,13 @@ public:
         FORCE_INLINE NODISCARD
         const V& operator*() const
         {
-            return DATA_OF(const V, _dictionary->_allocData)[_index].Value();
+            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
         }
 
         FORCE_INLINE NODISCARD
         const V* operator->() const
         {
-            return &DATA_OF(const V, _dictionary->_allocData)[_index].Value();
+            return &DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
         }
 
         // Iteration
@@ -658,6 +677,7 @@ public:
         ConstValEnumerator& operator++()
         {
             ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
             return *this;
         }
 
@@ -681,6 +701,7 @@ public:
             : _dictionary{ &dictionary }
             , _index{ 0 }
         {
+            _index = _dictionary->SkipToOccupied(_index);
         }
 
 
@@ -718,19 +739,19 @@ public:
         FORCE_INLINE NODISCARD
         const K& Key() const
         {
-            return DATA_OF(const K, _dictionary->_allocData)[_index].Key();
+            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Key();
         }
 
         FORCE_INLINE NODISCARD
         V& Value()
         {
-            return DATA_OF(V, _dictionary->_allocData)[_index].Value();
+            return DATA_OF(Bucket, _dictionary->_allocData)[_index].Value();
         }
 
         FORCE_INLINE NODISCARD
         const V& Value() const
         {
-            return DATA_OF(const V, _dictionary->_allocData)[_index].Value();
+            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
         }
 
 
@@ -746,6 +767,7 @@ public:
         MutBucketEnumerator& operator++()
         {
             ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
             return *this;
         }
 
@@ -768,6 +790,7 @@ public:
             : _dictionary{ &dictionary }
             , _index{ 0 }
         {
+            _index = _dictionary->SkipToOccupied(_index);
         }
         
 
@@ -789,13 +812,13 @@ public:
         FORCE_INLINE NODISCARD
         const K& Key() const
         {
-            return DATA_OF(const K, _dictionary->_allocData)[_index].Key();
+            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Key();
         }
 
         FORCE_INLINE NODISCARD
         const V& Value() const
         {
-            return DATA_OF(const V, _dictionary->_allocData)[_index].Value();
+            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
         }
 
 
@@ -811,6 +834,7 @@ public:
         ConstBucketEnumerator& operator++()
         {
             ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
             return *this;
         }
 

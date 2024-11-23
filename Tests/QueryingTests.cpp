@@ -5,6 +5,7 @@
 #include "Algorithms/Querying.h"
 #include "Allocators/FixedAlloc.h"
 #include "Collections/Array.h"
+#include "Collections/Dictionary.h"
 #include "Collections/Ring.h"
 #include "Math/Stastics.h"
 
@@ -106,4 +107,21 @@ TEST(QueryingTests_SelectWhere, Array)
 
         GTEST_ASSERT_EQ(query, 2);
     }
+}
+
+TEST(QueryingTest_Sum, Dictionary)
+{
+    using namespace Querying;
+    using namespace Statistics;
+
+    Dictionary<int32, int32> dict;
+    dict.Add(1, 5);
+    dict.Add(2, 8);
+    dict.Add(3, 17);
+
+    const int32 keysSum = Sum(dict.Keys());
+    const int32 valuesSum = Sum(dict.Vals());
+
+    GTEST_ASSERT_EQ(keysSum, 6);
+    GTEST_ASSERT_EQ(valuesSum, 30);
 }
