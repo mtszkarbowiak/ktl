@@ -92,6 +92,40 @@ namespace Statistics
     }
 
 
+    struct ToMin {};
+
+    struct ToMax {};
+
+    struct ToSum {};
+
+    struct ToAverage {};
+
+
+    template<typename Producer>
+    auto operator|(Producer&& producer, ToMin)
+    {
+        return Min(FORWARD(Producer, producer));
+    }
+
+    template<typename Producer>
+    auto operator|(Producer&& producer, ToMax)
+    {
+        return Max(FORWARD(Producer, producer));
+    }
+
+    template<typename Producer>
+    auto operator|(Producer&& producer, ToSum)
+    {
+        return Sum(FORWARD(Producer, producer));
+    }
+
+    template<typename Producer>
+    auto operator|(Producer&& producer, ToAverage)
+    {
+        return Average(FORWARD(Producer, producer));
+    }
+
+
     /// <summary> Calculates Residual Sum of Squares. </summary>
     template<typename EnumeratorA, typename EnumeratorB>
     NODISCARD

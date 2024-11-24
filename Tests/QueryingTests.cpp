@@ -103,7 +103,7 @@ TEST(QueryingTests_SelectWhere, Array)
         const int32 query = array.Values()
             | Select<decltype(selector)>(selector)
             | Where<decltype(predicate)>(predicate)
-            | CountElements();
+            | ToCount();
 
         GTEST_ASSERT_EQ(query, 2);
     }
@@ -114,14 +114,34 @@ TEST(QueryingTest_Sum, Dictionary)
     using namespace Querying;
     using namespace Statistics;
 
-    Dictionary<int32, int32> dict;
-    dict.Add(1, 5);
-    dict.Add(2, 8);
-    dict.Add(3, 17);
+    Dictionary<int32, float> dict;
+    dict.Add(1, 5.0f);
+    dict.Add(2, 8.0f);
+    dict.Add(3, 17.0f);
+    dict.Add(4, 3.0f);
+    dict.Add(5, 9.0f);
+    dict.Add(6, 11.0f);
+    dict.Add(7, 2.0f);
 
-    const int32 keysSum = Sum(dict.Keys());
-    const int32 valuesSum = Sum(dict.Values());
+    // Calculate the sum of all even keys
 
-    GTEST_ASSERT_EQ(keysSum, 6);
-    GTEST_ASSERT_EQ(valuesSum, 30);
+    auto where = [](const int32 key) { return key % 2 == 0; };
+
+    const int32 sum = dict.Keys()
+        | Where<decltype(where)>(where)
+        | ToSum();
+
+    GTEST_ASSERT_EQ(sum, 12);
+
+    // Calculate the average of squares of values above 5.
+
+    auto where2 = [](const float value) { return value > 5.0f; };
+    auto select = [](const float value) { return value * value; };
+
+    const float wtfNumba = dict.Values()
+        | Where<decltype(where2)>(where2)
+        | Select<decltype(select)>(select)
+        | ToAverage();
+
+    GTEST_ASSERT_GE(wtfNumba, 138.0f);
 }

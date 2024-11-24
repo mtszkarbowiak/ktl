@@ -25,7 +25,7 @@ namespace Querying
 
     // Transformation Queries
 
-    struct CountElements {}; // Only a tag to indicate the query.
+    struct ToCount {}; // Only a tag to indicate the query.
 
 
     template<typename Selector>
@@ -187,7 +187,7 @@ namespace Querying
 
 
     template<typename Producer>
-    auto operator|(Producer&& producer, CountElements ce)
+    auto operator|(Producer&& producer, ToCount)
     {
         return Count(FORWARD(Producer, producer));
     }
