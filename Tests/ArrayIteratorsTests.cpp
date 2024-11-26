@@ -21,7 +21,7 @@ TEST(ArrayIterators, ConstEnumerator)
     for (auto enumerator = array.Values(); enumerator; ++enumerator)
         actualSum += *enumerator;
     
-    ASSERT_EQ(expectedSum, actualSum);
+    GTEST_ASSERT_EQ(expectedSum, actualSum);
 }
 
 TEST(ArrayIterators, MutableEnumerator)
@@ -56,9 +56,9 @@ TEST(ArrayIterators, EnumeratorEquality)
     auto enumerator1 = array.Values();
     auto enumerator2 = array.Values();
 
-    ASSERT_EQ(enumerator1, enumerator2);
+    GTEST_ASSERT_EQ(enumerator1, enumerator2);
     ++enumerator1;
-    ASSERT_NE(enumerator1, enumerator2);
+    GTEST_ASSERT_NE(enumerator1, enumerator2);
     ++enumerator2;
-    ASSERT_EQ(enumerator1, enumerator2);
+    GTEST_ASSERT_EQ(enumerator1, enumerator2);
 }

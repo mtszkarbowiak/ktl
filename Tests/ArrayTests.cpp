@@ -366,15 +366,15 @@ TEST(Array_ElementManipulation, Insert)
 
         array.InsertAt(2, 69);
 
-        ASSERT_EQ(array.Count(), 7);
+        GTEST_ASSERT_EQ(array.Count(), 7);
 
-        ASSERT_EQ(array[0].Value, 0);
-        ASSERT_EQ(array[1].Value, 1);
-        ASSERT_EQ(array[2].Value, 69);
-        ASSERT_EQ(array[3].Value, 3);
-        ASSERT_EQ(array[4].Value, 4);
-        ASSERT_EQ(array[5].Value, 5);
-        ASSERT_EQ(array[6].Value, 2);
+        GTEST_ASSERT_EQ(array[0].Value, 0);
+        GTEST_ASSERT_EQ(array[1].Value, 1);
+        GTEST_ASSERT_EQ(array[2].Value, 69);
+        GTEST_ASSERT_EQ(array[3].Value, 3);
+        GTEST_ASSERT_EQ(array[4].Value, 4);
+        GTEST_ASSERT_EQ(array[5].Value, 5);
+        GTEST_ASSERT_EQ(array[6].Value, 2);
     }
     LIFECYCLE_TEST_OUT
 }
@@ -389,15 +389,15 @@ TEST(Array_ElementManipulation, InsertAt)
 
         array.InsertAtStable(2, 69);
 
-        ASSERT_EQ(array.Count(), 7);
+        GTEST_ASSERT_EQ(array.Count(), 7);
 
-        ASSERT_EQ(array[0].Value, 0);
-        ASSERT_EQ(array[1].Value, 1);
-        ASSERT_EQ(array[2].Value, 69);
-        ASSERT_EQ(array[3].Value, 2);
-        ASSERT_EQ(array[4].Value, 3);
-        ASSERT_EQ(array[5].Value, 4);
-        ASSERT_EQ(array[6].Value, 5);
+        GTEST_ASSERT_EQ(array[0].Value, 0);
+        GTEST_ASSERT_EQ(array[1].Value, 1);
+        GTEST_ASSERT_EQ(array[2].Value, 69);
+        GTEST_ASSERT_EQ(array[3].Value, 2);
+        GTEST_ASSERT_EQ(array[4].Value, 3);
+        GTEST_ASSERT_EQ(array[5].Value, 4);
+        GTEST_ASSERT_EQ(array[6].Value, 5);
     }
     LIFECYCLE_TEST_OUT
 }
@@ -412,13 +412,13 @@ TEST(Array_ElementManipulation, Remove)
 
         array.RemoveAt(2);
 
-        ASSERT_EQ(array.Count(), 5);
+        GTEST_ASSERT_EQ(array.Count(), 5);
 
-        ASSERT_EQ(array[0].Value, 0);
-        ASSERT_EQ(array[1].Value, 1);
-        ASSERT_EQ(array[2].Value, 5);
-        ASSERT_EQ(array[3].Value, 3);
-        ASSERT_EQ(array[4].Value, 4);
+        GTEST_ASSERT_EQ(array[0].Value, 0);
+        GTEST_ASSERT_EQ(array[1].Value, 1);
+        GTEST_ASSERT_EQ(array[2].Value, 5);
+        GTEST_ASSERT_EQ(array[3].Value, 3);
+        GTEST_ASSERT_EQ(array[4].Value, 4);
 
     }
     LIFECYCLE_TEST_OUT
@@ -434,13 +434,13 @@ TEST(Array_ElementManipulation, RemoveStable)
 
         array.RemoveAtStable(2);
 
-        ASSERT_EQ(array.Count(), 5);
+        GTEST_ASSERT_EQ(array.Count(), 5);
 
-        ASSERT_EQ(array[0].Value, 0);
-        ASSERT_EQ(array[1].Value, 1);
-        ASSERT_EQ(array[2].Value, 3);
-        ASSERT_EQ(array[3].Value, 4);
-        ASSERT_EQ(array[4].Value, 5);
+        GTEST_ASSERT_EQ(array[0].Value, 0);
+        GTEST_ASSERT_EQ(array[1].Value, 1);
+        GTEST_ASSERT_EQ(array[2].Value, 3);
+        GTEST_ASSERT_EQ(array[3].Value, 4);
+        GTEST_ASSERT_EQ(array[4].Value, 5);
     }
     LIFECYCLE_TEST_OUT
 }
