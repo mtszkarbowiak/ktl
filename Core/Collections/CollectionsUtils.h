@@ -39,6 +39,8 @@
 /// <remarks> In the future, this macro may also be used to add additional checks or operations. </remarks>
 #define DATA_OF(element_type, alloc) static_cast<element_type*>((alloc).Get())
 
+/// <summary> Makes sure that the pointer is correctly aligned for the specified type. </summary>
+#define ASSERT_CORRECT_ALIGNMENT(type, ptr) ASSERT(reinterpret_cast<uintptr_t>(ptr) % alignof(type) == 0)
 
 
 class CollectionsUtils
@@ -85,7 +87,7 @@ public:
     /// </remarks>
     template<typename Element, typename Alloc, int32 Default>
     FORCE_INLINE NODISCARD
-        static auto GetRequiredCapacity(const int32 minCount) -> int32
+    static auto GetRequiredCapacity(const int32 minCount) -> int32
     {
         constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
         constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
@@ -96,7 +98,7 @@ public:
 
     template<typename Element, typename Alloc>
     FORCE_INLINE NODISCARD
-        static auto AllocateCapacity(typename Alloc::Data& data, const int32 capacity) -> int32
+    static auto AllocateCapacity(typename Alloc::Data& data, const int32 capacity) -> int32
     {
         constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
         constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
@@ -108,6 +110,9 @@ public:
         const int32 allocatedCapacity = data.Allocate(requestedMemory) / sizeof(Element);
 
         ASSERT(allocatedCapacity >= capacity);
+
+        const Element* elements = DATA_OF(Element, data);
+        ASSERT_CORRECT_ALIGNMENT(Element, elements);
 
         return allocatedCapacity;
     }
