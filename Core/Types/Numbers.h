@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../Language/TypeInfo.h"
+#include "Language/TypeInfo.h"
 
 
 using uint8  = unsigned char;

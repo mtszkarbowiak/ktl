@@ -537,7 +537,7 @@ public:
     // Collection Lifecycle  - Assignments
 
     FORCE_INLINE
-        Array& operator=(Array&& other) noexcept
+    Array& operator=(Array&& other) noexcept
     {
         if (this != &other) 
         {

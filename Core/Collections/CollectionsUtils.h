@@ -185,7 +185,7 @@ private:
     template<typename Element>
     FORCE_INLINE
     static std::enable_if_t<TIsCStyle<Element>::Value, void>
-    CopyLinearConentImpl(
+    CopyLinearContentImpl(
         const Element* source,
         Element*       target,
         const int32    count

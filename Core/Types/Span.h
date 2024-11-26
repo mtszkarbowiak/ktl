@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "../Debugging/Assertions.h"
-#include "../Types/Numbers.h"
+#include "Debugging/Assertions.h"
+#include "Types/Numbers.h"
 
 
 template<typename T>
