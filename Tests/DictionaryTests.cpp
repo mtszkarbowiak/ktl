@@ -4,13 +4,19 @@
 
 #include "Collections/Dictionary.h"
 
-TEST(DictionaryTests, Construct)
+
+// Capacity Management
+
+TEST(Dictionary_Capacity, Reserve_OnInit)
 {
-    Dictionary<int32, int32, HeapAlloc, Probing::Linear> dict;
-    GTEST_ASSERT_TRUE(dict.IsEmpty());
+    constexpr int32 ExampleDefaultCapacity = 10;
+    Dictionary<int32, int32> dict{ ExampleDefaultCapacity };
+    GTEST_ASSERT_GE(HASH_MAPS_DEFAULT_CAPACITY, ExampleDefaultCapacity);
+    GTEST_ASSERT_EQ(dict.Capacity(), HASH_MAPS_DEFAULT_CAPACITY);
 }
 
-TEST(DictionaryTest, Add)
+
+TEST(DictionaryTest, Reserve_Add)
 {
     Dictionary<int32, int32> dict;
     dict.Add(1, 2);
@@ -34,6 +40,34 @@ TEST(DictionaryTest, AddMany)
     {
         GTEST_ASSERT_TRUE(dict.Contains(i));
         GTEST_ASSERT_EQ(*dict.TryGet(i), i);
+    }
+}
+
+TEST(DictionaryTest, AddManyRemoveMany)
+{
+    Dictionary<int32, int32> dict;
+
+    for (int32 i = 0; i < 1000; ++i)
+    {
+        dict.Add(i, i);
+    }
+
+    GTEST_ASSERT_EQ(dict.Count(), 1000);
+
+    for (int32 i = 0; i < 1000; ++i)
+    {
+        GTEST_ASSERT_TRUE(dict.Contains(i));
+        GTEST_ASSERT_EQ(*dict.TryGet(i), i);
+    }
+
+    for (int32 i = 0; i < 1000; ++i)
+    {
+        if (i % 200 == 0) 
+        {
+            dict.Compact();
+        }
+
+        dict.Remove(i);
     }
 }
 
