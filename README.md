@@ -1,6 +1,10 @@
 # GameDev Fundamentals Library
 
-## I. Work in Progress
+> Note: This library is very work-in-progress. Adding the features and stability have higher priority than performance. When the library has all the features, specific benchmarks will be added.
+
+> Note: For examples of usage, see the test directory. It contains examples of example [collections](Tests/RingTests.cpp) or [queries](Tests/QueryingTests.cpp).
+
+## I. State of Features
 
 Collections:
 
@@ -9,8 +13,8 @@ Collections:
 - [x] `Ring` - Circular buffer, double-ended queue.
 - [ ] `Dictionary` - Unordered hash table.
 - [ ] `HasSet` - Unordered set.
-- [ ] `ChunkedArray` - Array of arrays for very large collections.
 - [x] `BitArray` - Specialized array for bits.
+- [ ] `ChunkedArray` - Array of arrays for very large collections.
 
 Allocators:
 
@@ -31,27 +35,21 @@ Algorithms
 
 ## II. Objectives
 
-- **Game Development**: The library is designed to be used in a game development environment where performance is a critical concern.
-- **Parity with Flax Engine**: The library was originaly created as a replacement for the Flax Engine's core library. In future, it is hoped to replace the contemporary solution.
-
-Motivations:
-
-- **Contributions**: The library is designed to be a contribution to the game development community.
-- **Personal Development**: The library is a personal project to learn more about game development and C++ programming.
-- **Example of My Work**: The library is an example of my work for potential employers and collaborators.
+- **Game Development**: The library is designed to be used in a game development environment where performance is a critical concern. As the primary source of performance issues in games is memory management, the library provides a set of data structures and algorithms that are designed to be efficient and flexible in terms of memory usage.
+- **Parity with [Flax Engine](https://github.com/FlaxEngine/FlaxEngine)**: The library was originaly created as a replacement for the Flax Engine's core library. Making improvements required changing the design on the conceptual level thus it deviated too much for drop-in replacement.
 
 
 ## III. Key Assumptions
 
-1. **Performance Priority**: The library is designed to be used in a game development environment where performance is a critical concern.
-2. **C++14**: The library is written in for C++14. Using higher versions may enable additional features.
+1. **Performance Priority**: The library is designed to be used in a game development environment where performance is a critical concern. It is assumed that handling memory correctly is the cornerstone of performance.
+2. **C++14**: The library is written in for Cpp 14. Using higher versions may enable additional features, but compatibility with Flax requires Cpp 14.
 3. **Memory Management**: The library is designed to be used in a game development environment where memory management is a critical concern. The library provides a set of data structures and algorithms that are designed to be efficient and flexible in terms of memory usage.
-4. **Exception Handling**: The library does not use exceptions for error handling. Exceptions create a significant overhead in terms of performance. They can be used only for critical unrecoverable errors.
-5. **Memory Limits**: Allocations are limited to 4GB. This is a reasonable limit for most game development scenarios. Thus, the library uses 32-bit integers for memory sizes.
-6. **Move Semantics**: The library uses move semantics to avoid unnecessary copying of objects. This is especially important for large objects such as arrays and dictionaries.
+4. **Exception Handling**: The library does not use exceptions for error handling. Making the code handle them correctly enforces very strict rules and performance overhead. They can be used only for critical unrecoverable errors.
+5. **Memory Limits**: Allocations are limited to 4GB. This is a reasonable limit for most game development scenarios. Thus, the library uses 32-bit integers for memory sizes. Pointers remain 64-bit.
+6. **Move Semantics**: The library extensively uses move semantics to avoid unnecessary copying of objects. This is especially important for large objects such as arrays and dictionaries. A macro to block implicit copying is considered.
 
 
-## VI. Core Principles
+## IV. Design Principles
 
 ### 1. General
 
@@ -91,21 +89,18 @@ Collections manage object lifetimes and manage required memory through allocatio
 - 3.7. Default capacity must obey constraints of the allocation policy.
 - 3.8. Collections must be ready to accept different hash types.
 
-### 3. Iterators
+### 4. Iterators
 
-- 3.1. Collections provide two types of iterators: STL-style and enumerators (C#-style).
-- 3.2. Iterators are not expected to stay valid after the collection has been modified.
-- 3.3. STL-style iterators must obey the STL iterator concept.
-- 3.4. Enumerators must provide a wat to check if dereferncing is valid, dereference, and move to the next element.
-
-### 4. Algorithms
-
-4.1. Algorithms should prefer to use iterators/enumerators over collections.
-
+- 4.1. Collections provide two types of iterators: STL-style and enumerators (C#-style).
+- 4.2. Enumerators are NOT re-enterant, making them singificantly simpler to implement, [and more importantly, to use](https://www.youtube.com/watch?v=49ZYW4gHBIQ&t=3414s) than [ranges](https://en.cppreference.com/w/cpp/ranges). This also makes them more similar to LINQ in C# (or Rust iterators).
+- 4.3. STL-style iterators must obey the STL iterator concept to enable STL algorithms.
+- 4.4. Enumerators provide simple API: `operator(bool)` for end condition, `operator++()` for moving to the next element and `operator*()` for accessing the current element.
 
 ## V. Aknowledgements
 
 Created by Mateusz Karbowiak 2024
+
+The project is available under the [MIT License](LICENSE.md).
 
 The library is inspired by the following projects: 
 
@@ -116,5 +111,3 @@ The project uses the following tools:
 
 - [CMake](https://cmake.org/)
 - [Google Test](https://github.com/google/googletest)
-
-The project is available under the MIT License.
