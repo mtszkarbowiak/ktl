@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CollectionsUtils.h"
+#include "Types/IterHint.h"
 
 /// <summary>
 /// Specialized container for storing dynamically resizable arrays of logic values.
@@ -555,6 +556,13 @@ public:
         // Access
 
         FORCE_INLINE NODISCARD
+        IterHint Hint() const
+        {
+            const int32 remaining = _array->Count() - _index;
+            return { remaining, remaining };
+        }
+
+        FORCE_INLINE NODISCARD
         auto operator*() -> MutBitRef
         {
             return MutBitRef{ _array, _index };
@@ -649,6 +657,13 @@ public:
 
 
         // Access
+
+        FORCE_INLINE NODISCARD
+        IterHint Hint() const
+        {
+            const int32 remaining = _array->Count() - _index;
+            return { remaining, remaining };
+        }
 
         FORCE_INLINE NODISCARD
         auto operator*() const -> ConstBitRef

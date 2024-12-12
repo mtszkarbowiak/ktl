@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CollectionsUtils.h"
+#include "Types/IterHint.h"
 
 
 /// <summary>
@@ -606,7 +607,15 @@ public:
         {
         }
 
+
         // Access
+
+        FORCE_INLINE NODISCARD
+        IterHint Hint() const
+        {
+            const int32 remaining = _array->_count - _index;
+            return { remaining, remaining };
+        }
 
         FORCE_INLINE T& operator*()  { return (*_array)[_index]; }
 
@@ -700,6 +709,13 @@ public:
 
 
         // Access
+
+        FORCE_INLINE NODISCARD
+        IterHint Hint() const
+        {
+            const int32 remaining = _array->_count - _index;
+            return { remaining, remaining };
+        }
 
         FORCE_INLINE
         const T& operator*() const  { return (*_array)[_index]; }

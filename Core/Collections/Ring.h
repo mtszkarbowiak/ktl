@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Collections/CollectionsUtils.h"
+#include "Types/IterHint.h"
 
 /// <summary>
 /// Double-ended container for storing dynamically resizable queues of elements.
@@ -751,6 +752,13 @@ public:
         // Access
 
         FORCE_INLINE
+        IterHint Hint() const
+        {
+            const int32 remaining = _ring->Count() - _indexOfElement;
+            return { remaining, remaining };
+        }
+
+        FORCE_INLINE
         T& operator*()
         {
             return DATA_OF(T, _ring->_allocData)[_indexOfSlot];
@@ -859,6 +867,12 @@ public:
 
 
         // Access
+
+        FORCE_INLINE auto Hint() const -> IterHint
+        {
+            const int32 remaining = _ring->Count() - _indexOfElement;
+            return { remaining, remaining };
+        }
 
         FORCE_INLINE NODISCARD
         const T& operator*() const
