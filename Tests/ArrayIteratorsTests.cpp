@@ -18,8 +18,20 @@ TEST(ArrayIterators, ConstEnumerator)
     }
 
     int32 actualSum = 0;
-    for (auto enumerator = array.Values(); enumerator; ++enumerator)
+    int32 index = 0;
+    int32 elementsLeft = array.Count(); // Hints are inclusive!
+
+    for (auto enumerator = array.Values(); enumerator; ++enumerator) 
+    {
         actualSum += *enumerator;
+
+        GTEST_ASSERT_EQ(enumerator.Index(), index);
+        GTEST_ASSERT_EQ(enumerator.Hint().Min, elementsLeft);
+        GTEST_ASSERT_EQ(enumerator.Hint().Max, elementsLeft);
+
+        ++index;
+        --elementsLeft;
+    }
     
     GTEST_ASSERT_EQ(expectedSum, actualSum);
 }
@@ -37,8 +49,19 @@ TEST(ArrayIterators, MutableEnumerator)
         expectedSum += i;
     }
 
-    for (auto enumerator = array.Values(); enumerator; ++enumerator)
+    int32 index = 0;
+    int32 elementsLeft = array.Count(); // Hints are inclusive!
+    for (auto enumerator = array.Values(); enumerator; ++enumerator) 
+    {
         *enumerator = TestElements - *enumerator;
+
+        GTEST_ASSERT_EQ(enumerator.Index(), index);
+        GTEST_ASSERT_EQ(enumerator.Hint().Min, elementsLeft);
+        GTEST_ASSERT_EQ(enumerator.Hint().Max, elementsLeft);
+
+        ++index;
+        --elementsLeft;
+    }
     
     int32 actualSum = 0;
     for (auto enumerator = array.Values(); enumerator; ++enumerator)
