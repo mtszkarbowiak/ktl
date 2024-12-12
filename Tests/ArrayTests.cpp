@@ -306,16 +306,16 @@ TEST(Array_Relocation, MoveConstruct_DragAlloc)
 
     LIFECYCLE_TEST_INTO
     {
-        using NoDragAlloc = HeapAlloc;
+        using DragAlloc = HeapAlloc;
 
-        Array<TestTracker, NoDragAlloc> movedArray{ ElementCount };
+        Array<TestTracker, DragAlloc> movedArray{ ElementCount };
 
         // Init: n constructions
         for (int32 i = 0; i < ElementCount; ++i)
             movedArray.Emplace(i);
 
         // Reloc: 0 constructions
-        Array<TestTracker, NoDragAlloc> targetArray{ MOVE(movedArray) };
+        Array<TestTracker, DragAlloc> targetArray{ MOVE(movedArray) };
         GTEST_ASSERT_EQ(targetArray.Count(), ElementCount);
 
         // Total: n constructions
@@ -330,15 +330,15 @@ TEST(Array_Relocation, MoveAssignment_DragAlloc)
 
     LIFECYCLE_TEST_INTO
     {
-        using NoDragAlloc = HeapAlloc;
+        using DragAlloc = HeapAlloc;
 
-        Array<TestTracker, NoDragAlloc> movedArray{ ElementCount };
+        Array<TestTracker, DragAlloc> movedArray{ ElementCount };
 
         // Init: n constructions
         for (int32 i = 0; i < ElementCount; ++i)
             movedArray.Emplace(i);
 
-        Array<TestTracker, NoDragAlloc> targetArray;
+        Array<TestTracker, DragAlloc> targetArray;
 
         // Init: 1 construction
         targetArray.Emplace(69); // To be overriden
