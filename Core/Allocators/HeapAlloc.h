@@ -21,7 +21,7 @@ public:
 
     class Data
     {
-        void* _ptr;
+        byte* _ptr;
 
     public:
 
@@ -90,7 +90,7 @@ public:
         {
             ASSERT_MEMORY(_ptr == nullptr);
 
-            _ptr = MALLOC(size);
+            _ptr = static_cast<byte*>(MALLOC(size));
             return _ptr ? size : 0;
         }
 
@@ -105,13 +105,13 @@ public:
 
 
         FORCE_INLINE NODISCARD
-        auto Get() const -> const void*
+        auto Get() const -> const byte*
         {
             return _ptr;
         }
 
         FORCE_INLINE NODISCARD
-        auto Get() -> void*
+        auto Get() -> byte*
         {
             return _ptr;
         }

@@ -147,13 +147,13 @@ public:
 
 
         FORCE_INLINE NODISCARD
-        auto Get() const -> const void*
+        auto Get() const -> const byte*
         {
             return _data;
         }
 
         FORCE_INLINE NODISCARD
-        auto Get() -> void*
+        auto Get() -> byte*
         {
             return _data;
         }

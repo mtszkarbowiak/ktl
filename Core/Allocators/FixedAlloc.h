@@ -76,13 +76,13 @@ public:
 
 
         FORCE_INLINE NODISCARD
-        constexpr auto Get() const -> const void*
+        constexpr auto Get() const -> const byte*
         {
             return _data;
         }
 
         FORCE_INLINE NODISCARD
-        constexpr auto Get() -> void*
+        constexpr auto Get() -> byte*
         {
             return _data;
         }
