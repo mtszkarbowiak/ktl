@@ -1,10 +1,16 @@
 # GameDev Fundamentals Library
 
-> Note: This library is very work-in-progress. Adding the features and stability have higher priority than performance. When the library has all the features, specific benchmarks will be added.
+> Note: This library is very work-in-progress. Originally, it was supposed to be only a proof-of-concept. Adding the features and stability have higher priority than performance. When the library has all the features, specific benchmarks will be added.
 
 > Note: For examples of usage, see the test directory. It contains examples of example [collections](Tests/RingTests.cpp) or [queries](Tests/QueryingTests.cpp).
 
 ## I. State of Features
+
+Types:
+
+- [ ] `SafeBool`, `SafeInt` - Types preventing common mistakes: implicit conversions, arithmetic overflows, etc.
+- [ ] `Nullable` - Type for optional values.
+- [ ] `Result` - Type for returning errors.
 
 Collections:
 
@@ -47,6 +53,8 @@ Algorithms
 4. **Exception Handling**: The library does not use exceptions for error handling. Making the code handle them correctly enforces very strict rules and performance overhead. They can be used only for critical unrecoverable errors.
 5. **Memory Limits**: Allocations are limited to 4GB. This is a reasonable limit for most game development scenarios. Thus, the library uses 32-bit integers for memory sizes. Pointers remain 64-bit.
 6. **Move Semantics**: The library extensively uses move semantics to avoid unnecessary copying of objects. This is especially important for large objects such as arrays and dictionaries. A macro to block implicit copying is considered.
+7. **No RTTI**: The library does not use RTTI. This is a performance optimization, as RTTI can be expensive in terms of memory and performance.
+8. **No Inheritance**: The library does not use inheritance. It creates a lot of problems, best described by the author of the STL itself, Alexander Stepanov.
 
 
 ## IV. Design Principles
@@ -65,7 +73,7 @@ Allocation policy is a class storing general traits of an allocation, it include
 - 2.2. Allocation policy takes responsibility for alignment.
 - 2.3. The destructor does not release the memory block.
 - 2.4. Allocation data is not agnostic of the stored type. This disables `constexpr` but allows for tricks with the type system.
-- 2.5. Accessing allocated block takes place through a method `Get() -> void*`.
+- 2.5. Accessing allocated block takes place through a method `Get() -> byte*`.
 - 2.6. Allocation failures are signaled by returning a null pointer and zero size.
 - 2.7. State of the allcation data may change only: on initialization, on allocation, on deallocation.
 - 2.8. Allocation policy may declare the minimum and maximum size of allocatable memory blocks. Requesting a size outside this range is an error.
@@ -95,6 +103,7 @@ Collections manage object lifetimes and manage required memory through allocatio
 - 4.2. Enumerators are NOT re-enterant, making them singificantly simpler to implement, [and more importantly, to use](https://www.youtube.com/watch?v=49ZYW4gHBIQ&t=3414s) than [ranges](https://en.cppreference.com/w/cpp/ranges). This also makes them more similar to LINQ in C# (or Rust iterators).
 - 4.3. STL-style iterators must obey the STL iterator concept to enable STL algorithms.
 - 4.4. Enumerators provide simple API: `operator(bool)` for end condition, `operator++()` for moving to the next element and `operator*()` for accessing the current element.
+- 4.5. Enumerators provide an enumeration space hints, so more advanced queries can predict number of elements: `Hint() -> struct IterHint{ Min; Max; }`. This reduces the need for dynamic memory allocation.
 
 ## V. Aknowledgements
 
