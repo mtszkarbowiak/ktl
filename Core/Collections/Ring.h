@@ -337,7 +337,7 @@ public:
         if (_countCached == _capacity)
             EnsureCapacity(_capacity + 1);
 
-        T* target = static_cast<T*>(_allocData.Get()) + _tail;
+        T* target = DATA_OF(T, _allocData) + _tail;
 
         new (target) T(FORWARD(U, element));
         _tail = (_tail + 1) % _capacity;
@@ -356,7 +356,7 @@ public:
         if (_countCached == _capacity)
             EnsureCapacity(_capacity + 1);
 
-        T* target = static_cast<T*>(_allocData.Get()) + _tail;
+        T* target = DATA_OF(T, _allocData) + _tail;
 
         new (target) T(FORWARD(Args, args)...);
         _tail = (_tail + 1) % _capacity;
@@ -382,7 +382,7 @@ public:
             EnsureCapacity(_capacity + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
-        T* target = static_cast<T*>(_allocData.Get()) + _head;
+        T* target = DATA_OF(T, _allocData) + _head;
         new (target) T(FORWARD(U, element));
         _countCached += 1;
 
@@ -400,7 +400,7 @@ public:
             EnsureCapacity(_capacity + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
-        T* target = static_cast<T*>(_allocData.Get()) + _head;
+        T* target = DATA_OF(T, _allocData) + _head;
         new (target) T(FORWARD(Args, args)...);
         _countCached += 1;
 
@@ -420,7 +420,7 @@ public:
     {
         ASSERT(_countCached > 0); // Ring must not be empty!
         _tail = (_tail - 1 + _capacity) % _capacity;
-        T* target = static_cast<T*>(_allocData.Get()) + _tail;
+        T* target = DATA_OF(T, _allocData) + _tail;
         target->~T();
         _countCached -= 1;
 
@@ -432,7 +432,7 @@ public:
     void PopFront()
     {
         ASSERT(_countCached > 0); // Ring must not be empty!
-        T* target = static_cast<T*>(_allocData.Get()) + _head;
+        T* target = DATA_OF(T, _allocData) + _head;
         target->~T();
         _head = (_head + 1) % _capacity;
         _countCached -= 1;
