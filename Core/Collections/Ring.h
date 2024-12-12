@@ -641,7 +641,10 @@ public:
     }
 
     /// <summary> Initializes a ring by copying another ring. </summary>
-    template<typename U = T, typename = typename std::enable_if<((std::is_copy_constructible<T>::value&& std::is_same<U, T>::value))>::type>
+    template<typename U = T, typename = typename std::enable_if<((
+        std::is_copy_constructible<T>::value &&
+        std::is_same<U, T>::value
+    ))>::type>
     Ring(const Ring& other)
     {
         CopyFrom<Alloc>(other);
@@ -686,7 +689,10 @@ public:
         return *this;
     }
 
-    template<typename U = T, typename = typename std::enable_if<((std::is_copy_constructible<T>::value&& std::is_same<U, T>::value))>::type>
+    template<typename U = T, typename = typename std::enable_if<((
+        std::is_copy_constructible<T>::value &&
+        std::is_same<U, T>::value
+    ))>::type>
     FORCE_INLINE
     Ring& operator=(const Ring& other)
     {

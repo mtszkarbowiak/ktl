@@ -627,9 +627,9 @@ public:
         typename K_ = K,
         typename V_ = V,
         typename = typename std::enable_if<((
-            std::is_copy_constructible<K>::value&&
-            std::is_copy_constructible<V>::value&&
-            std::is_same<K, K_>::value&&
+            std::is_copy_constructible<K>::value &&
+            std::is_copy_constructible<V>::value &&
+            std::is_same<K, K_>::value &&
             std::is_same<V, V_>::value
         ))>::type>
     auto operator=(const Dictionary& other) -> Dictionary&
