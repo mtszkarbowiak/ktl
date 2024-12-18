@@ -57,4 +57,25 @@ namespace Math
         capacity |= capacity >> 16;
         return capacity + 1;
     }
+
+    /// <summary> Returns the highest power of 2 smaller or equal to the given number. </summary>
+    FORCE_INLINE NODISCARD
+    constexpr static auto PrevPow2(const int32 count) -> int32
+    {
+        if (count <= 0) return 0; // Handle invalid input gracefully.
+        int32 capacity = count;
+        capacity |= capacity >> 1;
+        capacity |= capacity >> 2;
+        capacity |= capacity >> 4;
+        capacity |= capacity >> 8;
+        capacity |= capacity >> 16;
+        return capacity - (capacity >> 1);
+    }
+
+    /// <summary> Checks if the given number is a power of 2. </summary>
+    FORCE_INLINE NODISCARD
+    constexpr static auto IsPow2(const int32 count) -> bool
+    {
+        return count > 0 && (count & (count - 1)) == 0;
+    }
 }

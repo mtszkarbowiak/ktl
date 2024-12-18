@@ -5,6 +5,27 @@
 #include "Allocators/FixedAlloc.h"
 #include "Allocators/HeapAlloc.h"
 #include "Allocators/BumpAlloc.h"
+#include "Math/Arithmetic.h"
+
+TEST(CapacityMath, Pow2)
+{
+    using namespace Math;
+
+    GTEST_ASSERT_EQ(NextPow2(1), 1);
+    GTEST_ASSERT_EQ(NextPow2(2137), 4096);
+    GTEST_ASSERT_EQ(NextPow2(4096), 4096);
+
+    GTEST_ASSERT_EQ(PrevPow2(1), 1);
+    GTEST_ASSERT_EQ(PrevPow2(2137), 2048);
+    GTEST_ASSERT_EQ(PrevPow2(4096), 4096);
+
+    GTEST_ASSERT_TRUE(IsPow2(1));
+    GTEST_ASSERT_TRUE(IsPow2(2));
+    GTEST_ASSERT_TRUE(IsPow2(1024));
+
+    GTEST_ASSERT_FALSE(IsPow2(3));
+    GTEST_ASSERT_FALSE(IsPow2(2137));
+}
 
 TEST(FixedAlloc, AllocationCycle)
 {
