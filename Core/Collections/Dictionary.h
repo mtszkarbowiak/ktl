@@ -429,11 +429,14 @@ public:
         if (_deletedCount > (_capacity / HASH_MAPS_DEFAULT_SLACK_RATIO))
             Compact(); // If the number of deleted elements is too high, shrink the table
 
-        EnsureCapacity((_elementsCount + 1) * HASH_MAPS_DEFAULT_SLACK_RATIO + _deletedCount);
+        const int32 ensuredCapacity = (_elementsCount + 1) * HASH_MAPS_DEFAULT_SLACK_RATIO + _deletedCount;
+        EnsureCapacity(ensuredCapacity);
 
-        //TODO Prevent double rebuiding
+        //TODO Prevent double rebuilding
         
         // 2. Find the bucket to reserve
+        ASSERT(_capacity > 0); // The dictionary must be allocated
+
         BucketSearchResult searchResult;
         FindBucket(key, searchResult);
 

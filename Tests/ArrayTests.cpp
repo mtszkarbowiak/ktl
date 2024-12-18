@@ -263,6 +263,7 @@ TEST(Array_Relocation, MoveConstruct_NoDragAlloc)
 
         // Reloc: n constructions
         Array<TestTracker, NoDragAlloc> targetArray{ MOVE(movedArray) };
+        GTEST_ASSERT_EQ(movedArray.Count(), 0);
         GTEST_ASSERT_EQ(targetArray.Count(), ElementCount);
 
         // Total: 2n constructions
