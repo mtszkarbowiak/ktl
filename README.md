@@ -25,11 +25,12 @@ Collections:
 Allocators:
 
 - [x] `HeapAlloc` - Standard allocator for dynamic memory.
+- [ ] `PolymorphicAlloc` - Allocator that can use other allocators as backups.
 - [x] `InlinedAlloc` - Psuedo-allocator for stack-allocated objects and more.
 - [ ] `BumpAlloc` - Fast allocator for temporary memory.
-- [ ] `BumpSyncAlloc` - Thread-safe version of `BumpAlloc`.
+- [ ] `BumpConcurrentAlloc` - Thread-safe version of `BumpAlloc`.
 - [ ] `PoolAlloc` - Allocator for fixed-size objects.
-- [ ] `PoolSyncAlloc` - Thread-safe version of `PoolAlloc`.
+- [ ] `PoolConcurrentAlloc` - Thread-safe version of `PoolAlloc`.
 
 Algorithms
 
@@ -55,6 +56,7 @@ Algorithms
 6. **Move Semantics**: The library extensively uses move semantics to avoid unnecessary copying of objects. This is especially important for large objects such as arrays and dictionaries. A macro to block implicit copying is considered.
 7. **No RTTI**: The library does not use RTTI. This is a performance optimization, as RTTI can be expensive in terms of memory and performance.
 8. **No Inheritance**: The library does not use inheritance. It creates a lot of problems, best described by the author of the STL itself, Alexander Stepanov.
+9. **Allocators Universality**: Collections must be able to accept all types of allocators.
 
 
 ## IV. Design Principles
@@ -115,6 +117,7 @@ The library is inspired by the following projects:
 
 - [Flax Engine](https://github.com/FlaxEngine/FlaxEngine)
 - [MSVC STL](https://github.com/microsoft/STL)
+- Rust Standard Library
 
 The project uses the following tools:
 
