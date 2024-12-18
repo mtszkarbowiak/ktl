@@ -84,16 +84,23 @@ public:
     /// <remarks>
     /// The allocator accepts only a specific range of capacities.
     /// This function ensures that the requested capacity is within the valid range.
+    /// Remember that capacities are always rounded up to the nearest power of 2,
+    /// while memory blocks do not have to be aligned to the power of 2.
     /// </remarks>
     template<typename Element, typename Alloc, int32 Default>
     FORCE_INLINE NODISCARD
-    static auto GetRequiredCapacity(const int32 minCount) -> int32
+    static int32 GetRequiredCapacity(const int32 minCount)
     {
         constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
         constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
         constexpr static int32 DefaultCapped = Math::Clamp(Default, MinElements, MaxElements);
 
-        return Math::Max<int32>(minCount, DefaultCapped);
+        const int32 capacity = Math::Max<int32>(minCount, DefaultCapped);
+
+        ASSERT(Math::IsPow2(capacity)); // The collection capacity must always be a power of 2.
+        ASSERT(minCount <= capacity);   // The collection capacity must be at least as big as the requested count.
+
+        return capacity;
     }
 
     template<typename Element, typename Alloc>
@@ -103,6 +110,7 @@ public:
         constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
         constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
 
+        ASSERT(Math::IsPow2(capacity));  // The collection capacity must always be a power of 2.
         ASSERT(capacity >= MinElements); // Requested capacity is too low for the allocator.
         ASSERT(capacity <= MaxElements); // Requested capacity is too high for the allocator.
 
