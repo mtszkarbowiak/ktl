@@ -4,7 +4,18 @@
 
 #include "Allocators/HeapAlloc.h"
 #include "Language/Templates.h"
+#include "Language/TypeInfo.h"
 #include "Math/Arithmetic.h"
+#include "Math/Growing.h"
+#include "Math/HashingFunctions.h"
+#include "Math/Probing.h"
+#include "Types/IterHint.h"
+
+
+/// <summary>
+/// Default memory allocator. To be used when no specific allocator is required.
+/// </summary>
+using DefaultAlloc = HeapAlloc;
 
 
 #ifndef ARRAY_DEFAULT_CAPACITY

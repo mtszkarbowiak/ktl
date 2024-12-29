@@ -2,9 +2,7 @@
 
 #pragma once
 
-#include "CollectionsUtils.h"
-#include "Math/Growing.h"
-#include "Types/IterHint.h"
+#include "Collections/CollectionsUtils.h"
 
 /// <summary>
 /// Specialized container for storing dynamically resizable arrays of logic values.
@@ -17,7 +15,7 @@
 /// </remarks>
 /// <typeparam name="Alloc"> Type of the allocator to use. </typeparam>
 template<
-    typename Alloc = HeapAlloc,
+    typename Alloc = DefaultAlloc,
     int32(&Grow)(int32) = Growing::Default
 >
 class BitArray

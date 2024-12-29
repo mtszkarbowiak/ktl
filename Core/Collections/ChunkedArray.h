@@ -2,15 +2,13 @@
 
 #pragma once
 
-#include "Allocators/HeapAlloc.h"
 #include "Collections/CollectionsUtils.h"
-#include "Language/TypeInfo.h"
 
 template<
     typename T,
     int32    ChunkSize  = 16,
-    typename ChunkAlloc = HeapAlloc,
-    typename MainAlloc  = HeapAlloc
+    typename ChunkAlloc = DefaultAlloc,
+    typename MainAlloc  = DefaultAlloc
 >
 class ChunkedArray
 {
