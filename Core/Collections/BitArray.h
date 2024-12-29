@@ -25,7 +25,8 @@ public:
     using Block     = uint64;
 
 private:
-    using AllocData = typename Alloc::Data;
+    using AllocData   = typename Alloc::Data;
+    using AllocHelper = AllocHelper<Block, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
 
     AllocData _allocData;
     int32     _blockCapacity;
@@ -115,10 +116,8 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData }; // Copy the binding
 
-        const int32 requiredBlocksCapacity
-            = CollectionsUtils::GetRequiredCapacity<Block, Alloc, ARRAY_DEFAULT_CAPACITY>(minBlocksCapacity);
-        const int32 allocatedBlocksCapacity
-            = CollectionsUtils::AllocateCapacity<Block, Alloc>(newData, requiredBlocksCapacity);
+        const int32 requiredBlocksCapacity = AllocHelper::NextCapacity(_blockCapacity, minBlocksCapacity);
+        const int32 allocatedBlocksCapacity = AllocHelper::AllocateCapacity(_allocData, requiredBlocksCapacity);
 
         if (_blockCapacity > 0)
         {

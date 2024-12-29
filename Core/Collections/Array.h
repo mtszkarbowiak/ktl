@@ -25,7 +25,8 @@ template<
 >
 class Array
 {
-    using AllocData = typename Alloc::Data;
+    using AllocData   = typename Alloc::Data;
+    using AllocHelper = AllocHelper<T, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
 
     AllocData _allocData;
     int32     _capacity;
@@ -89,10 +90,8 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData };
 
-        const int32 requiredCapacity
-            = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(minCapacity);
-        const int32 allocatedCapacity
-            = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, requiredCapacity);
+        const int32 requiredCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
+        const int32 allocatedCapacity = AllocHelper::AllocateCapacity(newData, requiredCapacity);
 
         // Move the content before reassigning the capacity
         if (_capacity > 0)
@@ -134,8 +133,7 @@ public:
         }
 
         // Test required capacity against the current capacity.
-        const int32 requiredCapacity
-            = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(_count);
+        const int32 requiredCapacity = AllocHelper::InitCapacity(_count);
 
         if (_capacity <= requiredCapacity)
             return;
@@ -144,8 +142,7 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData }; // Copy the binding
 
-        const int32 allocatedCapacity
-            = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, _count);
+        const int32 allocatedCapacity = AllocHelper::Allocate(newData, requiredCapacity);
 
         BulkOperations::MoveLinearContent<T>(
             DATA_OF(T, _allocData), 
@@ -435,11 +432,10 @@ private:
         }
         else
         {
-            const int32 requestedCapacity = 
-                CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
+            const int32 requestedCapacity = AllocHelper::InitCapacity(other._count);
 
             _allocData = AllocData{};
-            _capacity  = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requestedCapacity);
+            _capacity  = AllocHelper::Allocate(_allocData, requestedCapacity);
             _count     = other._count;
 
             BulkOperations::MoveLinearContent<T>(
@@ -522,8 +518,8 @@ public:
         : _allocData{}
         , _count{}
     {
-        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(capacity);
-        _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
+        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
     }
 
     /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
@@ -533,8 +529,8 @@ public:
         : _allocData{ FORWARD(AllocContext, context) }
         , _count{}
     {
-        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(capacity);
-        _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
+        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
     }
 
 

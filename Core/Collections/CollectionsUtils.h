@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Allocators/HeapAlloc.h"
+#include "Collections/AllocHelper.h"
 #include "Language/Templates.h"
 #include "Language/TypeInfo.h"
 #include "Math/Arithmetic.h"
@@ -46,13 +47,6 @@ using DefaultAlloc = HeapAlloc;
 #endif
 
 
-/// <summary> Returns the pointer to the data of the specified type. </summary>
-/// <remarks> In the future, this macro may also be used to add additional checks or operations. </remarks>
-#define DATA_OF(element_type, alloc) reinterpret_cast<element_type*>((alloc).Get())
-
-/// <summary> Makes sure that the pointer is correctly aligned for the specified type. </summary>
-#define ASSERT_CORRECT_ALIGNMENT(type, ptr) ASSERT(reinterpret_cast<uintptr_t>(ptr) % alignof(type) == 0)
-
 
 class CollectionsUtils
 {
@@ -89,52 +83,47 @@ public:
         Deleted,
     };
 
-    /// <summary>
-    /// Calculates the minimal legal capacity for given number of elements for the specified allocator.
-    /// </summary>
-    /// <remarks>
-    /// The allocator accepts only a specific range of capacities.
-    /// This function ensures that the requested capacity is within the valid range.
-    /// Remember that capacities are always rounded up to the nearest power of 2,
-    /// while memory blocks do not have to be aligned to the power of 2.
-    /// </remarks>
-    template<typename Element, typename Alloc, int32 Default>
-    FORCE_INLINE NODISCARD
-    static int32 GetRequiredCapacity(const int32 minCount)
-    {
-        constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
-        constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
-        constexpr static int32 DefaultCapped = Math::Clamp(Default, MinElements, MaxElements);
-
-        const int32 capacity = Math::Max<int32>(minCount, DefaultCapped);
-
-        ASSERT(Math::IsPow2(capacity)); // The collection capacity must always be a power of 2.
-        ASSERT(minCount <= capacity);   // The collection capacity must be at least as big as the requested count.
-
-        return capacity;
-    }
-
-    template<typename Element, typename Alloc>
-    FORCE_INLINE NODISCARD
-    static auto AllocateCapacity(typename Alloc::Data& data, const int32 capacity) -> int32
-    {
-        constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
-        constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
-
-        ASSERT(Math::IsPow2(capacity));  // The collection capacity must always be a power of 2.
-        ASSERT(capacity >= MinElements); // Requested capacity is too low for the allocator.
-        ASSERT(capacity <= MaxElements); // Requested capacity is too high for the allocator.
-
-        const int32 requestedMemory = Math::NextPow2(capacity) * sizeof(Element);
-        const int32 allocatedCapacity = data.Allocate(requestedMemory) / sizeof(Element);
-
-        ASSERT(allocatedCapacity >= capacity);
-
-        const Element* elements = DATA_OF(Element, data);
-        ASSERT_CORRECT_ALIGNMENT(Element, elements);
-
-        return allocatedCapacity;
-    }
+    // /// <summary>
+    // /// Calculates the minimal legal capacity for given number of elements for the specified allocator.
+    // /// </summary>
+    // /// <remarks>
+    // /// The allocator accepts only a specific range of capacities.
+    // /// </remarks>
+    // template<typename Element, typename Alloc, int32 Default>
+    // FORCE_INLINE NODISCARD
+    // static int32 GetRequiredCapacity(const int32 minCount)
+    // {
+    //     constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
+    //     constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
+    //     constexpr static int32 DefaultCapped = Math::Clamp(Default, MinElements, MaxElements);
+    // 
+    //     const int32 capacity = Math::Max<int32>(minCount, DefaultCapped);
+    // 
+    // 
+    //     ASSERT(minCount <= capacity);   // The collection capacity must be at least as big as the requested count.
+    //     return capacity;
+    // }
+    // 
+    // template<typename Element, typename Alloc>
+    // FORCE_INLINE NODISCARD
+    // static auto AllocateCapacity(typename Alloc::Data& data, const int32 capacity) -> int32
+    // {
+    //     constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
+    //     constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
+    // 
+    //     ASSERT(capacity >= MinElements); // Requested capacity is too low for the allocator.
+    //     ASSERT(capacity <= MaxElements); // Requested capacity is too high for the allocator.
+    // 
+    //     const int32 requestedMemory = Math::NextPow2(capacity) * sizeof(Element);
+    //     const int32 allocatedCapacity = data.Allocate(requestedMemory) / sizeof(Element);
+    // 
+    //     ASSERT(allocatedCapacity >= capacity);
+    // 
+    //     const Element* elements = DATA_OF(Element, data);
+    //     ASSERT_CORRECT_ALIGNMENT(Element, elements);
+    // 
+    //     return allocatedCapacity;
+    // }
 };
 
 class BulkOperations
