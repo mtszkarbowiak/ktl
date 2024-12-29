@@ -48,9 +48,8 @@ using DefaultAlloc = HeapAlloc;
 
 
 
-class CollectionsUtils
+namespace Bucketing
 {
-public:
     /// <summary>
     /// Helper object for searching for a bucket in a hash-based collection.
     /// -1 means the object was not found.
@@ -82,48 +81,6 @@ public:
         /// <remarks> This value works as a tombstone. </remarks>
         Deleted,
     };
-
-    // /// <summary>
-    // /// Calculates the minimal legal capacity for given number of elements for the specified allocator.
-    // /// </summary>
-    // /// <remarks>
-    // /// The allocator accepts only a specific range of capacities.
-    // /// </remarks>
-    // template<typename Element, typename Alloc, int32 Default>
-    // FORCE_INLINE NODISCARD
-    // static int32 GetRequiredCapacity(const int32 minCount)
-    // {
-    //     constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
-    //     constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
-    //     constexpr static int32 DefaultCapped = Math::Clamp(Default, MinElements, MaxElements);
-    // 
-    //     const int32 capacity = Math::Max<int32>(minCount, DefaultCapped);
-    // 
-    // 
-    //     ASSERT(minCount <= capacity);   // The collection capacity must be at least as big as the requested count.
-    //     return capacity;
-    // }
-    // 
-    // template<typename Element, typename Alloc>
-    // FORCE_INLINE NODISCARD
-    // static auto AllocateCapacity(typename Alloc::Data& data, const int32 capacity) -> int32
-    // {
-    //     constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
-    //     constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
-    // 
-    //     ASSERT(capacity >= MinElements); // Requested capacity is too low for the allocator.
-    //     ASSERT(capacity <= MaxElements); // Requested capacity is too high for the allocator.
-    // 
-    //     const int32 requestedMemory = Math::NextPow2(capacity) * sizeof(Element);
-    //     const int32 allocatedCapacity = data.Allocate(requestedMemory) / sizeof(Element);
-    // 
-    //     ASSERT(allocatedCapacity >= capacity);
-    // 
-    //     const Element* elements = DATA_OF(Element, data);
-    //     ASSERT_CORRECT_ALIGNMENT(Element, elements);
-    // 
-    //     return allocatedCapacity;
-    // }
 };
 
 class BulkOperations

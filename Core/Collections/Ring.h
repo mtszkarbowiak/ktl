@@ -580,9 +580,9 @@ private:
         else if (!other.IsWrapped())
         {
 
-            const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
+            const int32 requiredCapacity = Bucketing::GetRequiredCapacity<Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
             _allocData   = AllocData{};
-            _capacity    = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+            _capacity    = Bucketing::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
@@ -595,9 +595,9 @@ private:
         }
         else
         {
-            const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
+            const int32 requiredCapacity = Bucketing::GetRequiredCapacity<Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
             _allocData   = AllocData{};
-            _capacity    = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+            _capacity    = Bucketing::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;

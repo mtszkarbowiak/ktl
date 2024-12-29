@@ -467,9 +467,9 @@ private:
             _allocData = AllocData{};
 
             const int32 requiredCapacity = 
-                CollectionsUtils::GetRequiredCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
+                Bucketing::GetRequiredCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
 
-            _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+            _capacity = Bucketing::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
             _count    = other._count;
 
             BulkOperations::CopyLinearContent<T>(

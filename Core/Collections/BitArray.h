@@ -154,7 +154,7 @@ public:
 
         const int32 blocksCount = BlocksForBits(_bitCount);
         const int32 requiredBlocksCapacity
-            = CollectionsUtils::GetRequiredCapacity<Block, Alloc, ARRAY_DEFAULT_CAPACITY>(blocksCount);
+            = Bucketing::GetRequiredCapacity<Block, Alloc, ARRAY_DEFAULT_CAPACITY>(blocksCount);
 
         if (_blockCapacity <= requiredBlocksCapacity)
             return;
@@ -164,7 +164,7 @@ public:
         AllocData newData{ oldData }; // Copy the binding
 
         const int32 allocatedBlocksCapacity
-            = CollectionsUtils::AllocateCapacity<Block, Alloc>(newData, requiredBlocksCapacity);
+            = Bucketing::AllocateCapacity<Block, Alloc>(newData, requiredBlocksCapacity);
 
         BulkOperations::MoveLinearContent<Block>(
             DATA_OF(Block, _allocData), 

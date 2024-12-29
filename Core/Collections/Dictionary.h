@@ -21,7 +21,7 @@ template<typename K, typename V>
 class DictionaryBucket final
 {
 public:
-    using BucketState = CollectionsUtils::BucketState;
+    using BucketState = Bucketing::BucketState;
 
 private:
     V _value;
@@ -122,8 +122,8 @@ template<
 class Dictionary 
 {
     using Bucket             = DictionaryBucket<K, V>;
-    using BucketSearchResult = CollectionsUtils::BucketSearchResult;
-    using BucketState        = CollectionsUtils::BucketState;
+    using BucketSearchResult = Bucketing::BucketSearchResult;
+    using BucketState        = Bucketing::BucketState;
     using HashType           = int32; //TODO Add support for custom hash types
     using AllocData          = typename Alloc::Data;
     using AllocHelper        = AllocHelper<Bucket, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
