@@ -4,6 +4,7 @@
 
 #include "CollectionsUtils.h"
 #include "Types/IterHint.h"
+#include "Math/Growing.h"
 
 
 /// <summary>
@@ -19,7 +20,11 @@
 /// </remarks>
 /// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, nor a reference. </typeparam>
 /// <typeparam name="Alloc"> Type of the allocator to use. </typeparam>
-template<typename T, typename Alloc = HeapAlloc>
+template<
+    typename T,
+    typename Alloc = HeapAlloc,
+    int32(&Grow)(int32) = Growing::Default
+>
 class Array
 {
     using AllocData = typename Alloc::Data;

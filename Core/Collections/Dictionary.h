@@ -5,6 +5,7 @@
 #include "Allocators/HeapAlloc.h"
 #include "Collections/CollectionsUtils.h"
 #include "Language/TypeInfo.h"
+#include "Math/Growing.h"
 #include "Math/HashingFunctions.h"
 #include "Math/Probing.h"
 
@@ -12,7 +13,8 @@ template<
     typename K,
     typename V,
     typename Alloc = HeapAlloc,
-    int32(&Probe)(int32, int32) = Probing::Linear
+    int32(&Probe)(int32, int32) = Probing::Linear,
+    int32(&Grow)(int32) = Growing::Default
 >
 class Dictionary;
 
@@ -119,7 +121,8 @@ template<
     typename K,
     typename V,
     typename Alloc,
-    int32(&Probe)(int32, int32)
+    int32(&Probe)(int32, int32),
+    int32(&Grow)(int32)
 >
 class Dictionary 
 {

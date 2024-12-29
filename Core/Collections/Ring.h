@@ -4,6 +4,7 @@
 
 #include "Collections/CollectionsUtils.h"
 #include "Types/IterHint.h"
+#include "Math/Growing.h"
 
 /// <summary>
 /// Double-ended container for storing dynamically resizable queues of elements.
@@ -17,7 +18,11 @@
 /// unless explicitly freed by calling <c>Reset</c>.
 /// 3. <c>Ring</c> STL inspiration is <c>std::deque</c>.
 /// </remarks>
-template<typename T, typename Alloc = HeapAlloc>
+template<
+    typename T,
+    typename Alloc = HeapAlloc,
+    int32(&Grow)(int32) = Growing::Default
+>
 class Ring
 {
     using AllocData = typename Alloc::Data;

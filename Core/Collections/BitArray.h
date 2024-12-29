@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CollectionsUtils.h"
+#include "Math/Growing.h"
 #include "Types/IterHint.h"
 
 /// <summary>
@@ -15,7 +16,10 @@
 /// unless explicitly freed by calling <c>Reset</c>.
 /// </remarks>
 /// <typeparam name="Alloc"> Type of the allocator to use. </typeparam>
-template<typename Alloc = HeapAlloc>
+template<
+    typename Alloc = HeapAlloc,
+    int32(&Grow)(int32) = Growing::Default
+>
 class BitArray
 {
 public:
