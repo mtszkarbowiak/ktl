@@ -238,7 +238,7 @@ protected:
         // 2. Allocate the new storage.
         const int32 oldCapacity = _capacity;
         const int32 requestedCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
-        _capacity = AllocHelper::AllocateCapacity(_allocData, requestedCapacity);
+        _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
 
         // 2.1. We have raw memory, so we need to manually call the constructors.
         // This is necessary, as the memory is not zeroed. If the bucket is C-style, we can skip this step.
@@ -307,7 +307,7 @@ public:
         if (_capacity == 0)
         {
             const int32 requrestedCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
-            _capacity = AllocHelper::AllocateCapacity(_allocData, requrestedCapacity);
+            _capacity = AllocHelper::Allocate(_allocData, requrestedCapacity);
 
             // Initialize the dictionary
             for (int32 i = 0; i < _capacity; ++i)

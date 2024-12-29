@@ -15,6 +15,8 @@
 
 /// <summary>
 /// Utility class to help manage the state of allocation in a collection.
+/// This classes uses the type of the element, the allocator, and the growth policy
+/// to manage the allocation of the memory for the collection.
 /// </summary>
 /// <remarks>
 /// Collection takes care of tracking the capacity of the allocated memory.
@@ -137,12 +139,5 @@ public:
         ASSERT_CORRECT_ALIGNMENT(Element, elements);
 
         return allocatedCapacity;
-    }
-
-
-    NODISCARD
-        static int32 AllocateCapacity(AllocData& alloc, const int32 capacity) // Having one function for both cases is more efficient.
-    {
-        return Allocate(alloc, capacity);
     }
 };

@@ -91,7 +91,7 @@ public:
         AllocData newData{ oldData };
 
         const int32 requiredCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
-        const int32 allocatedCapacity = AllocHelper::AllocateCapacity(newData, requiredCapacity);
+        const int32 allocatedCapacity = AllocHelper::Allocate(newData, requiredCapacity);
 
         // Move the content before reassigning the capacity
         if (_capacity > 0)

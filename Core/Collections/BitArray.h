@@ -117,7 +117,7 @@ public:
         AllocData newData{ oldData }; // Copy the binding
 
         const int32 requiredBlocksCapacity = AllocHelper::NextCapacity(_blockCapacity, minBlocksCapacity);
-        const int32 allocatedBlocksCapacity = AllocHelper::AllocateCapacity(_allocData, requiredBlocksCapacity);
+        const int32 allocatedBlocksCapacity = AllocHelper::Allocate(_allocData, requiredBlocksCapacity);
 
         if (_blockCapacity > 0)
         {
