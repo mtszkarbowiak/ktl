@@ -38,13 +38,13 @@ private:
 
 protected:
     FORCE_INLINE NODISCARD
-    auto Data() noexcept -> Block*
+    auto Data()  -> Block*
     {
         return DATA_OF(Block, _allocData);
     }
 
     FORCE_INLINE NODISCARD
-    auto Data() const noexcept -> const Block*
+    auto Data() const  -> const Block*
     {
         return DATA_OF(const Block, _allocData);
     }
@@ -52,7 +52,7 @@ protected:
 
     /// <summary> Calculates the number of blocks required to store the given number of bits. </summary>
     FORCE_INLINE NODISCARD
-    static constexpr auto BlocksForBits(const int32 bitCount) noexcept -> int32
+    static constexpr auto BlocksForBits(const int32 bitCount)  -> int32
     {
         return (bitCount + BitsPerBlock - 1) / BitsPerBlock;
     }
@@ -62,14 +62,14 @@ public:
 
     /// <summary> Checks if the bit-array has an active allocation. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto IsAllocated() const noexcept -> bool
+    constexpr auto IsAllocated() const  -> bool
     {
         return _blockCapacity > 0;
     }
 
     /// <summary> Number of bits that can be stored without invoking the allocator. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto Capacity() const noexcept -> int32
+    constexpr auto Capacity() const  -> int32
     {
         return _blockCapacity * BitsPerBlock;
     }
@@ -79,20 +79,20 @@ public:
 
     /// <summary> Checks if the bit-array has any bits. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto IsEmpty() const noexcept -> bool
+    constexpr auto IsEmpty() const  -> bool
     {
         return _bitCount == 0;
     }
 
     /// <summary> Number of currently stored bits. </summary>
     FORCE_INLINE NODISCARD
-    constexpr auto Count() const noexcept -> int32
+    constexpr auto Count() const  -> int32
     {
         return _bitCount;
     }
 
     /// <summary> Number of bits that can be added without invoking the allocator. </summary>
-    constexpr auto Slack() const noexcept -> int32
+    constexpr auto Slack() const  -> int32
     {
         return Capacity() - _bitCount;
     }
@@ -380,7 +380,7 @@ public:
 
 private:
     FORCE_INLINE
-    void MoveFrom(BitArray&& other) noexcept
+    void MoveFrom(BitArray&& other) 
     {
         if (!other.IsAllocated())
         {
@@ -444,7 +444,7 @@ private:
 public:
     /// <summary> Initializes an empty bit-array with no active allocation. </summary>
     FORCE_INLINE
-    constexpr BitArray() noexcept
+    constexpr BitArray() 
         : _allocData{}
         , _blockCapacity{ 0 }
         , _bitCount{ 0 }
@@ -453,7 +453,7 @@ public:
 
     /// <summary> Initializes a bit-array by moving the allocation from another array. </summary>
     FORCE_INLINE
-    BitArray(BitArray&& other) noexcept
+    BitArray(BitArray&& other) 
     {
         MoveFrom(MOVE(other));
     }
@@ -486,7 +486,7 @@ public:
     // Collection Lifecycle - Assignments
 
     FORCE_INLINE
-    auto operator=(BitArray&& other) noexcept -> BitArray&
+    auto operator=(BitArray&& other)  -> BitArray&
     {
         if (this != &other)
         {
@@ -587,7 +587,7 @@ public:
 
         /// <summary> Check if the enumerator reached the end of the array. </summary>
         FORCE_INLINE NODISCARD
-        explicit operator bool() const noexcept
+        explicit operator bool() const 
         {
             ASSERT(_array != nullptr);
             return _index < _array->_bitCount;
@@ -595,7 +595,7 @@ public:
 
         /// <summary> Returns the index of the current element. </summary>
         FORCE_INLINE
-        auto Index() const noexcept -> int32
+        auto Index() const  -> int32
         {
             return _index;
         }
@@ -683,7 +683,7 @@ public:
         // End Condition and Movement
 
         FORCE_INLINE NODISCARD
-        operator bool() const noexcept
+        operator bool() const 
         {
             ASSERT(_array != nullptr);
             return _index < _array->_bitCount;
