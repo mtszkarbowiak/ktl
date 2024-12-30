@@ -141,3 +141,9 @@ public:
         return allocatedCapacity;
     }
 };
+
+//TODO Consider implementing `contexpr` manipulation for allocators.
+// To do that, the allocator should use template `GetData` method.
+// Thus, it could match its underlying type with the collection's element type,
+// allowing for constexpr operations on the allocator's data.
+// Ngl, if it works it's gonna be a game changer.
