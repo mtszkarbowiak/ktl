@@ -56,14 +56,14 @@ protected:
 public:
     /// <summary> Checks if the ring has an active allocation. </summary>
     FORCE_INLINE NODISCARD
-    constexpr bool IsAllocated() const noexcept
+    constexpr bool IsAllocated() const 
     {
         return _capacity > 0;
     }
 
     /// <summary> Number of elements that can be stored without invoking the allocator. </summary>
     FORCE_INLINE NODISCARD
-    constexpr int32 Capacity() const noexcept
+    constexpr int32 Capacity() const 
     {
         return _capacity;
     }
@@ -73,21 +73,21 @@ public:
 
     /// <summary> Checks if the ring has any elements. </summary>
     FORCE_INLINE NODISCARD
-    constexpr bool IsEmpty() const noexcept
+    constexpr bool IsEmpty() const 
     {
         return _head == _tail;
     }
 
     /// <summary> Number of currently stored elements. </summary>
     FORCE_INLINE NODISCARD
-    constexpr int32 Count() const noexcept
+    constexpr int32 Count() const 
     {
         return _countCached;
     }
 
     /// <summary> Number of elements that can be added without invoking the allocator. </summary>
     FORCE_INLINE NODISCARD
-    constexpr int32 Slack() const noexcept
+    constexpr int32 Slack() const 
     {
         return _capacity - _countCached;
     }
@@ -95,14 +95,14 @@ public:
 protected:
     /// <summary> Index of the first element in the ring. </summary>
     FORCE_INLINE NODISCARD
-    constexpr int32 Head() const noexcept
+    constexpr int32 Head() const 
     {
         return _head;
     }
 
     /// <summary> Index of the next free slot in the ring. </summary>
     FORCE_INLINE NODISCARD
-    constexpr int32 Tail() const noexcept
+    constexpr int32 Tail() const 
     {
         return _tail;
     }
@@ -110,7 +110,7 @@ protected:
 public:
     /// <summary> Checks if the ring is wrapped around the capacity, meaning that elements are stored in two segments. </summary>
     FORCE_INLINE NODISCARD
-    constexpr bool IsWrapped() const noexcept
+    constexpr bool IsWrapped() const 
     {
         return _head > _tail;
     }
@@ -505,17 +505,21 @@ public:
     // Collection Lifecycle - Moves and Copies
 
 private:
-    void MoveFrom(Ring&& other) noexcept
+    void MoveToEmpty(Ring&& other) 
     {
+        ASSERT(
+            _countCached == 0 && 
+            _capacity == 0
+        ); // Ring must be empty, but the collection must be initialized!
+
         if (!other.IsAllocated())
         {
-            _allocData   = AllocData{};
-            _capacity    = 0;
             _head        = 0;
             _tail        = 0;
-            _countCached = 0;
+            return;
         }
-        else if (other._allocData.MovesItems())
+
+        if (other._allocData.MovesItems())
         {
             _allocData = MOVE(other._allocData);
 
@@ -576,7 +580,7 @@ private:
     }
 
     template<typename OtherAllocation>
-    void CopyFrom(const Ring<T, OtherAllocation>& other) //TODO Add test for ring copy
+    void CopyToEmpty(const Ring<T, OtherAllocation>& other) //TODO Add test for ring copy and revise.
     {
         static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
 
@@ -635,7 +639,7 @@ private:
 
 public:
     /// <summary> Initializes an empty ring with no active allocation. </summary>
-    constexpr Ring() noexcept
+    constexpr Ring() 
         : _allocData{}
         , _capacity{}
         , _head{}
@@ -646,8 +650,13 @@ public:
 
     /// <summary> Initializes a ring by moving the allocation from another array. </summary>
     Ring(Ring&& other) noexcept
+        : _allocData{}
+        , _capacity{}
+        , _head{}
+        , _tail{}
+        , _countCached{}
     {
-        MoveFrom(MOVE(other));
+        MoveToEmpty(MOVE(other));
     }
 
     /// <summary> Initializes a ring by copying another ring. </summary>
@@ -656,8 +665,11 @@ public:
         std::is_same<U, T>::value
     ))>::type>
     Ring(const Ring& other)
+        : _allocData{}
+        , _capacity{}
+        , _head{}
     {
-        CopyFrom<Alloc>(other);
+        CopyToEmpty<Alloc>(other);
     }
 
 
@@ -688,12 +700,12 @@ public:
     // Collection Lifecycle - Assignments
 
     FORCE_INLINE
-    Ring& operator=(Ring&& other) noexcept
+    Ring& operator=(Ring&& other) 
     {
         if (this != &other) 
         {
             Reset();
-            MoveFrom(MOVE(other));
+            MoveToEmpty(MOVE(other));
         }
 
         return *this;
@@ -709,7 +721,7 @@ public:
         if (this != &other) 
         {
             Reset();
-            CopyFrom<Alloc>(other);
+            CopyToEmpty<Alloc>(other);
         }
 
         return *this;
@@ -793,7 +805,7 @@ public:
 
         /// <summary> Returns the index of the current element. </summary>
         FORCE_INLINE NODISCARD
-        int32 Index() const noexcept
+        int32 Index() const 
         {
             return _indexOfElement;
         }
@@ -803,7 +815,7 @@ public:
 
         /// <summary> Check if the enumerator points to a valid element. </summary>
         FORCE_INLINE NODISCARD
-        explicit operator bool() const noexcept
+        explicit operator bool() const 
         {
             ASSERT(_ring != nullptr);
             return _indexOfElement < _ring->_countCached;
@@ -897,7 +909,7 @@ public:
 
         /// <summary> Returns the index of the current element. </summary>
         FORCE_INLINE NODISCARD
-        int32 Index() const noexcept
+        int32 Index() const 
         {
             return _indexOfElement;
         }
@@ -907,7 +919,7 @@ public:
 
         /// <summary> Check if the enumerator points to a valid element. </summary>
         FORCE_INLINE NODISCARD
-        explicit operator bool() const noexcept
+        explicit operator bool() const 
         {
             ASSERT(_ring != nullptr);
             return _indexOfElement < _ring->_countCached;
