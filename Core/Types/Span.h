@@ -2,21 +2,25 @@
 
 #pragma once
 
-#include "Debugging/Assertions.h"
 #include "Types/Numbers.h"
 
-
+/// <summary>
+/// Non-owning view of a contiguous sequence of elements.
+/// </summary>
+/// <remarks>
+/// Span is classified as null if it points to <c>null</c> OR its points to zero elements.
+/// <remarks>
 template<typename T>
 class Span
 {
-    T* _data;
-    int32 _size;
+    T*    _data{};
+    int32 _count{};
 
 
 public:
     explicit Span(T* data, const int32 size)
         : _data{ data }
-        , _size{ size }
+        , _count{ size }
     {
     }
 
@@ -25,32 +29,69 @@ public:
     Span(Span&&) noexcept = default;
 
 
-    auto operator=(const Span&) -> Span & = default;
+    Span& operator=(const Span&)= default;
 
-    auto operator=(Span&& other) noexcept -> Span&
-    {
-        if (this != &other)
-        {
-            _data = other._data;
-            _size = other._size;
-            other._data = nullptr;
-            other._size = 0;
-        }
-        return *this;
-    }
+    Span& operator=(Span&&) noexcept = default;
 
     ~Span() = default;
 
 
-    auto operator[](const int32 index) -> T&
+    // Properties
+
+    /// <summary> Returns the number of elements in the span. </summary>
+    FORCE_INLINE NODISCARD
+    int32 Count() const
     {
-        ASSERT_MEMORY_BOUNDS(index >= 0 && index < _size);
+        return _count;
+    }
+
+    /// <summary>
+    /// Returns the pointer to the underlying data i.e.
+    /// the first element or <c>nullptr</c> if the span is empty.
+    /// </summary>
+    FORCE_INLINE NODISCARD
+    T* Data()
+    {
+        return _data;
+    }
+
+    /// <summary>
+    /// Returns the pointer to the underlying data i.e.
+    /// the first element or <c>nullptr</c> if the span is empty.
+    /// </summary>
+    FORCE_INLINE NODISCARD
+    const T* Data() const
+    {
+        return _data;
+    }
+
+    /// <summary> Checks if the span points to any elements. </summary>
+    FORCE_INLINE NODISCARD
+    explicit operator bool() const
+    {
+        return
+            static_cast<bool>(_data) || 
+            static_cast<bool>(_count);
+    }
+
+
+    // Element Access
+
+    FORCE_INLINE NODISCARD
+    T& operator[](const int32 index)
+    {
         return _data[index];
     }
 
-    auto operator[](const int32 index) const -> const T&
+    FORCE_INLINE NODISCARD
+    const T& operator[](const int32 index) const
     {
-        ASSERT_MEMORY_BOUNDS(index >= 0 && index < _size);
         return _data[index];
     }
+
+
+    // Iterators
+
+    //TODO Add iterators to Span.
+    //TODO Idea: Unify Array and Span enumerators 'PointerIterator'.
 };

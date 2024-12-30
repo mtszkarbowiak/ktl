@@ -28,9 +28,9 @@ private:
     using AllocData   = typename Alloc::Data;
     using AllocHelper = AllocHelperOf<Block, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
 
-    AllocData _allocData;
-    int32     _blockCapacity;
-    int32     _bitCount;
+    AllocData _allocData{};
+    int32     _blockCapacity{};
+    int32     _bitCount{};
 
     constexpr static int32 BytesPerBlock = sizeof(Block);
     constexpr static int32  BitsPerBlock = BytesPerBlock * 8;
@@ -125,7 +125,7 @@ public:
             AllocData newData{ oldData }; // Copy the binding
 
             const int32 requiredBlocksCapacity = AllocHelper::NextCapacity(_blockCapacity, minBlocksCapacity);
-            const int32 allocatedBlocksCapacity = AllocHelper::Allocate(_allocData, requiredBlocksCapacity);
+            const int32 allocatedBlocksCapacity = AllocHelper::Allocate(newData, requiredBlocksCapacity);
 
             if (_blockCapacity > 0)
             {
@@ -376,6 +376,84 @@ public:
     }
 
 
+    /// <summary> Inserts a bit without changing the order of the other bits. </summary>
+    void InsertAtStable(const int32 index, const bool value)
+    {
+        ASSERT_INDEX(index >= 0 && index <= _bitCount); // Allow index == _bitCount for appending
+
+        Reserve(_bitCount + 1); // Ensure enough space for the new bit.
+
+        const int32 blockIndex  = index / BitsPerBlock;
+        const int32 bitIndex    = index % BitsPerBlock;
+        const int32 blocksCount = BlocksForBits(_bitCount);
+
+        Block* blocks = DATA_OF(Block, _allocData);
+
+        if (index < _bitCount)
+        {
+            // Shift all bits to the right starting from the insertion point.
+            for (int32 i = blocksCount - 1; i > blockIndex; --i)
+            {
+                const Block prevBlock = blocks[i - 1];
+                blocks[i] = (blocks[i] >> 1) | (prevBlock << (BitsPerBlock - 1));
+            }
+
+            // Handle the block containing the insertion point.
+            Block& targetBlock = blocks[blockIndex];
+            const Block lowerMask = (Block{ 1 } << bitIndex) - 1; // Mask for bits below insertion.
+            const Block upperBits = targetBlock & ~lowerMask;   // Preserve bits above insertion.
+            const Block lowerBits = targetBlock & lowerMask;   // Preserve bits below insertion.
+
+            targetBlock = (upperBits << 1) | lowerBits; // Merge shifted upper bits and lower bits.
+        }
+
+        // Insert the new bit.
+        Block& block = blocks[blockIndex];
+        const Block mask = Block{ 1 } << bitIndex;
+        if (value)
+            block |= mask;
+        else
+            block &= ~mask;
+
+        ++_bitCount;
+    }
+
+    /// <summary> Removes the bit at the specified index without changing the order of the other bits. </summary>
+    void RemoveAtStable(const int32 index)
+    {
+        ASSERT_INDEX(index >= 0 && index < _bitCount); // Ensure the index is valid.
+
+        const int32 blockIndex = index / BitsPerBlock;
+        const int32 bitIndex = index % BitsPerBlock;
+        const int32 blocksCount = BlocksForBits(_bitCount);
+
+        Block* blocks = DATA_OF(Block, _allocData);
+
+        // Handle the block containing the removed bit.
+        {
+            Block& targetBlock = blocks[blockIndex];
+            const Block lowerMask = (Block{ 1 } << bitIndex) - 1; // Mask for bits below the removed bit.
+            const Block upperMask = ~lowerMask & ~(Block{ 1 } << bitIndex); // Mask for bits above the removed bit.
+
+            const Block lowerBits = targetBlock & lowerMask;       // Preserve bits below the removed bit.
+            const Block upperBits = (targetBlock & upperMask) >> 1; // Shift bits above the removed bit down.
+
+            targetBlock = lowerBits | upperBits; // Merge lower and shifted upper bits.
+        }
+
+        // Shift remaining bits to the left for subsequent blocks.
+        for (int32 i = blockIndex + 1; i < blocksCount; ++i)
+        {
+            const Block currentBlock = blocks[i];
+            const Block carryBit = currentBlock & Block{ 1 }; // The lowest bit to carry.
+            blocks[i - 1] |= carryBit << (BitsPerBlock - 1); // Carry it to the previous block.
+            blocks[i] = currentBlock >> 1;                  // Shift current block to the left.
+        }
+
+        --_bitCount;
+    }
+
+
     // Collection Lifecycle - Overriding Content
 
 private:
@@ -389,22 +467,22 @@ private:
 
         if (other._allocData.MovesItems())
         {
-            _allocData = MOVE(other._allocData);
+            _allocData     = MOVE(other._allocData);
             _blockCapacity = other._blockCapacity;
-            _bitCount = other._bitCount;
+            _bitCount      = other._bitCount;
 
             other._blockCapacity = 0; // Allocation moved - Reset the capacity!
-            other._bitCount = 0;
+            other._bitCount      = 0;
         }
         else
         {
-            _allocData = AllocData{};
             _bitCount = other._bitCount;
 
             const int32 requiredBlocks = BlocksForBits(_bitCount);
-            const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
+            const int32 requestedBlocksCapacity = AllocHelper::InitCapacity(requiredBlocks);
 
-            _blockCapacity = allocatedMemory / BytesPerBlock;
+            _blockCapacity = AllocHelper::Allocate(_allocData, requestedBlocksCapacity);
+            _bitCount = other._bitCount;
 
             BulkOperations::MoveLinearContent<Block>(
                 DATA_OF(Block, other._allocData),
@@ -418,23 +496,22 @@ private:
 
     void CopyToEmpty(const BitArray& other)
     {
-        if (other._blockCapacity == 0)
-        {
-            _blockCapacity = 0;
-            _bitCount = 0;
-        }
-        else
-        {
-            const int32 requiredBlocks = BlocksForBits(other._bitCount);
-            const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
-            _blockCapacity = allocatedMemory / BytesPerBlock;
-            _bitCount = other._bitCount;
-            BulkOperations::CopyLinearContent<Block>(
-                DATA_OF(const Block, other._allocData),
-                DATA_OF(Block, this->_allocData),
-                requiredBlocks
-            );
-        }
+        ASSERT(_bitCount == 0 && _blockCapacity == 0); // BitArray must be empty, but the collection must be initialized!
+
+        if (other._bitCount == 0 || other._blockCapacity == 0)
+            return;
+
+        const int32 requiredBlocks = BlocksForBits(other._bitCount);
+        const int32 requestedBlocksCapacity = AllocHelper::InitCapacity(requiredBlocks);
+
+        _blockCapacity = AllocHelper::Allocate(_allocData, requestedBlocksCapacity);
+        _bitCount = other._bitCount;
+
+        BulkOperations::CopyLinearContent<Block>(
+            DATA_OF(const Block, other._allocData),
+            DATA_OF(Block, this->_allocData),
+            requiredBlocks
+        );
     }
 
 
@@ -443,21 +520,19 @@ private:
 public:
     /// <summary> Initializes an empty bit-array with no active allocation. </summary>
     FORCE_INLINE
-    constexpr BitArray() 
-        : _allocData{}
-        , _blockCapacity{ 0 }
-        , _bitCount{ 0 }
-    {
-    }
+    constexpr BitArray() = default;
 
     /// <summary> Initializes a bit-array by moving the allocation from another array. </summary>
     FORCE_INLINE
     BitArray(BitArray&& other) noexcept
-        : _allocData{}
-        , _blockCapacity{}
-        , _bitCount{}
     {
         MoveToEmpty(MOVE(other));
+    }
+
+    /// <summary> Initializing an empty bit-array with an active context-less allocation. </summary>
+    BitArray(const BitArray& other)
+    {
+        CopyToEmpty(other);
     }
 
 
@@ -488,7 +563,7 @@ public:
     // Collection Lifecycle - Assignments
 
     FORCE_INLINE
-    auto operator=(BitArray&& other)  -> BitArray&
+    BitArray& operator=(BitArray&& other) noexcept
     {
         if (this != &other)
         {
@@ -498,7 +573,7 @@ public:
         return *this;
     }
 
-    auto operator=(const BitArray& other) -> BitArray&
+    BitArray& operator=(const BitArray& other)
     {
         if (this != &other)
         {
@@ -685,7 +760,7 @@ public:
         // End Condition and Movement
 
         FORCE_INLINE NODISCARD
-        operator bool() const 
+        explicit operator bool() const 
         {
             ASSERT(_array != nullptr);
             return _index < _array->_bitCount;

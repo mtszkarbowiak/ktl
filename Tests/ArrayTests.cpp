@@ -9,7 +9,7 @@
 
 // Capacity Management
 
-TEST(Array_Capacity, Reserve_OnInit)
+TEST(Array_Capacity, Reserve_OnInit) //TODO Fix tests naming.
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -352,6 +352,44 @@ TEST(Array_Relocation, MoveAssignment_DragAlloc)
     }
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(1 * ElementCount + 1)
+}
+
+
+// Element Copying
+
+TEST(Array_Copying, CopyCtr)
+{
+    constexpr int32 ElementCount = 12;
+    LIFECYCLE_TEST_INTO
+    {
+        Array<TestTracker> arraySrc{ ElementCount }; // Reserve space so we don't reallocate
+        for (int32 i = 0; i < ElementCount; ++i)
+            arraySrc.Add(TestTracker{ i }); // 2 constructions: 1 for the array, 1 for the temporary
+
+        Array<TestTracker> arrayDst{ arraySrc }; // 1 construction: 1 for the copy
+
+        GTEST_ASSERT_EQ(arrayDst.Count(), arraySrc.Count());
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(3 * ElementCount)
+}
+
+TEST(Array_Copying, CopyAsg)
+{
+    constexpr int32 ElementCount = 12;
+    LIFECYCLE_TEST_INTO
+    {
+        Array<TestTracker> arraySrc{ ElementCount }; // Reserve space so we don't reallocate
+        for (int32 i = 0; i < ElementCount; ++i)
+            arraySrc.Add(TestTracker{ i }); // 2 constructions: 1 for the array, 1 for the temporary
+
+        Array<TestTracker> arrayDst = Array<TestTracker>{}; // Explicit init, so IDE doesn't complain.
+        arrayDst = arraySrc; // 1 construction: 1 for the copy
+
+        GTEST_ASSERT_EQ(arrayDst.Count(), arraySrc.Count());
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
 

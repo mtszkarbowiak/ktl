@@ -11,6 +11,7 @@
 #include "Math/HashingFunctions.h"
 #include "Math/Probing.h"
 #include "Types/IterHint.h"
+#include "Types/Span.h"
 
 
 /// <summary>

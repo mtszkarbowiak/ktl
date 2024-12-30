@@ -6,9 +6,13 @@
 
 
 /// <summary>
-/// Basic container for storing dynamically resizable arrays of elements.
-/// It stores the elements in a contiguous memory block and uses doubling growth strategy.
+/// Basic container for storing dynamically resizable arrays of elements in one contiguous memory block.
 /// </summary>
+///
+/// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, and not a reference. </typeparam>
+/// <typeparam name="Alloc"> Type of the allocator to use. Can be either dragging or non-dragging.</typeparam>
+/// <typeparam name="Grow"> Function to calculate the next capacity (before capping by allocator). </typeparam>
+///
 /// <remarks>
 /// 1. <c>Array</c> works effectively as a stack. If you need a queue, consider using <c>Ring</c> instead.
 /// 2. The container is designed to invoke the allocator as little as possible.
@@ -16,8 +20,6 @@
 /// unless explicitly freed by calling <c>Reset</c>.
 /// 3. <c>Array</c> STL inspiration is <c>std::vector</c>.
 /// </remarks>
-/// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, nor a reference. </typeparam>
-/// <typeparam name="Alloc"> Type of the allocator to use. </typeparam>
 template<
     typename T,
     typename Alloc = HeapAlloc,
@@ -28,9 +30,9 @@ class Array
     using AllocData   = typename Alloc::Data;
     using AllocHelper = AllocHelperOf<T, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
 
-    AllocData _allocData;
-    int32     _capacity;
-    int32     _count;
+    AllocData _allocData{};
+    int32     _capacity{};
+    int32     _count{};
 
     // Capacity Access
 
@@ -417,9 +419,70 @@ public:
     }
 
 
-    // Collection Lifecycle - Overriding Content
+    /// <summary> Creates a span of the stored elements. </summary>
+    FORCE_INLINE NODISCARD
+    Span<T> AsSpan() noexcept
+    {
+        return Span<T>{ DATA_OF(T, _allocData), _count };
+    }
 
-private:
+    /// <summary>
+    /// Adds one-by-one copies of the specified elements to the end of the array.
+    /// Max one allocation is performed.
+    /// </summary>
+    /// <remarks>
+    /// Array has specialized method for adding multiple elements at once,
+    /// because they may be returned from a function as a span.
+    /// </remarks>
+    Span<T> AddElements(const T* source, const int32 count)
+    {
+        const int32 newCount = _count + count;
+        EnsureCapacity(newCount);
+
+        T* target = DATA_OF(T, _allocData) + _count;
+        BulkOperations::CopyLinearContent<T>(source, target, count);
+
+        _count = newCount;
+        return Span<T>{ target, count };
+    }
+
+    /// <summary>
+    /// Adds one-by-one copies of the specified elements to the end of the array.
+    /// Max one allocation is performed.
+    /// </summary>
+    /// <remarks>
+    /// Array has specialized method for adding multiple elements at once,
+    /// because they may be returned from a function as a span.
+    /// </remarks>
+    Span<T> AddElements(const Span<T> source)
+    {
+        return AddElements(source.Data(), source.Count());
+    }
+
+    /// <summary>
+    /// Adds copies of one and the same element to the end of the array.
+    /// </summary>
+    /// <remarks>
+    /// Array has specialized method for adding multiple elements at once,
+    /// because they may be returned from a function as a span.
+    /// </remarks>
+    Span<T> AddRepetitions(const T& source, const int32 count)
+    {
+        const int32 newCount = _count + count;
+        EnsureCapacity(newCount);
+
+        for (int i = 0; i < count; ++i) {
+            Add(source);
+        }
+
+        const int32 startIndex = _count - count;
+        const T* startPtr = DATA_OF(T, _allocData) + startIndex;
+
+        return Span<T>{ startPtr, count };
+    }
+
+
+protected:
     FORCE_INLINE
     void MoveToEmpty(Array&& other) noexcept
     {
@@ -443,7 +506,6 @@ private:
         {
             const int32 requestedCapacity = AllocHelper::InitCapacity(other._count);
 
-            _allocData = AllocData{};
             _capacity  = AllocHelper::Allocate(_allocData, requestedCapacity);
             _count     = other._count;
 
@@ -457,70 +519,36 @@ private:
         }
     }
 
-    template<typename OtherAlloc>
-    void CopyToEmpty(const Array<T, OtherAlloc>& other) //TODO Add test for array copy
-    {
-        static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
-
-        ASSERT(_count == 0 && _capacity == 0); // Array must be empty, but the collection must be initialized!
-
-        if (other._count == 0)
-            return;
-
-        const int32 requiredCapacity = AllocHelper::InitCapacity(other._count);
-        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
-        _count    = other._count;
-
-        BulkOperations::CopyLinearContent<T>(
-            DATA_OF(const T, other._allocData),
-            DATA_OF(T,       this->_allocData),
-            _count
-        );
-    }
-
 
     // Collection Lifecycle - Constructors
 
 public:
     /// <summary> Initializes an empty array with no active allocation. </summary>
     FORCE_INLINE
-    constexpr Array() 
-        : _allocData{}
-        , _capacity{}
-        , _count{}
-    {
-    }
+    constexpr Array() = default;
 
     /// <summary> Initializes an array by moving the allocation from another array. </summary>
     FORCE_INLINE
     Array(Array&& other) noexcept
-        : _allocData{}
-        , _capacity{}
-        , _count{}
     {
         MoveToEmpty(MOVE(other));
     }
 
     /// <summary> Initializes an array by copying another array. </summary>
-    template<
-        typename U = T,
-        typename = typename std::enable_if<((
-            std::is_copy_constructible<T>::value && 
-            std::is_same<U, T>::value
-        ))>::type>
     Array(const Array& other)
-        : _allocData{}
-        , _capacity{}
-        , _count{}
     {
-        CopyToEmpty<Alloc>(other); //TODO Maybe use dedicated method to copy from other allocators. Not necessarily `CopyToEmpty`.
+        if (other._count == 0)
+            return;
+
+        AddElements(
+            other.Data(),
+            other._count
+        );
     }
 
     /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
     FORCE_INLINE
     explicit Array(const int32 capacity)
-        : _allocData{}
-        , _count{}
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
@@ -531,7 +559,6 @@ public:
     FORCE_INLINE
     explicit Array(const int32 capacity, AllocContext&& context)
         : _allocData{ FORWARD(AllocContext, context) }
-        , _count{}
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
@@ -551,18 +578,15 @@ public:
         return *this;
     }
 
-    template<
-        typename U = T,
-        typename = typename std::enable_if<((
-            std::is_copy_constructible<T>::value && 
-            std::is_same<U, T>::value
-        ))>::type>
     Array& operator=(const Array& other)
     {
-        if (this != &other)
+        if (this != &other) 
         {
             Reset();
-            CopyToEmpty<Alloc>(other);
+            AddElements(
+                other.Data(),
+                other._count
+            );
         }
         return *this;
     }
