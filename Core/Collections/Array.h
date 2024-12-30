@@ -405,7 +405,7 @@ public:
 
     /// <summary> Removes all elements from the array and frees the allocation. </summary>
     FORCE_INLINE
-    void Reset()
+    void Reset() noexcept
     {
         if (_capacity == 0)
             return;
@@ -421,7 +421,7 @@ public:
 
 private:
     FORCE_INLINE
-    void MoveToEmpty(Array&& other)
+    void MoveToEmpty(Array&& other) noexcept
     {
         ASSERT(_count == 0 && _capacity == 0); // Array must be empty, but the collection must be initialized!
 
@@ -434,10 +434,13 @@ private:
             _count     = other._count;
             _capacity  = other._capacity;
 
-            other._capacity = 0; // Allocation moved - Reset the capacity!
-            other._count = 0;
+            // The items have been moved with the allocator.
+            // The capacity must be reset manually.
+            other._capacity = 0;
+            other._count    = 0;
         }
-        else {
+        else 
+        {
             const int32 requestedCapacity = AllocHelper::InitCapacity(other._count);
 
             _allocData = AllocData{};
@@ -490,7 +493,7 @@ public:
 
     /// <summary> Initializes an array by moving the allocation from another array. </summary>
     FORCE_INLINE
-    Array(Array&& other)
+    Array(Array&& other) noexcept
         : _allocData{}
         , _capacity{}
         , _count{}
@@ -538,7 +541,7 @@ public:
     // Collection Lifecycle  - Assignments
 
     FORCE_INLINE
-    Array& operator=(Array&& other) 
+    Array& operator=(Array&& other) noexcept
     {
         if (this != &other) 
         {
