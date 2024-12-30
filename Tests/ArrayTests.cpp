@@ -362,16 +362,16 @@ TEST(Array_Copying, CopyCtr)
     constexpr int32 ElementCount = 12;
     LIFECYCLE_TEST_INTO
     {
-        Array<int32> arraySrc;
+        Array<TestTracker> arraySrc{ ElementCount }; // Reserve space so we don't reallocate
         for (int32 i = 0; i < ElementCount; ++i)
-            arraySrc.Add(i);
+            arraySrc.Add(TestTracker{ i }); // 2 constructions: 1 for the array, 1 for the temporary
 
-        Array<int32> arrayDst{ arraySrc };
+        Array<TestTracker> arrayDst{ arraySrc }; // 1 construction: 1 for the copy
 
         GTEST_ASSERT_EQ(arrayDst.Count(), arraySrc.Count());
-        GTEST_ASSERT_EQ(arrayDst[0], 0);
     }
     LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
 TEST(Array_Copying, CopyAsg)
@@ -379,17 +379,17 @@ TEST(Array_Copying, CopyAsg)
     constexpr int32 ElementCount = 12;
     LIFECYCLE_TEST_INTO
     {
-        Array<int32> arraySrc;
+        Array<TestTracker> arraySrc{ ElementCount }; // Reserve space so we don't reallocate
         for (int32 i = 0; i < ElementCount; ++i)
-            arraySrc.Add(i);
+            arraySrc.Add(TestTracker{ i }); // 2 constructions: 1 for the array, 1 for the temporary
 
-        Array<int32> arrayDst = Array<int32>{}; // Explicit init, so IDE doesn't complain.
-        arrayDst = arraySrc;
+        Array<TestTracker> arrayDst = Array<TestTracker>{}; // Explicit init, so IDE doesn't complain.
+        arrayDst = arraySrc; // 1 construction: 1 for the copy
 
         GTEST_ASSERT_EQ(arrayDst.Count(), arraySrc.Count());
-        GTEST_ASSERT_EQ(arrayDst[0], 0);
     }
     LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
 

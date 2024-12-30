@@ -376,6 +376,43 @@ TEST(Ring_Relocation, MoveAssignment_DragAlloc)
 }
 
 
+// Element Copying
+
+TEST(Ring_Copying, CopyCtr)
+{
+    constexpr int32 ElementCount = 12;
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> movedRing{ ElementCount };
+        for (int32 i = 0; i < ElementCount; ++i)
+            movedRing.PushBack(TestTracker{ i }); // 2 constructions: 1 for the ring, 1 for the temporary
+
+        Ring<TestTracker> targetRing{ movedRing }; // 1 construction: 1 for the copy
+        GTEST_ASSERT_EQ(targetRing.Count(), ElementCount);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(3 * ElementCount)
+}
+
+TEST(Ring_Copying, CopyAsg)
+{
+    constexpr int32 ElementCount = 12;
+    LIFECYCLE_TEST_INTO
+    {
+        Ring<TestTracker> movedRing{ ElementCount };
+        for (int32 i = 0; i < ElementCount; ++i)
+            movedRing.PushBack(TestTracker{ i }); // 2 constructions: 1 for the ring, 1 for the temporary
+
+        Ring<TestTracker> targetRing = Ring<TestTracker>{}; // Explicit init, so IDE doesn't complain.
+        targetRing = movedRing; // 1 construction: 1 for the copy
+
+        GTEST_ASSERT_EQ(targetRing.Count(), ElementCount);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(3 * ElementCount) // Include temporary
+}
+
+
 // Element Manipulation
 
 TEST(Ring_ElementManipulation, PushBack_PopBack)
