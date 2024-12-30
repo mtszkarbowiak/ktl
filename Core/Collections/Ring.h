@@ -502,22 +502,14 @@ public:
     }
 
 
-    // Collection Lifecycle - Moves and Copies
-
-private:
-    void MoveToEmpty(Ring&& other) 
+protected:
+    void MoveToEmpty(Ring&& other) noexcept
     {
-        ASSERT(
-            _countCached == 0 && 
-            _capacity == 0
-        ); // Ring must be empty, but the collection must be initialized!
+        ASSERT(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
+        ASSERT(other.IsValid()); // Make sure the other ring is valid.
 
-        if (!other.IsAllocated())
-        {
-            _head        = 0;
-            _tail        = 0;
+        if (other._capacity == 0 || other._countCached == 0)
             return;
-        }
 
         if (other._allocData.MovesItems())
         {
@@ -579,28 +571,25 @@ private:
         }
     }
 
-    template<typename OtherAllocation>
-    void CopyToEmpty(const Ring<T, OtherAllocation>& other) //TODO Add test for ring copy and revise.
+    void CopyToEmpty(const Ring& other)
     {
         static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
 
-        if (other.IsEmpty()) 
-        {
-            _allocData   = AllocData{};
-            _capacity    = 0;
-            _head        = 0;
-            _tail        = 0;
-            _countCached = 0;
-        }
-        else if (!other.IsWrapped())
+        ASSERT(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
+        ASSERT(other.IsValid()); // Make sure the other ring is valid.
+
+        if (other._capacity == 0 || other._countCached == 0)
+            return;
+
+        if (!other.IsWrapped())
         {
 
             const int32 requiredCapacity = AllocHelper::InitCapacity(other._countCached);
-            _allocData   = AllocData{};
+
             _capacity    = AllocHelper::Allocate(_allocData, requiredCapacity);
-            _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
+            _countCached = other._countCached;
 
             BulkOperations::CopyLinearContent<T>(
                 DATA_OF(const T, other._allocData) + other._head,
@@ -611,11 +600,11 @@ private:
         else
         {
             const int32 requiredCapacity = AllocHelper::InitCapacity(other._countCached);
-            _allocData   = AllocData{};
+
             _capacity    = AllocHelper::Allocate(_allocData, requiredCapacity);
-            _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
+            _countCached = other._countCached;
 
             const int32 wrapIndex = other._capacity - other._head;
 
@@ -648,22 +637,15 @@ public:
     }
 
     /// <summary> Initializes a ring by copying another ring. </summary>
-    template<typename U = T, typename = typename std::enable_if<((
-        std::is_copy_constructible<T>::value &&
-        std::is_same<U, T>::value
-    ))>::type>
     Ring(const Ring& other)
     {
-        CopyToEmpty<Alloc>(other);
+        CopyToEmpty(other);
     }
 
 
     /// <summary> Initializes an empty ring with an active context-less allocation of the specified capacity. </summary>
+    FORCE_INLINE
     explicit Ring(const int32 capacity)
-        : _allocData{}
-        , _head{}
-        , _tail{}
-        , _countCached{}
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
@@ -671,11 +653,9 @@ public:
 
     /// <summary> Initializes an empty ring with an active allocation of the specified capacity and context. </summary>
     template<typename AllocContext>
+    FORCE_INLINE
     explicit Ring(const int32 capacity, AllocContext&& context)
         : _allocData{ FORWARD(AllocContext, context) }
-        , _head{}
-        , _tail{}
-        , _countCached{}
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
@@ -685,7 +665,7 @@ public:
     // Collection Lifecycle - Assignments
 
     FORCE_INLINE
-    Ring& operator=(Ring&& other) 
+    Ring& operator=(Ring&& other) noexcept
     {
         if (this != &other) 
         {
@@ -696,17 +676,12 @@ public:
         return *this;
     }
 
-    template<typename U = T, typename = typename std::enable_if<((
-        std::is_copy_constructible<T>::value &&
-        std::is_same<U, T>::value
-    ))>::type>
-    FORCE_INLINE
     Ring& operator=(const Ring& other)
     {
         if (this != &other) 
         {
             Reset();
-            CopyToEmpty<Alloc>(other);
+            CopyToEmpty(other);
         }
 
         return *this;
