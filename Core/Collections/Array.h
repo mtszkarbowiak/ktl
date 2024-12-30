@@ -483,14 +483,17 @@ public:
     FORCE_INLINE
     constexpr Array() 
         : _allocData{}
-        , _capacity{ 0 }
-        , _count{ 0 }
+        , _capacity{}
+        , _count{}
     {
     }
 
     /// <summary> Initializes an array by moving the allocation from another array. </summary>
     FORCE_INLINE
-    Array(Array&& other) 
+    Array(Array&& other)
+        : _allocData{}
+        , _capacity{}
+        , _count{}
     {
         MoveToEmpty(MOVE(other));
     }
@@ -503,8 +506,11 @@ public:
             std::is_same<U, T>::value
         ))>::type>
     Array(const Array& other)
+        : _allocData{}
+        , _capacity{}
+        , _count{}
     {
-        CopyToEmpty<Alloc>(other);
+        CopyToEmpty<Alloc>(other); //TODO Maybe use dedicated method to copy from other allocators. Not necessarily `CopyToEmpty`.
     }
 
     /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
