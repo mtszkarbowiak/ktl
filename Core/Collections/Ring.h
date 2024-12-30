@@ -45,6 +45,7 @@ protected:
             return true;
         }
 
+        // Check if the cached count is correct.
         const int32 expectedTail = (_head + _countCached) % _capacity;
         return _tail == expectedTail;
     }
@@ -127,11 +128,25 @@ public:
         if (minCapacity <= _capacity)
             return; // Reserving the same capacity would not increase the capacity.
 
+        if (_capacity == 0)
+        {
+            const int32 requiredCapacity = AllocHelper::InitCapacity(minCapacity);
+            const int32 allocatedCapacity = AllocHelper::Allocate(_allocData, requiredCapacity);
+
+            _capacity = allocatedCapacity;
+            _head = 0;
+            _tail = 0;
+            _countCached = 0;
+
+            ASSERT(IsValid());
+            return;
+        }
+
         // Higher capacity is required. Allocate new memory.
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData };
 
-        const int32 requiredCapacity = AllocHelper::InitCapacity(minCapacity);
+        const int32 requiredCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
         const int32 allocatedCapacity = AllocHelper::Allocate(newData, requiredCapacity);
 
         // Move the content before reassigning the capacity
@@ -333,8 +348,7 @@ public:
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
-        if (_countCached == _capacity)
-            EnsureCapacity(_capacity + 1);
+        EnsureCapacity(_countCached + 1);
 
         T* target = DATA_OF(T, _allocData) + _tail;
 
@@ -352,8 +366,7 @@ public:
     FORCE_INLINE
     T& EmplaceBack(Args&&... args)
     {
-        if (_countCached == _capacity)
-            EnsureCapacity(_capacity + 1);
+        EnsureCapacity(_countCached + 1);
 
         T* target = DATA_OF(T, _allocData) + _tail;
 
@@ -377,8 +390,7 @@ public:
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
-        if (_countCached == _capacity)
-            EnsureCapacity(_capacity + 1);
+        EnsureCapacity(_countCached + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
         T* target = DATA_OF(T, _allocData) + _head;
@@ -395,8 +407,7 @@ public:
     FORCE_INLINE
     T& EmplaceFront(Args&&... args)
     {
-        if (_countCached == _capacity)
-            EnsureCapacity(_capacity + 1);
+        EnsureCapacity(_countCached + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
         T* target = DATA_OF(T, _allocData) + _head;
