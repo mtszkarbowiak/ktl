@@ -420,18 +420,21 @@ public:
     // Collection Lifecycle - Overriding Content
 
 private:
+    /// <summary>
+    /// Moves the allocation from another array to this array.
+    /// Warning: The array must be fully initialized and empty.
+    /// </summary>
     FORCE_INLINE
     void MoveFrom(Array&& other)  //TODO Maybe rename it to MoveToEmpty so Unreal Engine devs are more familiar with the naming convention?
     {
-        ASSERT(!IsAllocated()); // Array must be empty!
+        ASSERT(_count == 0 && _capacity == 0); // Array must be empty!
 
         if (!other.IsAllocated())
         {
-            _allocData = AllocData{};
-            _count     = 0;
-            _capacity  = 0;
+            return;
         }
-        else if (other._allocData.MovesItems())
+
+        if (other._allocData.MovesItems())
         {
             _allocData = MOVE(other._allocData);
             _count     = other._count;
@@ -504,7 +507,10 @@ public:
 
     /// <summary> Initializes an array by moving the allocation from another array. </summary>
     FORCE_INLINE
-    Array(Array&& other) 
+    Array(Array&& other)
+        : _allocData{}
+        , _capacity{}
+        , _count{}
     {
         MoveFrom(MOVE(other));
     }
@@ -517,6 +523,9 @@ public:
             std::is_same<U, T>::value
         ))>::type>
     Array(const Array& other)
+        : _allocData{}
+        , _capacity{}
+        , _count{}
     {
         CopyFrom<Alloc>(other);
     }
