@@ -86,31 +86,41 @@ public:
         if (minCapacity <= _capacity)
             return; // Reserving the same capacity would not increase the capacity.
 
-        // Higher capacity is required. Allocate new memory.
-        const AllocData& oldData = _allocData;
-        AllocData newData{ oldData };
 
-        const int32 requiredCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
-        const int32 allocatedCapacity = AllocHelper::Allocate(newData, requiredCapacity);
-
-        // Move the content before reassigning the capacity
-        if (_capacity > 0)
+        if (_capacity == 0)
         {
-            BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, _allocData), 
-                DATA_OF(T, newData), 
-                _count
-            );
-            BulkOperations::DestroyLinearContent<T>(
-                DATA_OF(T, _allocData), 
-                _count
-            );
-
-            _allocData.Free();
+            // If the array is empty, allocate the default capacity.
+            const int32 requiredCapacity = AllocHelper::InitCapacity(minCapacity);
+            _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
         }
+        else
+        {
+            // Higher capacity is required. Allocate new memory.
+            const AllocData& oldData = _allocData;
+            AllocData newData{ oldData };
 
-        _allocData = MOVE(newData);
-        _capacity  = allocatedCapacity;
+            const int32 requiredCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
+            const int32 allocatedCapacity = AllocHelper::Allocate(newData, requiredCapacity);
+
+            // Move the content before reassigning the capacity
+            if (_capacity > 0)
+            {
+                BulkOperations::MoveLinearContent<T>(
+                    DATA_OF(T, _allocData),
+                    DATA_OF(T, newData),
+                    _count
+                );
+                BulkOperations::DestroyLinearContent<T>(
+                    DATA_OF(T, _allocData),
+                    _count
+                );
+
+                _allocData.Free();
+            }
+
+            _allocData = MOVE(newData);
+            _capacity = allocatedCapacity;
+        }
     }
 
     /// <summary>
@@ -411,7 +421,7 @@ public:
 
 private:
     FORCE_INLINE
-    void MoveFrom(Array&& other) noexcept
+    void MoveFrom(Array&& other) noexcept //TODO Maybe rename it to MoveToEmpty so Unreal Engine devs are more familiar with the naming convention?
     {
         ASSERT(!IsAllocated()); // Array must be empty!
 
@@ -449,7 +459,7 @@ private:
     }
 
     template<typename OtherAlloc>
-    void CopyFrom(const Array<T, OtherAlloc>& other)
+    void CopyFrom(const Array<T, OtherAlloc>& other) //TODO Add test for array copy
     {
         static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
 
@@ -466,10 +476,9 @@ private:
         {
             _allocData = AllocData{};
 
-            const int32 requiredCapacity = 
-                Bucketing::GetRequiredCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
+            const int32 requiredCapacity = AllocHelper::InitCapacity(other._count);
 
-            _capacity = Bucketing::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+            _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
             _count    = other._count;
 
             BulkOperations::CopyLinearContent<T>(
