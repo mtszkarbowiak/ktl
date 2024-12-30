@@ -389,22 +389,22 @@ private:
 
         if (other._allocData.MovesItems())
         {
-            _allocData = MOVE(other._allocData);
+            _allocData     = MOVE(other._allocData);
             _blockCapacity = other._blockCapacity;
-            _bitCount = other._bitCount;
+            _bitCount      = other._bitCount;
 
             other._blockCapacity = 0; // Allocation moved - Reset the capacity!
-            other._bitCount = 0;
+            other._bitCount      = 0;
         }
         else
         {
-            _allocData = AllocData{};
             _bitCount = other._bitCount;
 
             const int32 requiredBlocks = BlocksForBits(_bitCount);
-            const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
+            const int32 requestedBlocksCapacity = AllocHelper::InitCapacity(requiredBlocks);
 
-            _blockCapacity = allocatedMemory / BytesPerBlock;
+            _blockCapacity = AllocHelper::Allocate(_allocData, requestedBlocksCapacity);
+            _bitCount = other._bitCount;
 
             BulkOperations::MoveLinearContent<Block>(
                 DATA_OF(Block, other._allocData),
@@ -418,23 +418,22 @@ private:
 
     void CopyToEmpty(const BitArray& other)
     {
-        if (other._blockCapacity == 0)
-        {
-            _blockCapacity = 0;
-            _bitCount = 0;
-        }
-        else
-        {
-            const int32 requiredBlocks = BlocksForBits(other._bitCount);
-            const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
-            _blockCapacity = allocatedMemory / BytesPerBlock;
-            _bitCount = other._bitCount;
-            BulkOperations::CopyLinearContent<Block>(
-                DATA_OF(const Block, other._allocData),
-                DATA_OF(Block, this->_allocData),
-                requiredBlocks
-            );
-        }
+        ASSERT(_bitCount == 0 && _blockCapacity == 0); // BitArray must be empty, but the collection must be initialized!
+
+        if (other._bitCount == 0 || other._blockCapacity == 0)
+            return;
+
+        const int32 requiredBlocks = BlocksForBits(other._bitCount);
+        const int32 requestedBlocksCapacity = AllocHelper::InitCapacity(requiredBlocks);
+
+        _blockCapacity = AllocHelper::Allocate(_allocData, requestedBlocksCapacity);
+        _bitCount = other._bitCount;
+
+        BulkOperations::CopyLinearContent<Block>(
+            DATA_OF(const Block, other._allocData),
+            DATA_OF(Block, this->_allocData),
+            requiredBlocks
+        );
     }
 
 

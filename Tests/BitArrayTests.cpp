@@ -5,6 +5,8 @@
 #include "Collections/BitArray.h"
 
 
+// Capacity Management
+
 TEST(BitArray, Reserving_Init)
 {
     constexpr int32 MinReservedCapacity = 128;
@@ -16,6 +18,22 @@ TEST(BitArray, Reserving_Init)
     array.Reset();
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
+
+TEST(BitArray, Reserving_Request)
+{
+    constexpr int32 MinReservedCapacity = 128;
+    GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
+    BitArray<> array;
+    array.Reserve(MinReservedCapacity);
+    GTEST_ASSERT_TRUE(array.IsAllocated());
+    GTEST_ASSERT_GE(array.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE(array.Capacity(), MinReservedCapacity * 2);
+    array.Reset();
+    GTEST_ASSERT_FALSE(array.IsAllocated());
+}
+
+
+// Element Access
 
 TEST(BitArray, BitReferences)
 {
