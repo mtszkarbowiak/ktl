@@ -418,6 +418,41 @@ public:
         ++_bitCount;
     }
 
+    /// <summary> Removes the bit at the specified index without changing the order of the other bits. </summary>
+    void RemoveAtStable(const int32 index)
+    {
+        ASSERT_INDEX(index >= 0 && index < _bitCount); // Ensure the index is valid.
+
+        const int32 blockIndex = index / BitsPerBlock;
+        const int32 bitIndex = index % BitsPerBlock;
+        const int32 blocksCount = BlocksForBits(_bitCount);
+
+        Block* blocks = DATA_OF(Block, _allocData);
+
+        // Handle the block containing the removed bit.
+        {
+            Block& targetBlock = blocks[blockIndex];
+            const Block lowerMask = (Block{ 1 } << bitIndex) - 1; // Mask for bits below the removed bit.
+            const Block upperMask = ~lowerMask & ~(Block{ 1 } << bitIndex); // Mask for bits above the removed bit.
+
+            const Block lowerBits = targetBlock & lowerMask;       // Preserve bits below the removed bit.
+            const Block upperBits = (targetBlock & upperMask) >> 1; // Shift bits above the removed bit down.
+
+            targetBlock = lowerBits | upperBits; // Merge lower and shifted upper bits.
+        }
+
+        // Shift remaining bits to the left for subsequent blocks.
+        for (int32 i = blockIndex + 1; i < blocksCount; ++i)
+        {
+            const Block currentBlock = blocks[i];
+            const Block carryBit = currentBlock & Block{ 1 }; // The lowest bit to carry.
+            blocks[i - 1] |= carryBit << (BitsPerBlock - 1); // Carry it to the previous block.
+            blocks[i] = currentBlock >> 1;                  // Shift current block to the left.
+        }
+
+        --_bitCount;
+    }
+
 
     // Collection Lifecycle - Overriding Content
 
