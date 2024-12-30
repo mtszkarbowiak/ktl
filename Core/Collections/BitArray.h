@@ -380,15 +380,14 @@ public:
 
 private:
     FORCE_INLINE
-    void MoveToEmpty(BitArray&& other) 
+    void MoveToEmpty(BitArray&& other) noexcept
     {
-        if (!other.IsAllocated())
-        {
-            _allocData = AllocData{};
-            _blockCapacity = 0;
-            _bitCount = 0;
-        }
-        else if (other._allocData.MovesItems())
+        ASSERT(_bitCount == 0 && _blockCapacity == 0); // BitArray must be empty, but the collection must be initialized!
+
+        if (other._bitCount == 0 ||other._blockCapacity == 0)
+            return;
+
+        if (other._allocData.MovesItems())
         {
             _allocData = MOVE(other._allocData);
             _blockCapacity = other._blockCapacity;
@@ -453,7 +452,10 @@ public:
 
     /// <summary> Initializes a bit-array by moving the allocation from another array. </summary>
     FORCE_INLINE
-    BitArray(BitArray&& other) 
+    BitArray(BitArray&& other) noexcept
+        : _allocData{}
+        , _blockCapacity{}
+        , _bitCount{}
     {
         MoveToEmpty(MOVE(other));
     }

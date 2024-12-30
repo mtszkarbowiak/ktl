@@ -507,15 +507,19 @@ public:
 private:
     void MoveToEmpty(Ring&& other) 
     {
+        ASSERT(
+            _countCached == 0 && 
+            _capacity == 0
+        ); // Ring must be empty, but the collection must be initialized!
+
         if (!other.IsAllocated())
         {
-            _allocData   = AllocData{};
-            _capacity    = 0;
             _head        = 0;
             _tail        = 0;
-            _countCached = 0;
+            return;
         }
-        else if (other._allocData.MovesItems())
+
+        if (other._allocData.MovesItems())
         {
             _allocData = MOVE(other._allocData);
 
@@ -645,7 +649,12 @@ public:
     }
 
     /// <summary> Initializes a ring by moving the allocation from another array. </summary>
-    Ring(Ring&& other) 
+    Ring(Ring&& other) noexcept
+        : _allocData{}
+        , _capacity{}
+        , _head{}
+        , _tail{}
+        , _countCached{}
     {
         MoveToEmpty(MOVE(other));
     }
@@ -656,6 +665,9 @@ public:
         std::is_same<U, T>::value
     ))>::type>
     Ring(const Ring& other)
+        : _allocData{}
+        , _capacity{}
+        , _head{}
     {
         CopyToEmpty<Alloc>(other);
     }
