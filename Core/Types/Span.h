@@ -7,6 +7,9 @@
 /// <summary>
 /// Non-owning view of a contiguous sequence of elements.
 /// </summary>
+/// <remarks>
+/// Span is classified as null if it points to <c>null</c> OR its points to zero elements.
+/// <remarks>
 template<typename T>
 class Span
 {
@@ -35,22 +38,40 @@ public:
 
     // Properties
 
+    /// <summary> Returns the number of elements in the span. </summary>
     FORCE_INLINE NODISCARD
     int32 Count() const
     {
         return _count;
     }
 
+    /// <summary>
+    /// Returns the pointer to the underlying data i.e.
+    /// the first element or <c>nullptr</c> if the span is empty.
+    /// </summary>
     FORCE_INLINE NODISCARD
     T* Data()
     {
         return _data;
     }
 
+    /// <summary>
+    /// Returns the pointer to the underlying data i.e.
+    /// the first element or <c>nullptr</c> if the span is empty.
+    /// </summary>
     FORCE_INLINE NODISCARD
     const T* Data() const
     {
         return _data;
+    }
+
+    /// <summary> Checks if the span points to any elements. </summary>
+    FORCE_INLINE NODISCARD
+    explicit operator bool() const
+    {
+        return
+            static_cast<bool>(_data) || 
+            static_cast<bool>(_count);
     }
 
 
