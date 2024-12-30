@@ -504,7 +504,6 @@ protected:
         {
             const int32 requestedCapacity = AllocHelper::InitCapacity(other._count);
 
-            _allocData = AllocData{};
             _capacity  = AllocHelper::Allocate(_allocData, requestedCapacity);
             _count     = other._count;
 
@@ -557,6 +556,7 @@ public:
     template<typename AllocContext>
     FORCE_INLINE
     explicit Array(const int32 capacity, AllocContext&& context)
+        : _allocData{ FORWARD(AllocContext, context) }
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
