@@ -576,7 +576,7 @@ private:
     }
 
     template<typename OtherAllocation>
-    void CopyFrom(const Ring<T, OtherAllocation>& other)
+    void CopyFrom(const Ring<T, OtherAllocation>& other) //TODO Add test for ring copy
     {
         static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
 
@@ -591,9 +591,9 @@ private:
         else if (!other.IsWrapped())
         {
 
-            const int32 requiredCapacity = Bucketing::GetRequiredCapacity<Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
+            const int32 requiredCapacity = AllocHelper::InitCapacity(other._countCached);
             _allocData   = AllocData{};
-            _capacity    = Bucketing::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+            _capacity    = AllocHelper::Allocate(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
@@ -606,9 +606,9 @@ private:
         }
         else
         {
-            const int32 requiredCapacity = Bucketing::GetRequiredCapacity<Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
+            const int32 requiredCapacity = AllocHelper::InitCapacity(other._countCached);
             _allocData   = AllocData{};
-            _capacity    = Bucketing::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+            _capacity    = AllocHelper::Allocate(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
