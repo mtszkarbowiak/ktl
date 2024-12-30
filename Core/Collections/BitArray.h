@@ -376,7 +376,47 @@ public:
     }
 
 
-    //TODO AddAt, RemoveAt, InsertAt
+    /// <summary> Inserts a bit without changing the order of the other bits. </summary>
+    void InsertAtStable(const int32 index, const bool value)
+    {
+        ASSERT_INDEX(index >= 0 && index <= _bitCount); // Allow index == _bitCount for appending
+
+        Reserve(_bitCount + 1); // Ensure enough space for the new bit.
+
+        const int32 blockIndex  = index / BitsPerBlock;
+        const int32 bitIndex    = index % BitsPerBlock;
+        const int32 blocksCount = BlocksForBits(_bitCount);
+
+        Block* blocks = DATA_OF(Block, _allocData);
+
+        if (index < _bitCount)
+        {
+            // Shift all bits to the right starting from the insertion point.
+            for (int32 i = blocksCount - 1; i > blockIndex; --i)
+            {
+                const Block prevBlock = blocks[i - 1];
+                blocks[i] = (blocks[i] >> 1) | (prevBlock << (BitsPerBlock - 1));
+            }
+
+            // Handle the block containing the insertion point.
+            Block& targetBlock = blocks[blockIndex];
+            const Block lowerMask = (Block{ 1 } << bitIndex) - 1; // Mask for bits below insertion.
+            const Block upperBits = targetBlock & ~lowerMask;   // Preserve bits above insertion.
+            const Block lowerBits = targetBlock & lowerMask;   // Preserve bits below insertion.
+
+            targetBlock = (upperBits << 1) | lowerBits; // Merge shifted upper bits and lower bits.
+        }
+
+        // Insert the new bit.
+        Block& block = blocks[blockIndex];
+        const Block mask = Block{ 1 } << bitIndex;
+        if (value)
+            block |= mask;
+        else
+            block &= ~mask;
+
+        ++_bitCount;
+    }
 
 
     // Collection Lifecycle - Overriding Content

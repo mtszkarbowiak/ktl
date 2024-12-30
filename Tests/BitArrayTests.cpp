@@ -193,5 +193,69 @@ TEST(BitArray_Copying, CopyAsg)
 }
 
 
+// Element Manipulation
 
-//TODO(mtszkarbowiak) Add more tests.
+TEST(BitArray_ElementManipulation, StableInsert_OneBlock)
+{
+    BitArray<> array;
+    for (int32 i = 0; i < 6; ++i)
+        array.Add(i % 2 == 0);
+
+    // 0 1 2 3 4 5
+    // T F T F T F
+
+    array.InsertAtStable(2, true);
+
+    // 0 1 2 3 4 5 6
+    // T F T T F T F
+
+    GTEST_ASSERT_EQ(7, array.Count());
+    GTEST_ASSERT_EQ(true,  array.GetBit(0));
+    GTEST_ASSERT_EQ(false, array.GetBit(1));
+    GTEST_ASSERT_EQ(true,  array.GetBit(2));
+    GTEST_ASSERT_EQ(true,  array.GetBit(3));
+    GTEST_ASSERT_EQ(false, array.GetBit(4));
+    GTEST_ASSERT_EQ(true,  array.GetBit(5));
+    GTEST_ASSERT_EQ(false, array.GetBit(6));
+}
+
+TEST(BitArray_ElementManipulation, StableInsert_MultipleBlocks)
+{
+    constexpr int32 ElementCount = 1024;
+
+    BitArray<> array;
+    for (int32 i = 0; i < ElementCount; ++i)
+        array.Add(i % 2 == 0);
+
+    array.InsertAtStable(ElementCount / 2, true);
+
+    for (int32 i = 0; i < ElementCount / 2; ++i)
+        GTEST_ASSERT_EQ(i % 2 == 0, array.GetBit(i));
+
+    GTEST_ASSERT_EQ(true, array.GetBit(ElementCount / 2));
+
+    for (int32 i = ElementCount / 2 + 1; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ((i - 1) % 2 == 0, array.GetBit(i));
+}
+
+//TEST(BitArray_ElementManipulation, StableRemove)
+//{
+//    BitArray<> array;
+//    for (int32 i = 0; i < 6; ++i)
+//        array.Add(i % 2 == 0);
+//
+//    // 0 1 2 3 4 5
+//    // T F T F T F
+//
+//    array.RemoveAtStable(2);
+//
+//    // 0 1 2 3 4
+//    // T F F T F
+//
+//    GTEST_ASSERT_EQ(5, array.Count());
+//    GTEST_ASSERT_EQ(true,  array.GetBit(0));
+//    GTEST_ASSERT_EQ(false, array.GetBit(1));
+//    GTEST_ASSERT_EQ(false, array.GetBit(2));
+//    GTEST_ASSERT_EQ(true,  array.GetBit(3));
+//    GTEST_ASSERT_EQ(false, array.GetBit(4));
+//}
