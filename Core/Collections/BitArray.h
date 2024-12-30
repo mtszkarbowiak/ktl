@@ -28,9 +28,9 @@ private:
     using AllocData   = typename Alloc::Data;
     using AllocHelper = AllocHelperOf<Block, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
 
-    AllocData _allocData;
-    int32     _blockCapacity;
-    int32     _bitCount;
+    AllocData _allocData{};
+    int32     _blockCapacity{};
+    int32     _bitCount{};
 
     constexpr static int32 BytesPerBlock = sizeof(Block);
     constexpr static int32  BitsPerBlock = BytesPerBlock * 8;
@@ -376,6 +376,9 @@ public:
     }
 
 
+    //TODO AddAt, RemoveAt, InsertAt
+
+
     // Collection Lifecycle - Overriding Content
 
 private:
@@ -442,21 +445,19 @@ private:
 public:
     /// <summary> Initializes an empty bit-array with no active allocation. </summary>
     FORCE_INLINE
-    constexpr BitArray() 
-        : _allocData{}
-        , _blockCapacity{ 0 }
-        , _bitCount{ 0 }
-    {
-    }
+    constexpr BitArray() = default;
 
     /// <summary> Initializes a bit-array by moving the allocation from another array. </summary>
     FORCE_INLINE
     BitArray(BitArray&& other) noexcept
-        : _allocData{}
-        , _blockCapacity{}
-        , _bitCount{}
     {
         MoveToEmpty(MOVE(other));
+    }
+
+    /// <summary> Initializing an empty bit-array with an active context-less allocation. </summary>
+    BitArray(const BitArray& other)
+    {
+        CopyToEmpty(other);
     }
 
 
@@ -487,7 +488,7 @@ public:
     // Collection Lifecycle - Assignments
 
     FORCE_INLINE
-    auto operator=(BitArray&& other)  -> BitArray&
+    BitArray& operator=(BitArray&& other) noexcept
     {
         if (this != &other)
         {
@@ -497,7 +498,7 @@ public:
         return *this;
     }
 
-    auto operator=(const BitArray& other) -> BitArray&
+    BitArray& operator=(const BitArray& other)
     {
         if (this != &other)
         {
@@ -684,7 +685,7 @@ public:
         // End Condition and Movement
 
         FORCE_INLINE NODISCARD
-        operator bool() const 
+        explicit operator bool() const 
         {
             ASSERT(_array != nullptr);
             return _index < _array->_bitCount;

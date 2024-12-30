@@ -2,40 +2,67 @@
 
 #include <gtest/gtest.h>
 
+#include "Allocators/FixedAlloc.h"
 #include "Collections/BitArray.h"
 
 
 // Capacity Management
 
-TEST(BitArray, Reserving_Init)
+TEST(BitArray_Capacity, Reserving_Init)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
+
     BitArray<> array{ MinReservedCapacity };
+
     GTEST_ASSERT_TRUE(array.IsAllocated());
     GTEST_ASSERT_GE(array.Capacity(), MinReservedCapacity);
     GTEST_ASSERT_LE(array.Capacity(), MinReservedCapacity * 2);
+
     array.Reset();
+
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(BitArray, Reserving_Request)
+TEST(BitArray_Capacity, Reserving_Request)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
+
     BitArray<> array;
     array.Reserve(MinReservedCapacity);
+
     GTEST_ASSERT_TRUE(array.IsAllocated());
-    GTEST_ASSERT_GE(array.Capacity(), MinReservedCapacity);
-    GTEST_ASSERT_LE(array.Capacity(), MinReservedCapacity * 2);
+    GTEST_ASSERT_GE  (array.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE  (array.Capacity(), MinReservedCapacity * 2);
+
     array.Reset();
+
+    GTEST_ASSERT_FALSE(array.IsAllocated());
+}
+
+TEST(BitArray_Capacity, Reserving_Add)
+{
+    constexpr int32 MinReservedCapacity = 128;
+    GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
+
+    BitArray<> array;
+    for (int32 i = 0; i < MinReservedCapacity; ++i)
+        array.Add(i % 2 == 0);
+
+    GTEST_ASSERT_TRUE(array.IsAllocated());
+    GTEST_ASSERT_GE  (array.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE  (array.Capacity(), MinReservedCapacity * 2);
+
+    array.Reset();
+
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
 
 // Element Access
 
-TEST(BitArray, BitReferences)
+TEST(BitArray_ElementAccess, BitReferences)
 {
     BitArray<> array;
 
@@ -49,7 +76,7 @@ TEST(BitArray, BitReferences)
     GTEST_ASSERT_EQ(true, array[1]);
 }
 
-TEST(BitArray, ConstEnumerator)
+TEST(BitArray_ElementAccess, ConstEnumerator)
 {
     BitArray<> array;
     array.Add(true);
@@ -64,5 +91,107 @@ TEST(BitArray, ConstEnumerator)
     ++enumerator;
     GTEST_ASSERT_FALSE(static_cast<bool>(enumerator));
 }
+
+
+// Element Relocation
+
+TEST(BitArray_Relocation, MoveConstruct_NoDragAlloc)
+{
+    constexpr int32 ElementCount = 128;
+    using NoDragAlloc = FixedAlloc<sizeof(uint64) * 2>;
+
+    BitArray<NoDragAlloc> movedArray;
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        movedArray.Add(i % 2 == 0);
+
+    BitArray<NoDragAlloc> targetArray{ MOVE(movedArray) };
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(i % 2 == 0, targetArray[i]);
+}
+
+TEST(BitArray_Relocation, MoveAssignment_NoDragAlloc)
+{
+    constexpr int32 ElementCount = 128;
+    using NoDragAlloc = FixedAlloc<sizeof(uint64) * 2>;
+
+    BitArray<NoDragAlloc> movedArray;
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        movedArray.Add(i % 2 == 0);
+
+    BitArray<NoDragAlloc> targetArray = BitArray<NoDragAlloc>{}; // Suppress IDE warning.
+    targetArray = MOVE(movedArray);
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(i % 2 == 0, targetArray[i]);
+}
+
+TEST(BitArray_Relocation, MoveConstruct_DragAlloc)
+{
+    constexpr int32 ElementCount = 128;
+    using DragAlloc = HeapAlloc;
+
+    BitArray<DragAlloc> movedArray;
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        movedArray.Add(i % 2 == 0);
+
+    BitArray<DragAlloc> targetArray{ MOVE(movedArray) };
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(i % 2 == 0, targetArray[i]);
+}
+
+TEST(BitArray_Relocation, MoveAssignment_DragAlloc)
+{
+    constexpr int32 ElementCount = 128;
+    using DragAlloc = HeapAlloc;
+
+    BitArray<DragAlloc> movedArray;
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        movedArray.Add(i % 2 == 0);
+
+    BitArray<DragAlloc> targetArray = BitArray<DragAlloc>{}; // Suppress IDE warning.
+    targetArray = MOVE(movedArray);
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(i % 2 == 0, targetArray[i]);
+}
+
+
+// Element Copying
+
+TEST(BitArray_Copying, CopyCtr)
+{
+    constexpr int32 ElementCount = 128;
+
+    BitArray<> arraySrc;
+    for (int32 i = 0; i < ElementCount; ++i)
+        arraySrc.Add(i % 2 == 0);
+
+    BitArray<> arrayDst{ arraySrc };
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(i % 2 == 0, arrayDst[i]);
+}
+
+TEST(BitArray_Copying, CopyAsg)
+{
+    constexpr int32 ElementCount = 128;
+
+    BitArray<> arraySrc;
+    for (int32 i = 0; i < ElementCount; ++i)
+        arraySrc.Add(i % 2 == 0);
+
+    BitArray<> arrayDst = BitArray<>{};
+    arrayDst = arraySrc;
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(i % 2 == 0, arrayDst[i]);
+}
+
+
 
 //TODO(mtszkarbowiak) Add more tests.
