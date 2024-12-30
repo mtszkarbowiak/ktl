@@ -148,7 +148,7 @@ public:
     /// If the array is empty, the allocation will be freed.
     /// </summary>
     FORCE_INLINE
-    void ShrinkToFit()
+    void ShrinkToFit() //TODO Test this method.
     {
         if (_bitCount == 0)
         {
@@ -162,8 +162,7 @@ public:
         }
 
         const int32 blocksCount = BlocksForBits(_bitCount);
-        const int32 requiredBlocksCapacity
-            = Bucketing::GetRequiredCapacity<Block, Alloc, ARRAY_DEFAULT_CAPACITY>(blocksCount);
+        const int32 requiredBlocksCapacity = AllocHelper::InitCapacity(blocksCount);
 
         if (_blockCapacity <= requiredBlocksCapacity)
             return;
@@ -172,8 +171,7 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData }; // Copy the binding
 
-        const int32 allocatedBlocksCapacity
-            = Bucketing::AllocateCapacity<Block, Alloc>(newData, requiredBlocksCapacity);
+        const int32 allocatedBlocksCapacity = AllocHelper::Allocate(newData, requiredBlocksCapacity);
 
         BulkOperations::MoveLinearContent<Block>(
             DATA_OF(Block, _allocData), 
