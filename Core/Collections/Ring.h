@@ -505,7 +505,7 @@ public:
     // Collection Lifecycle - Moves and Copies
 
 private:
-    void MoveFrom(Ring&& other) 
+    void MoveToEmpty(Ring&& other) 
     {
         if (!other.IsAllocated())
         {
@@ -576,7 +576,7 @@ private:
     }
 
     template<typename OtherAllocation>
-    void CopyFrom(const Ring<T, OtherAllocation>& other) //TODO Add test for ring copy
+    void CopyToEmpty(const Ring<T, OtherAllocation>& other) //TODO Add test for ring copy and revise.
     {
         static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
 
@@ -647,7 +647,7 @@ public:
     /// <summary> Initializes a ring by moving the allocation from another array. </summary>
     Ring(Ring&& other) 
     {
-        MoveFrom(MOVE(other));
+        MoveToEmpty(MOVE(other));
     }
 
     /// <summary> Initializes a ring by copying another ring. </summary>
@@ -657,7 +657,7 @@ public:
     ))>::type>
     Ring(const Ring& other)
     {
-        CopyFrom<Alloc>(other);
+        CopyToEmpty<Alloc>(other);
     }
 
 
@@ -693,7 +693,7 @@ public:
         if (this != &other) 
         {
             Reset();
-            MoveFrom(MOVE(other));
+            MoveToEmpty(MOVE(other));
         }
 
         return *this;
@@ -709,7 +709,7 @@ public:
         if (this != &other) 
         {
             Reset();
-            CopyFrom<Alloc>(other);
+            CopyToEmpty<Alloc>(other);
         }
 
         return *this;

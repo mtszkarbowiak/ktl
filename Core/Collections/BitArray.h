@@ -380,7 +380,7 @@ public:
 
 private:
     FORCE_INLINE
-    void MoveFrom(BitArray&& other) 
+    void MoveToEmpty(BitArray&& other) 
     {
         if (!other.IsAllocated())
         {
@@ -417,7 +417,7 @@ private:
         }
     }
 
-    void CopyFrom(const BitArray& other)
+    void CopyToEmpty(const BitArray& other)
     {
         if (other._blockCapacity == 0)
         {
@@ -455,7 +455,7 @@ public:
     FORCE_INLINE
     BitArray(BitArray&& other) 
     {
-        MoveFrom(MOVE(other));
+        MoveToEmpty(MOVE(other));
     }
 
 
@@ -491,7 +491,7 @@ public:
         if (this != &other)
         {
             Reset();
-            MoveFrom(MOVE(other));
+            MoveToEmpty(MOVE(other));
         }
         return *this;
     }
@@ -501,7 +501,7 @@ public:
         if (this != &other)
         {
             Reset();
-            CopyFrom(other);
+            CopyToEmpty(other);
         }
         return *this;
     }
