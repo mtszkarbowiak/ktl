@@ -421,27 +421,23 @@ public:
 
 private:
     FORCE_INLINE
-    void MoveFrom(Array&& other)  //TODO Maybe rename it to MoveToEmpty so Unreal Engine devs are more familiar with the naming convention?
+    void MoveToEmpty(Array&& other)
     {
-        ASSERT(!IsAllocated()); // Array must be empty!
+        ASSERT(_count == 0 && _capacity == 0); // Array must be empty, but the collection must be initialized!
 
-        if (!other.IsAllocated())
-        {
-            _allocData = AllocData{};
-            _count     = 0;
-            _capacity  = 0;
-        }
-        else if (other._allocData.MovesItems())
+        if (other._capacity == 0 || other._count == 0)
+            return;
+
+        if (other._allocData.MovesItems())
         {
             _allocData = MOVE(other._allocData);
             _count     = other._count;
             _capacity  = other._capacity;
 
             other._capacity = 0; // Allocation moved - Reset the capacity!
-            other._count    = 0;
+            other._count = 0;
         }
-        else
-        {
+        else {
             const int32 requestedCapacity = AllocHelper::InitCapacity(other._count);
 
             _allocData = AllocData{};
@@ -449,8 +445,8 @@ private:
             _count     = other._count;
 
             BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, other._allocData), 
-                DATA_OF(T, this->_allocData), 
+                DATA_OF(T, other._allocData),
+                DATA_OF(T, this->_allocData),
                 _count
             );
 
@@ -459,34 +455,24 @@ private:
     }
 
     template<typename OtherAlloc>
-    void CopyFrom(const Array<T, OtherAlloc>& other) //TODO Add test for array copy
+    void CopyToEmpty(const Array<T, OtherAlloc>& other) //TODO Add test for array copy
     {
         static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
 
-        ASSERT(!IsAllocated()); // Array must be empty!
+        ASSERT(_count == 0 && _capacity == 0); // Array must be empty, but the collection must be initialized!
 
-        if (other._capacity == 0)
-        {
-            // If no allocation is active, just zero the members.
-            _allocData = AllocData{};
-            _capacity  = 0;
-            _count     = 0;
-        }
-        else
-        {
-            _allocData = AllocData{};
+        if (other._count == 0)
+            return;
 
-            const int32 requiredCapacity = AllocHelper::InitCapacity(other._count);
+        const int32 requiredCapacity = AllocHelper::InitCapacity(other._count);
+        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
+        _count    = other._count;
 
-            _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
-            _count    = other._count;
-
-            BulkOperations::CopyLinearContent<T>(
-                DATA_OF(const T, other._allocData),
-                DATA_OF(T,       this->_allocData),
-                _count
-            );
-        }
+        BulkOperations::CopyLinearContent<T>(
+            DATA_OF(const T, other._allocData),
+            DATA_OF(T,       this->_allocData),
+            _count
+        );
     }
 
 
@@ -506,7 +492,7 @@ public:
     FORCE_INLINE
     Array(Array&& other) 
     {
-        MoveFrom(MOVE(other));
+        MoveToEmpty(MOVE(other));
     }
 
     /// <summary> Initializes an array by copying another array. </summary>
@@ -518,7 +504,7 @@ public:
         ))>::type>
     Array(const Array& other)
     {
-        CopyFrom<Alloc>(other);
+        CopyToEmpty<Alloc>(other);
     }
 
     /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
@@ -551,7 +537,7 @@ public:
         if (this != &other) 
         {
             Reset();
-            MoveFrom(MOVE(other));
+            MoveToEmpty(MOVE(other));
         }
         return *this;
     }
@@ -567,7 +553,7 @@ public:
         if (this != &other)
         {
             Reset();
-            CopyFrom<Alloc>(other);
+            CopyToEmpty<Alloc>(other);
         }
         return *this;
     }
