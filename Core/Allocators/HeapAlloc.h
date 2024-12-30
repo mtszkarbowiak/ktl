@@ -38,8 +38,8 @@ public:
             // No allocator context to bind to the new data
         }
 
-        FORCE_INLINE NODISCARD
-        auto MovesItems() const -> bool
+        FORCE_INLINE
+        bool MovesItems() const
         {
             return true;
         }
@@ -59,7 +59,7 @@ public:
 
 
         FORCE_INLINE
-        auto operator=(const Data&) -> Data&
+        Data& operator=(const Data&)
         {
             Free();
 
@@ -68,7 +68,7 @@ public:
         }
 
         FORCE_INLINE
-        auto operator=(Data&& other) noexcept -> Data&
+        Data& operator=(Data&& other) noexcept
         {
             if (this != &other)
             {
@@ -85,8 +85,8 @@ public:
         }
 
 
-        FORCE_INLINE NODISCARD
-        auto Allocate(const int32 size) -> int32
+        FORCE_INLINE
+        int32 Allocate(const int32 size)
         {
             ASSERT_MEMORY(_ptr == nullptr);
 
@@ -104,14 +104,14 @@ public:
         }
 
 
-        FORCE_INLINE NODISCARD
-        auto Get() const -> const byte*
+        FORCE_INLINE
+        const byte* Get() const
         {
             return _ptr;
         }
 
-        FORCE_INLINE NODISCARD
-        auto Get() -> byte*
+        FORCE_INLINE
+        byte* Get()
         {
             return _ptr;
         }

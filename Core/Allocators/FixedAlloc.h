@@ -42,19 +42,19 @@ public:
         }
 
         FORCE_INLINE NODISCARD
-        constexpr auto MovesItems() const -> bool
+        constexpr bool MovesItems() const
         {
             return false;
         }
 
 
-        constexpr auto operator=(const Data&) -> Data&
+        constexpr Data& operator=(const Data&)
         {
             // Pass
             return *this;
         }
 
-        constexpr auto operator=(Data&&) noexcept -> Data&
+        constexpr Data& operator=(Data&&) noexcept
         {
             // Pass
             return *this;
@@ -62,7 +62,7 @@ public:
 
 
         FORCE_INLINE NODISCARD
-        constexpr auto Allocate(const int32 size) -> int32
+        constexpr int32 Allocate(const int32 size)
         {
             ASSERT(size == Size || size == 0);
             return (size == Size) ? size : 0;
@@ -76,13 +76,13 @@ public:
 
 
         FORCE_INLINE NODISCARD
-        constexpr auto Get() const -> const byte*
+        constexpr const byte* Get() const
         {
             return _data;
         }
 
         FORCE_INLINE NODISCARD
-        constexpr auto Get() -> byte*
+        constexpr byte* Get()
         {
             return _data;
         }

@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Collections/CollectionsUtils.h"
-#include "Types/IterHint.h"
 
 /// <summary>
 /// Double-ended container for storing dynamically resizable queues of elements.
@@ -17,18 +16,21 @@
 /// unless explicitly freed by calling <c>Reset</c>.
 /// 3. <c>Ring</c> STL inspiration is <c>std::deque</c>.
 /// </remarks>
-template<typename T, typename Alloc = HeapAlloc>
+template<
+    typename T,
+    typename Alloc = DefaultAlloc,
+    int32(&Grow)(int32) = Growing::Default
+>
 class Ring
 {
-    using AllocData = typename Alloc::Data;
+    using AllocData   = typename Alloc::Data;
+    using AllocHelper = AllocHelperOf<T, Alloc, RING_DEFAULT_CAPACITY, Grow>;
 
     AllocData _allocData;
     int32     _capacity;
     int32     _head;
     int32     _tail; // Points to the next FREE slot (not the last element).
     int32     _countCached;
-
-    //TODO(mtszkarbowiak) Capacity could be stored as a power of 2. This would allow for very fast modulo operations.
 
     // Internal Integrity
 
@@ -43,6 +45,7 @@ protected:
             return true;
         }
 
+        // Check if the cached count is correct.
         const int32 expectedTail = (_head + _countCached) % _capacity;
         return _tail == expectedTail;
     }
@@ -125,14 +128,26 @@ public:
         if (minCapacity <= _capacity)
             return; // Reserving the same capacity would not increase the capacity.
 
+        if (_capacity == 0)
+        {
+            const int32 requiredCapacity = AllocHelper::InitCapacity(minCapacity);
+            const int32 allocatedCapacity = AllocHelper::Allocate(_allocData, requiredCapacity);
+
+            _capacity = allocatedCapacity;
+            _head = 0;
+            _tail = 0;
+            _countCached = 0;
+
+            ASSERT(IsValid());
+            return;
+        }
+
         // Higher capacity is required. Allocate new memory.
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData };
 
-        const int32 requiredCapacity
-            = CollectionsUtils::GetRequiredCapacity<T, Alloc, RING_DEFAULT_CAPACITY>(minCapacity);
-        const int32 allocatedCapacity
-            = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, requiredCapacity);
+        const int32 requiredCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
+        const int32 allocatedCapacity = AllocHelper::Allocate(newData, requiredCapacity);
 
         // Move the content before reassigning the capacity
         const bool isWrapped = _head > _tail;
@@ -205,8 +220,7 @@ public:
         }
 
         // Test required capacity against the current capacity.
-        const int32 requiredCapacity
-            = CollectionsUtils::GetRequiredCapacity<T, Alloc, RING_DEFAULT_CAPACITY>(_countCached);
+        const int32 requiredCapacity = AllocHelper::InitCapacity(_countCached); //TODO Review.
 
         if (_capacity <= requiredCapacity)
             return;
@@ -215,8 +229,7 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData };
 
-        const int32 allocatedCapacity
-            = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, _countCached);
+        const int32 allocatedCapacity = AllocHelper::Allocate(newData, requiredCapacity);
 
         // Move the content before reassigning the capacity
         const bool isWrapped = _head > _tail;
@@ -335,8 +348,7 @@ public:
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
-        if (_countCached == _capacity)
-            EnsureCapacity(_capacity + 1);
+        EnsureCapacity(_countCached + 1);
 
         T* target = DATA_OF(T, _allocData) + _tail;
 
@@ -354,8 +366,7 @@ public:
     FORCE_INLINE
     T& EmplaceBack(Args&&... args)
     {
-        if (_countCached == _capacity)
-            EnsureCapacity(_capacity + 1);
+        EnsureCapacity(_countCached + 1);
 
         T* target = DATA_OF(T, _allocData) + _tail;
 
@@ -379,8 +390,7 @@ public:
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
-        if (_countCached == _capacity)
-            EnsureCapacity(_capacity + 1);
+        EnsureCapacity(_countCached + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
         T* target = DATA_OF(T, _allocData) + _head;
@@ -397,8 +407,7 @@ public:
     FORCE_INLINE
     T& EmplaceFront(Args&&... args)
     {
-        if (_countCached == _capacity)
-            EnsureCapacity(_capacity + 1);
+        EnsureCapacity(_countCached + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
         T* target = DATA_OF(T, _allocData) + _head;
@@ -522,10 +531,10 @@ private:
         }
         else if (!other.IsWrapped())
         {
-            const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
+            const int32 requiredCapacity = AllocHelper::InitCapacity(other._countCached);
 
             _allocData   = AllocData{};
-            _capacity    = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+            _capacity    = AllocHelper::Allocate(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
@@ -540,10 +549,10 @@ private:
         }
         else
         {
-            const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
+            const int32 requiredCapacity = AllocHelper::InitCapacity(other._countCached);
 
             _allocData   = AllocData{};
-            _capacity    = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+            _capacity    = AllocHelper::Allocate(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
@@ -567,7 +576,7 @@ private:
     }
 
     template<typename OtherAllocation>
-    void CopyFrom(const Ring<T, OtherAllocation>& other)
+    void CopyFrom(const Ring<T, OtherAllocation>& other) //TODO Add test for ring copy
     {
         static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
 
@@ -582,9 +591,9 @@ private:
         else if (!other.IsWrapped())
         {
 
-            const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
+            const int32 requiredCapacity = AllocHelper::InitCapacity(other._countCached);
             _allocData   = AllocData{};
-            _capacity    = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+            _capacity    = AllocHelper::Allocate(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
@@ -597,9 +606,9 @@ private:
         }
         else
         {
-            const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Alloc, RING_DEFAULT_CAPACITY>(other._countCached);
+            const int32 requiredCapacity = AllocHelper::InitCapacity(other._countCached);
             _allocData   = AllocData{};
-            _capacity    = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+            _capacity    = AllocHelper::Allocate(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
             _tail        = other._countCached;
@@ -659,8 +668,8 @@ public:
         , _tail{}
         , _countCached{}
     {
-        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, RING_DEFAULT_CAPACITY>(capacity);
-        _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
+        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
     }
 
     /// <summary> Initializes an empty ring with an active allocation of the specified capacity and context. </summary>
@@ -671,8 +680,8 @@ public:
         , _tail{}
         , _countCached{}
     {
-        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, RING_DEFAULT_CAPACITY>(capacity);
-        _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
+        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
     }
 
 

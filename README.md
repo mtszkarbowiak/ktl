@@ -94,7 +94,7 @@ Collections manage object lifetimes and manage required memory through allocatio
 - 3.2. Collections may not assume that the object is default constructible.
 - 3.3. Collections should provide API to manage the memory block, especially reserving and compacting.
 - 3.4. Collections should use fast operations for C-style objects (no constructors, destructors, etc.).
-- 3.5. Every collection must use doubling strategy for resizing. This allows for heavy optimizations regarding hashign, iterating, etc. which involve modulo of capacity.
+- 3.5. ~~Every collection must use doubling strategy for resizing. This allows for heavy optimizations regarding hashign, iterating, etc. which involve modulo of capacity.~~
 - 3.6. Collections may define default capacity i.e. minimal capacity of the collection.
 - 3.7. Default capacity must obey constraints of the allocation policy.
 - 3.8. Collections must be ready to accept different hash types.

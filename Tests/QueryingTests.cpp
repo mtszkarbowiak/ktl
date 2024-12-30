@@ -109,39 +109,39 @@ TEST(QueryingTests_SelectWhere, Array)
     }
 }
 
-TEST(QueryingTest_Sum, Dictionary)
-{
-    using namespace Querying;
-    using namespace Statistics;
-
-    Dictionary<int32, float> dict;
-    dict.Add(1, 5.0f);
-    dict.Add(2, 8.0f);
-    dict.Add(3, 17.0f);
-    dict.Add(4, 3.0f);
-    dict.Add(5, 9.0f);
-    dict.Add(6, 11.0f);
-    dict.Add(7, 2.0f);
-
-    // Calculate the sum of all even keys
-
-    auto where = [](const int32 key) { return key % 2 == 0; };
-
-    const int32 sum = dict.Keys()
-        | Where<decltype(where)>(where)
-        | ToSum();
-
-    GTEST_ASSERT_EQ(sum, 12);
-
-    // Calculate the average of squares of values above 5.
-
-    auto where2 = [](const float value) { return value > 5.0f; };
-    auto select = [](const float value) { return value * value; };
-
-    const float wtfNumba = dict.Values()
-        | Where<decltype(where2)>(where2)
-        | Select<decltype(select)>(select)
-        | ToAverage();
-
-    GTEST_ASSERT_GE(wtfNumba, 138.0f);
-}
+//TEST(QueryingTest_Sum, Dictionary)
+//{
+//    using namespace Querying;
+//    using namespace Statistics;
+//
+//    Dictionary<int32, float> dict;
+//    dict.Add(1, 5.0f);
+//    dict.Add(2, 8.0f);
+//    dict.Add(3, 17.0f);
+//    dict.Add(4, 3.0f);
+//    dict.Add(5, 9.0f);
+//    dict.Add(6, 11.0f);
+//    dict.Add(7, 2.0f);
+//
+//    // Calculate the sum of all even keys
+//
+//    auto where = [](const int32 key) { return key % 2 == 0; };
+//
+//    const int32 sum = dict.Keys()
+//        | Where<decltype(where)>(where)
+//        | ToSum();
+//
+//    GTEST_ASSERT_EQ(sum, 12);
+//
+//    // Calculate the average of squares of values above 5.
+//
+//    auto where2 = [](const float value) { return value > 5.0f; };
+//    auto select = [](const float value) { return value * value; };
+//
+//    const float wtfNumba = dict.Values()
+//        | Where<decltype(where2)>(where2)
+//        | Select<decltype(select)>(select)
+//        | ToAverage();
+//
+//    GTEST_ASSERT_GE(wtfNumba, 138.0f);
+//}

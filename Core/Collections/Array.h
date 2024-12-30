@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include "CollectionsUtils.h"
-#include "Types/IterHint.h"
+#include "Collections/CollectionsUtils.h"
 
 
 /// <summary>
@@ -19,10 +18,15 @@
 /// </remarks>
 /// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, nor a reference. </typeparam>
 /// <typeparam name="Alloc"> Type of the allocator to use. </typeparam>
-template<typename T, typename Alloc = HeapAlloc>
+template<
+    typename T,
+    typename Alloc = HeapAlloc,
+    int32(&Grow)(int32) = Growing::Default
+>
 class Array
 {
-    using AllocData = typename Alloc::Data;
+    using AllocData   = typename Alloc::Data;
+    using AllocHelper = AllocHelperOf<T, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
 
     AllocData _allocData;
     int32     _capacity;
@@ -82,33 +86,41 @@ public:
         if (minCapacity <= _capacity)
             return; // Reserving the same capacity would not increase the capacity.
 
-        // Higher capacity is required. Allocate new memory.
-        const AllocData& oldData = _allocData;
-        AllocData newData{ oldData };
 
-        const int32 requiredCapacity
-            = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(minCapacity);
-        const int32 allocatedCapacity
-            = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, requiredCapacity);
-
-        // Move the content before reassigning the capacity
-        if (_capacity > 0)
+        if (_capacity == 0)
         {
-            BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, _allocData), 
-                DATA_OF(T, newData), 
-                _count
-            );
-            BulkOperations::DestroyLinearContent<T>(
-                DATA_OF(T, _allocData), 
-                _count
-            );
-
-            _allocData.Free();
+            // If the array is empty, allocate the default capacity.
+            const int32 requiredCapacity = AllocHelper::InitCapacity(minCapacity);
+            _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
         }
+        else
+        {
+            // Higher capacity is required. Allocate new memory.
+            const AllocData& oldData = _allocData;
+            AllocData newData{ oldData };
 
-        _allocData = MOVE(newData);
-        _capacity  = allocatedCapacity;
+            const int32 requiredCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
+            const int32 allocatedCapacity = AllocHelper::Allocate(newData, requiredCapacity);
+
+            // Move the content before reassigning the capacity
+            if (_capacity > 0)
+            {
+                BulkOperations::MoveLinearContent<T>(
+                    DATA_OF(T, _allocData),
+                    DATA_OF(T, newData),
+                    _count
+                );
+                BulkOperations::DestroyLinearContent<T>(
+                    DATA_OF(T, _allocData),
+                    _count
+                );
+
+                _allocData.Free();
+            }
+
+            _allocData = MOVE(newData);
+            _capacity = allocatedCapacity;
+        }
     }
 
     /// <summary>
@@ -131,8 +143,7 @@ public:
         }
 
         // Test required capacity against the current capacity.
-        const int32 requiredCapacity
-            = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(_count);
+        const int32 requiredCapacity = AllocHelper::InitCapacity(_count);
 
         if (_capacity <= requiredCapacity)
             return;
@@ -141,8 +152,7 @@ public:
         const AllocData& oldData = _allocData;
         AllocData newData{ oldData }; // Copy the binding
 
-        const int32 allocatedCapacity
-            = CollectionsUtils::AllocateCapacity<T, Alloc>(newData, _count);
+        const int32 allocatedCapacity = AllocHelper::Allocate(newData, requiredCapacity);
 
         BulkOperations::MoveLinearContent<T>(
             DATA_OF(T, _allocData), 
@@ -411,7 +421,7 @@ public:
 
 private:
     FORCE_INLINE
-    void MoveFrom(Array&& other) noexcept
+    void MoveFrom(Array&& other) noexcept //TODO Maybe rename it to MoveToEmpty so Unreal Engine devs are more familiar with the naming convention?
     {
         ASSERT(!IsAllocated()); // Array must be empty!
 
@@ -432,11 +442,10 @@ private:
         }
         else
         {
-            const int32 requestedCapacity = 
-                CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
+            const int32 requestedCapacity = AllocHelper::InitCapacity(other._count);
 
             _allocData = AllocData{};
-            _capacity  = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requestedCapacity);
+            _capacity  = AllocHelper::Allocate(_allocData, requestedCapacity);
             _count     = other._count;
 
             BulkOperations::MoveLinearContent<T>(
@@ -450,7 +459,7 @@ private:
     }
 
     template<typename OtherAlloc>
-    void CopyFrom(const Array<T, OtherAlloc>& other)
+    void CopyFrom(const Array<T, OtherAlloc>& other) //TODO Add test for array copy
     {
         static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
 
@@ -467,10 +476,9 @@ private:
         {
             _allocData = AllocData{};
 
-            const int32 requiredCapacity = 
-                CollectionsUtils::GetRequiredCapacity<Alloc, ARRAY_DEFAULT_CAPACITY>(other._count);
+            const int32 requiredCapacity = AllocHelper::InitCapacity(other._count);
 
-            _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+            _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
             _count    = other._count;
 
             BulkOperations::CopyLinearContent<T>(
@@ -519,8 +527,8 @@ public:
         : _allocData{}
         , _count{}
     {
-        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(capacity);
-        _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
+        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
     }
 
     /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
@@ -530,8 +538,8 @@ public:
         : _allocData{ FORWARD(AllocContext, context) }
         , _count{}
     {
-        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<T, Alloc, ARRAY_DEFAULT_CAPACITY>(capacity);
-        _capacity = CollectionsUtils::AllocateCapacity<T, Alloc>(_allocData, requiredCapacity);
+        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
+        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
     }
 
 

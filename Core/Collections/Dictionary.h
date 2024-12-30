@@ -2,17 +2,14 @@
 
 #pragma once
 
-#include "Allocators/HeapAlloc.h"
 #include "Collections/CollectionsUtils.h"
-#include "Language/TypeInfo.h"
-#include "Math/HashingFunctions.h"
-#include "Math/Probing.h"
 
 template<
     typename K,
     typename V,
-    typename Alloc = HeapAlloc,
-    int32(&Probe)(int32, int32) = Probing::Linear
+    typename Alloc = DefaultAlloc,
+    int32(&Probe)(int32, int32) = Probing::Linear,
+    int32(&Grow)(int32) = Growing::Default
 >
 class Dictionary;
 
@@ -24,7 +21,7 @@ template<typename K, typename V>
 class DictionaryBucket final
 {
 public:
-    using BucketState = CollectionsUtils::BucketState;
+    using BucketState = Bucketing::BucketState;
 
 private:
     V _value;
@@ -119,15 +116,17 @@ template<
     typename K,
     typename V,
     typename Alloc,
-    int32(&Probe)(int32, int32)
+    int32(&Probe)(int32, int32),
+    int32(&Grow)(int32)
 >
 class Dictionary 
 {
-    using AllocData          = typename Alloc::Data;
     using Bucket             = DictionaryBucket<K, V>;
-    using BucketSearchResult = CollectionsUtils::BucketSearchResult;
-    using BucketState        = CollectionsUtils::BucketState;
-    using HashType           = int32; //TODO Fix this.
+    using BucketSearchResult = Bucketing::BucketSearchResult;
+    using BucketState        = Bucketing::BucketState;
+    using HashType           = int32; //TODO Add support for custom hash types
+    using AllocData          = typename Alloc::Data;
+    using AllocHelper        = AllocHelperOf<Bucket, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
 
     AllocData _allocData;
     int32 _capacity;
@@ -238,11 +237,8 @@ protected:
 
         // 2. Allocate the new storage.
         const int32 oldCapacity = _capacity;
-
-        const int32 requestedCapacity =
-            CollectionsUtils::GetRequiredCapacity<Bucket, Alloc, HASH_MAPS_DEFAULT_CAPACITY>(minCapacity);
-        _capacity =
-            CollectionsUtils::AllocateCapacity<Bucket, Alloc>(_allocData, requestedCapacity);
+        const int32 requestedCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
+        _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
 
         // 2.1. We have raw memory, so we need to manually call the constructors.
         // This is necessary, as the memory is not zeroed. If the bucket is C-style, we can skip this step.
@@ -310,10 +306,8 @@ public:
 
         if (_capacity == 0)
         {
-            // Allocate the dictionary
-            const int32 requestedCapacity =
-                CollectionsUtils::GetRequiredCapacity<Bucket, Alloc, HASH_MAPS_DEFAULT_CAPACITY>(minCapacity);
-            _capacity = CollectionsUtils::AllocateCapacity<Bucket, Alloc>(_allocData, requestedCapacity);
+            const int32 requrestedCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
+            _capacity = AllocHelper::Allocate(_allocData, requrestedCapacity);
 
             // Initialize the dictionary
             for (int32 i = 0; i < _capacity; ++i)
@@ -500,11 +494,10 @@ private:
         }
         else
         {
-            const int32 requestedCapacity = 
-                CollectionsUtils::GetRequiredCapacity<Bucket, Alloc, HASH_MAPS_DEFAULT_CAPACITY>(other._elementsCount);
+            const int32 requestedCapacity = AllocHelper::InitCapacity(other._elementsCount);
 
             _allocData     = AllocData{};
-            _capacity      = CollectionsUtils::AllocateCapacity<Bucket, Alloc>(_allocData, requestedCapacity);
+            _capacity      = AllocHelper::Allocate(_allocData, requestedCapacity);
             _elementsCount = other._elementsCount;
             _deletedCount  = other._deletedCount;
 
@@ -596,8 +589,8 @@ public:
         , _elementsCount{ 0 }
         , _deletedCount{ 0 }
     {
-        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Bucket, Alloc, HASH_MAPS_DEFAULT_CAPACITY>(capacity);
-        _capacity = CollectionsUtils::AllocateCapacity<Bucket, Alloc>(_allocData, requiredCapacity);
+        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
+        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
     }
 
     /// <summary> Initializes an empty dictionary with an active allocation of the specified capacity and context. </summary>
@@ -608,8 +601,8 @@ public:
         , _elementsCount{ 0 }
         , _deletedCount{ 0 }
     {
-        const int32 requiredCapacity = CollectionsUtils::GetRequiredCapacity<Bucket, Alloc, HASH_MAPS_DEFAULT_CAPACITY>(capacity);
-        _capacity = CollectionsUtils::AllocateCapacity<Bucket, Alloc>(_allocData, requiredCapacity);
+        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
+        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
     }
 
 

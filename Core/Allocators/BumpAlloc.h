@@ -35,8 +35,8 @@ public:
         {
         }
 
-        FORCE_INLINE NODISCARD
-        auto Allocate(const int32 size, byte*& result) -> int32
+        FORCE_INLINE
+        int32 Allocate(const int32 size, byte*& result)
         {
             const int32 newOffset = _bump + size;
 
@@ -59,8 +59,8 @@ public:
             _bump = 0;
         }
 
-        FORCE_INLINE NODISCARD
-        auto FreeSpace() const -> int32
+        FORCE_INLINE
+        int32 FreeSpace() const
         {
             return _size - _bump;
         }
@@ -73,8 +73,8 @@ public:
         byte*    _data;
 
     public:
-        FORCE_INLINE NODISCARD
-        auto MovesItems() const -> bool
+        FORCE_INLINE
+        bool MovesItems() const
         {
             return true;
         }
@@ -105,14 +105,14 @@ public:
         }
 
 
-        auto operator=(const Data& other) -> Data&
+        Data& operator=(const Data& other)
         {
             _context = other._context;
             _data    = other._data;
             return *this;
         }
 
-        auto operator=(Data&& other) noexcept -> Data&
+        Data& operator=(Data&& other) noexcept
         {
             if (this != &other)
             {
@@ -132,8 +132,8 @@ public:
         }
 
 
-        FORCE_INLINE NODISCARD
-        auto Allocate(const int32 size) -> int32
+        FORCE_INLINE
+        int32 Allocate(const int32 size)
         {
             ASSERT_MEMORY(_data == nullptr);
             return _context->Allocate(size, _data);
@@ -146,14 +146,14 @@ public:
         }
 
 
-        FORCE_INLINE NODISCARD
-        auto Get() const -> const byte*
+        FORCE_INLINE
+        const byte* Get() const
         {
             return _data;
         }
 
-        FORCE_INLINE NODISCARD
-        auto Get() -> byte*
+        FORCE_INLINE
+        byte* Get()
         {
             return _data;
         }
