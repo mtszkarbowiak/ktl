@@ -417,6 +417,40 @@ public:
     }
 
 
+    /// <summary>
+    /// Adds one-by-one copies of the specified elements to the end of the array.
+    /// </summary>
+    Span<T> AddElements(const T* source, const int32 count)
+    {
+        const int32 newCount = _count + count;
+        EnsureCapacity(newCount);
+
+        T* target = DATA_OF(T, _allocData) + _count;
+        BulkOperations::CopyLinearContent<T>(source, target, count);
+
+        _count = newCount;
+        return Span<T>{ target, count };
+    }
+
+    /// <summary>
+    /// Adds copies of one and the same element to the end of the array.
+    /// </summary>
+    Span<T> AddRepetitions(const T& source, const int32 count)
+    {
+        const int32 newCount = _count + count;
+        EnsureCapacity(newCount);
+
+        for (int i = 0; i < count; ++i) {
+            Add(source);
+        }
+
+        const int32 startIndex = _count - count;
+        const T* startPtr = DATA_OF(T, _allocData) + startIndex;
+
+        return Span<T>{ startPtr, count };
+    }
+
+
     // Collection Lifecycle - Overriding Content
 
 private:
