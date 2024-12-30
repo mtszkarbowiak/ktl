@@ -102,7 +102,7 @@ public:
 
     /// <summary> Ensures that adding bits up to the requested capacity will not invoke the allocator. </summary>
     FORCE_INLINE
-    void Reserve(const int32 minBitsCapacity)
+    void Reserve(const int32 minBitsCapacity) //TODO Unify naming with EnsureCapacity.
     {
         if (minBitsCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
@@ -112,26 +112,35 @@ public:
         if (minBlocksCapacity <= _blockCapacity)
             return; // Reserving the same capacity would not increase the capacity.
 
-        // Higher capacity is required. Allocate new memory.
-        const AllocData& oldData = _allocData;
-        AllocData newData{ oldData }; // Copy the binding
-
-        const int32 requiredBlocksCapacity = AllocHelper::NextCapacity(_blockCapacity, minBlocksCapacity);
-        const int32 allocatedBlocksCapacity = AllocHelper::Allocate(_allocData, requiredBlocksCapacity);
-
-        if (_blockCapacity > 0)
+        if (_blockCapacity == 0)
         {
-            const int32 oldBlocksCount = BlocksForBits(_bitCount);
-            BulkOperations::MoveLinearContent<Block>(
-                DATA_OF(Block, _allocData),
-                DATA_OF(Block, newData),
-                oldBlocksCount
-            );
-            _allocData.Free();
+            // If the array is empty, allocate the default capacity.
+            const int32 requiredBlocksCapacity = AllocHelper::InitCapacity(minBlocksCapacity);
+            _blockCapacity = AllocHelper::Allocate(_allocData, requiredBlocksCapacity);
         }
+        else
+        {
+            // Higher capacity is required. Allocate new memory.
+            const AllocData& oldData = _allocData;
+            AllocData newData{ oldData }; // Copy the binding
 
-        _allocData     = MOVE(newData);
-        _blockCapacity = allocatedBlocksCapacity;
+            const int32 requiredBlocksCapacity = AllocHelper::NextCapacity(_blockCapacity, minBlocksCapacity);
+            const int32 allocatedBlocksCapacity = AllocHelper::Allocate(_allocData, requiredBlocksCapacity);
+
+            if (_blockCapacity > 0)
+            {
+                const int32 oldBlocksCount = BlocksForBits(_bitCount);
+                BulkOperations::MoveLinearContent<Block>(
+                    DATA_OF(Block, _allocData),
+                    DATA_OF(Block, newData),
+                    oldBlocksCount
+                );
+                _allocData.Free();
+            }
+
+            _allocData = MOVE(newData);
+            _blockCapacity = allocatedBlocksCapacity;
+        }
     }
 
     /// <summary>
