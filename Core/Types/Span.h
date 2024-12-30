@@ -2,21 +2,22 @@
 
 #pragma once
 
-#include "Debugging/Assertions.h"
 #include "Types/Numbers.h"
 
-
+/// <summary>
+/// Non-owning view of a contiguous sequence of elements.
+/// </summary>
 template<typename T>
 class Span
 {
-    T* _data;
-    int32 _size;
+    T*    _data{};
+    int32 _count{};
 
 
 public:
     explicit Span(T* data, const int32 size)
         : _data{ data }
-        , _size{ size }
+        , _count{ size }
     {
     }
 
@@ -25,32 +26,51 @@ public:
     Span(Span&&) noexcept = default;
 
 
-    auto operator=(const Span&) -> Span & = default;
+    Span& operator=(const Span&)= default;
 
-    auto operator=(Span&& other) noexcept -> Span&
-    {
-        if (this != &other)
-        {
-            _data = other._data;
-            _size = other._size;
-            other._data = nullptr;
-            other._size = 0;
-        }
-        return *this;
-    }
+    Span& operator=(Span&&) noexcept = default;
 
     ~Span() = default;
 
 
-    auto operator[](const int32 index) -> T&
+    // Properties
+
+    FORCE_INLINE NODISCARD
+    int32 Count() const
     {
-        ASSERT_MEMORY_BOUNDS(index >= 0 && index < _size);
+        return _count;
+    }
+
+    FORCE_INLINE NODISCARD
+    T* Data()
+    {
+        return _data;
+    }
+
+    FORCE_INLINE NODISCARD
+    const T* Data() const
+    {
+        return _data;
+    }
+
+
+    // Element Access
+
+    FORCE_INLINE NODISCARD
+    T& operator[](const int32 index)
+    {
         return _data[index];
     }
 
-    auto operator[](const int32 index) const -> const T&
+    FORCE_INLINE NODISCARD
+    const T& operator[](const int32 index) const
     {
-        ASSERT_MEMORY_BOUNDS(index >= 0 && index < _size);
         return _data[index];
     }
+
+
+    // Iterators
+
+    //TODO Add iterators to Span.
+    //TODO Idea: Unify Array and Span enumerators 'PointerIterator'.
 };
