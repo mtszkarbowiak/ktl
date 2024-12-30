@@ -112,7 +112,10 @@ public:
     /// </summary>
     /// <param name="alloc"> The allocation data to be used. Warning: It must not have active allocation prior to this call! </param>
     /// <param name="capacity"> The capacity to allocate. </param>
-    /// <returns> The number of elements that can be stored in the allocated memory. </returns>
+    /// <returns>
+    /// The number of elements that can be stored in the allocated memory.
+    /// It is guaranteed that the allocated capacity is at least as big as the requested capacity.
+    /// </returns>
     NODISCARD
     static int32 Allocate(AllocData& alloc, const int32 capacity)
     {

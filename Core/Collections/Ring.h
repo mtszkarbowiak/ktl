@@ -6,9 +6,14 @@
 
 /// <summary>
 /// Double-ended container for storing dynamically resizable queues of elements.
-/// It uses a single contiguous memory block, growing by doubling the capacity.
 /// The items are stored in one or two segments, depending on the head-tail relationship.
+/// Both segments share one and the same memory block.
 /// </summary>
+///
+/// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, and not a reference. </typeparam>
+/// <typeparam name="Alloc"> Type of the allocator to use. Can be either dragging or non-dragging.</typeparam>
+/// <typeparam name="Grow"> Function to calculate the next capacity (before capping by allocator). </typeparam>
+///
 /// <remarks>
 /// 1. <c>Ring</c> works effectively as a queue. If you need a stack, consider using <c>Array</c> instead.
 /// 2. The container is designed to invoke the allocator as little as possible.

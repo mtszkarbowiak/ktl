@@ -6,9 +6,13 @@
 
 
 /// <summary>
-/// Basic container for storing dynamically resizable arrays of elements.
-/// It stores the elements in a contiguous memory block and uses doubling growth strategy.
+/// Basic container for storing dynamically resizable arrays of elements in one contiguous memory block.
 /// </summary>
+///
+/// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, and not a reference. </typeparam>
+/// <typeparam name="Alloc"> Type of the allocator to use. Can be either dragging or non-dragging.</typeparam>
+/// <typeparam name="Grow"> Function to calculate the next capacity (before capping by allocator). </typeparam>
+///
 /// <remarks>
 /// 1. <c>Array</c> works effectively as a stack. If you need a queue, consider using <c>Ring</c> instead.
 /// 2. The container is designed to invoke the allocator as little as possible.
@@ -16,8 +20,6 @@
 /// unless explicitly freed by calling <c>Reset</c>.
 /// 3. <c>Array</c> STL inspiration is <c>std::vector</c>.
 /// </remarks>
-/// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, nor a reference. </typeparam>
-/// <typeparam name="Alloc"> Type of the allocator to use. </typeparam>
 template<
     typename T,
     typename Alloc = HeapAlloc,
