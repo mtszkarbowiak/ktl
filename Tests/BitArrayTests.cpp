@@ -222,20 +222,33 @@ TEST(BitArray_ElementManipulation, StableInsert_OneBlock)
 TEST(BitArray_ElementManipulation, StableInsert_MultipleBlocks)
 {
     constexpr int32 ElementCount = 1024;
+    constexpr int32 MidPoint = ElementCount / 2;
 
-    BitArray<> array;
+    BitArray<> arrayOfEvens, arrayOfOdds;
+
     for (int32 i = 0; i < ElementCount; ++i)
-        array.Add(i % 2 == 0);
+    {
+        arrayOfEvens.Add(i % 2 == 0);
+        arrayOfOdds .Add(i % 2 == 1);
+    }
 
-    array.InsertAtStable(ElementCount / 2, true);
+    arrayOfEvens.InsertAtStable(MidPoint, true);
+    arrayOfOdds .InsertAtStable(MidPoint, true);
 
-    for (int32 i = 0; i < ElementCount / 2; ++i)
-        GTEST_ASSERT_EQ(i % 2 == 0, array.GetBit(i));
+    for (int32 i = 0; i < MidPoint; ++i)
+    {
+        GTEST_ASSERT_EQ(i % 2 == 0, arrayOfEvens.GetBit(i));
+        GTEST_ASSERT_EQ(i % 2 == 1, arrayOfOdds .GetBit(i));
+    }
 
-    GTEST_ASSERT_EQ(true, array.GetBit(ElementCount / 2));
+    GTEST_ASSERT_EQ(true, arrayOfEvens.GetBit(MidPoint));
+    GTEST_ASSERT_EQ(true, arrayOfOdds .GetBit(MidPoint));
 
-    for (int32 i = ElementCount / 2 + 1; i < ElementCount; ++i)
-        GTEST_ASSERT_EQ((i - 1) % 2 == 0, array.GetBit(i));
+    for (int32 i = MidPoint + 1; i < ElementCount; ++i)
+    {
+        GTEST_ASSERT_EQ((i - 1) % 2 == 0, arrayOfEvens.GetBit(i));
+        GTEST_ASSERT_EQ((i - 1) % 2 == 1, arrayOfOdds .GetBit(i));
+    }
 }
 
 //TEST(BitArray_ElementManipulation, StableRemove)
