@@ -26,7 +26,7 @@ template<
 class Array
 {
     using AllocData   = typename Alloc::Data;
-    using AllocHelper = AllocHelper<T, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
+    using AllocHelper = AllocHelperOf<T, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
 
     AllocData _allocData;
     int32     _capacity;

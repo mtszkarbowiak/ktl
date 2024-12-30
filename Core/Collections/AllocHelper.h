@@ -30,7 +30,7 @@ template<
     int32 DefaultUncapped,
     int32(&Grow)(int32)
 >
-class AllocHelper final
+class AllocHelperOf final
 {
 public:
     /// <summary> Binding between the allocator and the collection's context. </summary>

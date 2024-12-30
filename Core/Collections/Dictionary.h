@@ -126,7 +126,7 @@ class Dictionary
     using BucketState        = Bucketing::BucketState;
     using HashType           = int32; //TODO Add support for custom hash types
     using AllocData          = typename Alloc::Data;
-    using AllocHelper        = AllocHelper<Bucket, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
+    using AllocHelper        = AllocHelperOf<Bucket, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
 
     AllocData _allocData;
     int32 _capacity;

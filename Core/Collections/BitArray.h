@@ -26,7 +26,7 @@ public:
 
 private:
     using AllocData   = typename Alloc::Data;
-    using AllocHelper = AllocHelper<Block, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
+    using AllocHelper = AllocHelperOf<Block, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
 
     AllocData _allocData;
     int32     _blockCapacity;

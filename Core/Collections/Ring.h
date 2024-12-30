@@ -24,7 +24,7 @@ template<
 class Ring
 {
     using AllocData   = typename Alloc::Data;
-    using AllocHelper = AllocHelper<T, Alloc, RING_DEFAULT_CAPACITY, Grow>;
+    using AllocHelper = AllocHelperOf<T, Alloc, RING_DEFAULT_CAPACITY, Grow>;
 
     AllocData _allocData;
     int32     _capacity;
