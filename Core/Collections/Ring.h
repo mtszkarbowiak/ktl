@@ -26,11 +26,11 @@ class Ring
     using AllocData   = typename Alloc::Data;
     using AllocHelper = AllocHelperOf<T, Alloc, RING_DEFAULT_CAPACITY, Grow>;
 
-    AllocData _allocData;
-    int32     _capacity;
-    int32     _head;
-    int32     _tail; // Points to the next FREE slot (not the last element).
-    int32     _countCached;
+    AllocData _allocData{};
+    int32     _capacity{};
+    int32     _head{};
+    int32     _tail{}; // Points to the next FREE slot (not the last element).
+    int32     _countCached{};
 
     // Internal Integrity
 
@@ -639,22 +639,10 @@ private:
 
 public:
     /// <summary> Initializes an empty ring with no active allocation. </summary>
-    constexpr Ring() 
-        : _allocData{}
-        , _capacity{}
-        , _head{}
-        , _tail{}
-        , _countCached{}
-    {
-    }
+    constexpr Ring() = default;
 
     /// <summary> Initializes a ring by moving the allocation from another array. </summary>
     Ring(Ring&& other) noexcept
-        : _allocData{}
-        , _capacity{}
-        , _head{}
-        , _tail{}
-        , _countCached{}
     {
         MoveToEmpty(MOVE(other));
     }
@@ -665,9 +653,6 @@ public:
         std::is_same<U, T>::value
     ))>::type>
     Ring(const Ring& other)
-        : _allocData{}
-        , _capacity{}
-        , _head{}
     {
         CopyToEmpty<Alloc>(other);
     }

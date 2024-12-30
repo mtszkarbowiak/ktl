@@ -28,9 +28,9 @@ class Array
     using AllocData   = typename Alloc::Data;
     using AllocHelper = AllocHelperOf<T, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
 
-    AllocData _allocData;
-    int32     _capacity;
-    int32     _count;
+    AllocData _allocData{};
+    int32     _capacity{};
+    int32     _count{};
 
     // Capacity Access
 
@@ -524,24 +524,17 @@ protected:
 public:
     /// <summary> Initializes an empty array with no active allocation. </summary>
     FORCE_INLINE
-    constexpr Array() 
-        : _allocData{}
-        , _capacity{}
-        , _count{}
-    {
-    }
+    constexpr Array() = default;
 
     /// <summary> Initializes an array by moving the allocation from another array. </summary>
     FORCE_INLINE
     Array(Array&& other) noexcept
-        : Array{}
     {
         MoveToEmpty(MOVE(other));
     }
 
     /// <summary> Initializes an array by copying another array. </summary>
     Array(const Array& other)
-        : Array{}//TODO (Perf) In the future all those functions could be manually inlined. Not now.
     {
         if (other._count == 0)
             return;
@@ -555,8 +548,6 @@ public:
     /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
     FORCE_INLINE
     explicit Array(const int32 capacity)
-        : _allocData{}
-        , _count{}
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
@@ -566,8 +557,6 @@ public:
     template<typename AllocContext>
     FORCE_INLINE
     explicit Array(const int32 capacity, AllocContext&& context)
-        : _allocData{ FORWARD(AllocContext, context) }
-        , _count{}
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
