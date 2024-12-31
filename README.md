@@ -54,9 +54,9 @@ Algorithms
 4. **Exception Handling**: The library does not use exceptions for error handling. Making the code handle them correctly enforces very strict rules and performance overhead. They can be used only for critical unrecoverable errors.
 5. **Memory Limits**: Allocations are limited to 4GB. This is a reasonable limit for most game development scenarios. Thus, the library uses 32-bit integers for memory sizes. Pointers remain 64-bit.
 6. **Move Semantics**: The library extensively uses move semantics to avoid unnecessary copying of objects. This is especially important for large objects such as arrays and dictionaries. A macro to block implicit copying is considered.
-7. **No RTTI**: The library does not use RTTI. This is a performance optimization, as RTTI can be expensive in terms of memory and performance.
-8. **No Inheritance**: The library does not use inheritance. It creates a lot of problems, best described by the author of the STL itself, Alexander Stepanov.
-9. **Allocators Universality**: Collections must be able to accept all types of allocators.
+7. **No RTTI**: The library does not use RTTI. (Further explanation required)
+8. **No Inheritance**: The library does not use inheritance. It creates a lot of problems, best described by the author of the STL itself, Alexander Stepanov. (Further explanation required)
+9. **Allocators Universality**: Collections must be able to accept **all** types of allocators.
 
 
 ## IV. Design Principles
@@ -90,7 +90,7 @@ Allocation policy is a class storing general traits of an allocation, it include
 
 Collections manage object lifetimes and manage required memory through allocation policies.
 
-- 3.1. Collections may assume that even object is movable but not copyable.
+- 3.1. Collections may assume that every object is no-throw movable but need not to be copyable.
 - 3.2. Collections may not assume that the object is default constructible.
 - 3.3. Collections should provide API to manage the memory block, especially reserving and compacting.
 - 3.4. Collections should use fast operations for C-style objects (no constructors, destructors, etc.).
