@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "../Allocators/HeapAlloc.h"
-#include "../Language/Templates.h"
+#include "Allocators/HeapAlloc.h"
+#include "Language/Templates.h"
 
 /// <summary>
 /// Stores one (or zero) element using a custom allocator.

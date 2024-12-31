@@ -1,3 +1,5 @@
+// Created by Mateusz Karbowiak 2024
+
 #pragma once
 
 #include "Types/Numbers.h"
