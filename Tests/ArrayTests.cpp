@@ -60,7 +60,7 @@ TEST(Array_Capacity, Reserve_Add)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Array_Capacity, ShrinkToFit_Free)
+TEST(Array_Capacity, Compact_Free)
 {
     using Item = int32;
     Array<Item> array;
@@ -84,7 +84,7 @@ TEST(Array_Capacity, ShrinkToFit_Free)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Array_Capacity, ShrinkToFit_Reloc)
+TEST(Array_Capacity, Compact_Reloc)
 {
     constexpr int32 TestCapacity1 = 256;
     constexpr int32 TestCapacity2 = 3;
@@ -221,7 +221,7 @@ TEST(Array_Relocation, Reserve)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Array_Relocation, ShrinkToFit)
+TEST(Array_Relocation, Compact)
 {
     constexpr int32 InitCapacity = 128;
     constexpr int32 ElementCount = 12;

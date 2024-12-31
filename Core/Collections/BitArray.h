@@ -148,7 +148,7 @@ public:
     /// If the array is empty, the allocation will be freed.
     /// </summary>
     FORCE_INLINE
-    void ShrinkToFit() //TODO Test this method.
+    void Compact() //TODO Test this method.
     {
         if (_bitCount == 0)
         {

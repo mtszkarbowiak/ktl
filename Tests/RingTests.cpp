@@ -60,7 +60,7 @@ TEST(Ring_Capacity, Reserve_Add)
     GTEST_ASSERT_FALSE(ring.IsAllocated());
 }
 
-TEST(Ring_Capacity, ShrinkToFit_Free)
+TEST(Ring_Capacity, Compact_Free)
 {
     using Item = int32;
     Ring<Item> array;
@@ -84,7 +84,7 @@ TEST(Ring_Capacity, ShrinkToFit_Free)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Ring_Capacity, ShrinkToFit_Reloc)
+TEST(Ring_Capacity, Compact_Reloc)
 {
     constexpr int32 TestCapacity1 = 256;
     constexpr int32 TestCapacity2 = 3;
@@ -245,7 +245,7 @@ TEST(Ring_Relocation, Reserve)
     LIFECYCLE_TEST_DIFF(5 * ElementCount)
 }
 
-TEST(Ring_Relocation, ShrinkToFit)
+TEST(Ring_Relocation, Compact)
 {
     constexpr int32 ElementCount = 12;
 
