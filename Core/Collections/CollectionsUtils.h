@@ -107,7 +107,7 @@ private:
         const int32 count
     )
     {
-        memset(elements, 0, count * sizeof(Element));
+        MEMSET(elements, 0, count * sizeof(Element));
     }
 
 
@@ -133,10 +133,10 @@ private:
         const int32 count
     )
     {
-        memcpy(target, source, count * sizeof(Element));
+        MEMCPY(target, source, count * sizeof(Element));
 
 #if ZERO_MEMORY_FOR_CSTYLE
-        memset(source, 0, count * sizeof(Element));
+        MEMSET(source, 0, count * sizeof(Element));
 #endif
     }
 
@@ -162,7 +162,7 @@ private:
         const int32    count
     )
     {
-        memcpy(target, source, count * sizeof(Element));
+        MEMCPY(target, source, count * sizeof(Element));
     }
 
 
@@ -189,7 +189,7 @@ private:
         // Pass.
 
 #if ZERO_MEMORY_FOR_CSTYLE
-        memset(elements, 0, count * sizeof(Element));
+        MEMSET(elements, 0, count * sizeof(Element));
  #endif
     }
 

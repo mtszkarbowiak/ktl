@@ -8,12 +8,13 @@
 
 // Capacity Management
 
-TEST(BitArray_Capacity, Reserving_Init)
+TEST(BitArray_Capacity, Reserving_Call)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
 
-    BitArray<> array{ MinReservedCapacity };
+    BitArray<> array;
+    array.Reserve(MinReservedCapacity);
 
     GTEST_ASSERT_TRUE(array.IsAllocated());
     GTEST_ASSERT_GE(array.Capacity(), MinReservedCapacity);
@@ -24,17 +25,16 @@ TEST(BitArray_Capacity, Reserving_Init)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(BitArray_Capacity, Reserving_Request)
+TEST(BitArray_Capacity, Reserving_Ctor)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
 
-    BitArray<> array;
-    array.Reserve(MinReservedCapacity);
+    BitArray<> array{ MinReservedCapacity };
 
     GTEST_ASSERT_TRUE(array.IsAllocated());
-    GTEST_ASSERT_GE  (array.Capacity(), MinReservedCapacity);
-    GTEST_ASSERT_LE  (array.Capacity(), MinReservedCapacity * 2);
+    GTEST_ASSERT_GE(array.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE(array.Capacity(), MinReservedCapacity * 2);
 
     array.Reset();
 
@@ -95,7 +95,7 @@ TEST(BitArray_ElementAccess, ConstEnumerator)
 
 // Element Relocation
 
-TEST(BitArray_Relocation, MoveConstruct_NoDragAlloc)
+TEST(BitArray_Relocation, MoveCtor_NoDragAlloc)
 {
     constexpr int32 ElementCount = 128;
     using NoDragAlloc = FixedAlloc<sizeof(uint64) * 2>;
@@ -111,7 +111,7 @@ TEST(BitArray_Relocation, MoveConstruct_NoDragAlloc)
         GTEST_ASSERT_EQ(i % 2 == 0, targetArray[i]);
 }
 
-TEST(BitArray_Relocation, MoveAssignment_NoDragAlloc)
+TEST(BitArray_Relocation, MoveAsgn_NoDragAlloc)
 {
     constexpr int32 ElementCount = 128;
     using NoDragAlloc = FixedAlloc<sizeof(uint64) * 2>;
@@ -128,7 +128,7 @@ TEST(BitArray_Relocation, MoveAssignment_NoDragAlloc)
         GTEST_ASSERT_EQ(i % 2 == 0, targetArray[i]);
 }
 
-TEST(BitArray_Relocation, MoveConstruct_DragAlloc)
+TEST(BitArray_Relocation, MoveCtor_DragAlloc)
 {
     constexpr int32 ElementCount = 128;
     using DragAlloc = HeapAlloc;
@@ -144,7 +144,7 @@ TEST(BitArray_Relocation, MoveConstruct_DragAlloc)
         GTEST_ASSERT_EQ(i % 2 == 0, targetArray[i]);
 }
 
-TEST(BitArray_Relocation, MoveAssignment_DragAlloc)
+TEST(BitArray_Relocation, MoveAsgn_DragAlloc)
 {
     constexpr int32 ElementCount = 128;
     using DragAlloc = HeapAlloc;
@@ -164,7 +164,7 @@ TEST(BitArray_Relocation, MoveAssignment_DragAlloc)
 
 // Element Copying
 
-TEST(BitArray_Copying, CopyCtr)
+TEST(BitArray_Copying, CopyCtor)
 {
     constexpr int32 ElementCount = 128;
 
@@ -177,7 +177,7 @@ TEST(BitArray_Copying, CopyCtr)
         GTEST_ASSERT_EQ(i % 2 == 0, arrayDst[i]);
 }
 
-TEST(BitArray_Copying, CopyAsg)
+TEST(BitArray_Copying, CopyAsgn)
 {
     constexpr int32 ElementCount = 128;
 

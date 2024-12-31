@@ -125,7 +125,7 @@ public:
 
     /// <summary> Ensures that adding items up to the requested capacity will not invoke the allocator. </summary>
     FORCE_INLINE
-    void EnsureCapacity(const int32 minCapacity)
+    void Reserve(const int32 minCapacity)
     {
         if (minCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
@@ -143,7 +143,7 @@ public:
             _tail = 0;
             _countCached = 0;
 
-            ASSERT(IsValid());
+            ASSERT_COLLECTION_INTEGRITY(IsValid());
             return;
         }
 
@@ -202,7 +202,7 @@ public:
         _head      = 0;
         _tail      = _countCached;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
     }
 
     /// <summary>
@@ -284,7 +284,7 @@ public:
         _allocData = MOVE(newData);
         _capacity  = allocatedCapacity;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
     }
 
 
@@ -293,7 +293,7 @@ public:
     /// <summary> Accesses the element at the given index. </summary>
     T& operator[](const int32 index)
     {
-        ASSERT_INDEX(index >= 0 && index < _countCached);
+        ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _countCached);
         const int32 realIndex = (_head + index) % _capacity;
         return DATA_OF(T, _allocData)[realIndex];
     }
@@ -301,7 +301,7 @@ public:
     /// <summary> Accesses the element at the given index. </summary>
     const T& operator[](const int32 index) const
     {
-        ASSERT_INDEX(index >= 0 && index < _countCached);
+        ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _countCached);
         const int32 realIndex = (_head + index) % _capacity;
         return DATA_OF(const T, _allocData)[realIndex];
     }
@@ -311,7 +311,7 @@ public:
     FORCE_INLINE
     T& PeekFront()
     {
-        ASSERT(_countCached > 0); // Ring must not be empty!
+        ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         return DATA_OF(T, _allocData)[_head];
     }
 
@@ -319,7 +319,7 @@ public:
     FORCE_INLINE
     const T& PeekFront() const
     {
-        ASSERT(_countCached > 0); // Ring must not be empty!
+        ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         return DATA_OF(const T, _allocData)[_head];
     }
 
@@ -327,7 +327,7 @@ public:
     FORCE_INLINE
     T& PeekBack()
     {
-        ASSERT(_countCached > 0); // Ring must not be empty!
+        ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         const int32 index = (_capacity + _tail - 1) % _capacity;
         return DATA_OF(T, _allocData)[index];
     }
@@ -335,7 +335,7 @@ public:
     /// <summary> Accesses the last element in the ring. </summary>
     const T& PeekBack() const
     {
-        ASSERT(_countCached > 0); // Ring must not be empty!
+        ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         const int32 index = (_capacity + _tail - 1) % _capacity;
         return DATA_OF(const T, _allocData)[index];
     }
@@ -344,7 +344,7 @@ public:
     // Element Manipulation
 
     /// <summary> Adds an element to the end of the ring. </summary>
-    template<typename U>
+    template<typename U> // Universal reference
     FORCE_INLINE
     T& PushBack(U&& element)
     {
@@ -353,7 +353,7 @@ public:
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
-        EnsureCapacity(_countCached + 1);
+        Reserve(_countCached + 1);
 
         T* target = DATA_OF(T, _allocData) + _tail;
 
@@ -361,17 +361,17 @@ public:
         _tail = (_tail + 1) % _capacity;
         _countCached += 1;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
 
         return *target;
     }
 
     /// <summary> Adds an element to the end of the ring. </summary>
-    template<typename... Args>
+    template<typename... Args> // Parameter pack
     FORCE_INLINE
     T& EmplaceBack(Args&&... args)
     {
-        EnsureCapacity(_countCached + 1);
+        Reserve(_countCached + 1);
 
         T* target = DATA_OF(T, _allocData) + _tail;
 
@@ -379,14 +379,14 @@ public:
         _tail = (_tail + 1) % _capacity;
         _countCached += 1;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
 
         return *target;
     }
 
 
     /// <summary> Adds an element to the beginning of the ring. </summary>
-    template<typename U>
+    template<typename U> // Universal reference
     FORCE_INLINE
     T& PushFront(U&& element)
     {
@@ -395,31 +395,31 @@ public:
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
-        EnsureCapacity(_countCached + 1);
+        Reserve(_countCached + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
         T* target = DATA_OF(T, _allocData) + _head;
         new (target) T(FORWARD(U, element));
         _countCached += 1;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
 
         return *target;
     }
 
     /// <summary> Adds an element to the beginning of the ring. </summary>
-    template<typename... Args>
+    template<typename... Args> // Parameter pack
     FORCE_INLINE
     T& EmplaceFront(Args&&... args)
     {
-        EnsureCapacity(_countCached + 1);
+        Reserve(_countCached + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
         T* target = DATA_OF(T, _allocData) + _head;
         new (target) T(FORWARD(Args, args)...);
         _countCached += 1;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
 
         return *target;
     }
@@ -433,26 +433,26 @@ public:
     FORCE_INLINE
     void PopBack()
     {
-        ASSERT(_countCached > 0); // Ring must not be empty!
+        ASSERT_COLLECTION_SAFE_MOD(_countCached > 0); // Ring must not be empty!
         _tail = (_tail - 1 + _capacity) % _capacity;
         T* target = DATA_OF(T, _allocData) + _tail;
         target->~T();
         _countCached -= 1;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
     }
 
     /// <summary> Removes the first element from the ring. </summary>
     FORCE_INLINE
     void PopFront()
     {
-        ASSERT(_countCached > 0); // Ring must not be empty!
+        ASSERT_COLLECTION_SAFE_MOD(_countCached > 0); // Ring must not be empty!
         T* target = DATA_OF(T, _allocData) + _head;
         target->~T();
         _head = (_head + 1) % _capacity;
         _countCached -= 1;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
     }
 
 
@@ -490,7 +490,7 @@ public:
         _tail        = 0;
         _countCached = 0;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
     }
 
     /// <summary> Removes all elements from the array and frees the allocation. </summary>
@@ -510,8 +510,8 @@ public:
 protected:
     void MoveToEmpty(Ring&& other) noexcept
     {
-        ASSERT(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
-        ASSERT(other.IsValid()); // Make sure the other ring is valid.
+        ASSERT_COLLECTION_SAFE_MOD(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
+        ASSERT_COLLECTION_INTEGRITY(other.IsValid()); // Make sure the other ring is valid.
 
         if (other._capacity == 0 || other._countCached == 0)
             return;
@@ -580,8 +580,8 @@ protected:
     {
         static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
 
-        ASSERT(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
-        ASSERT(other.IsValid()); // Make sure the other ring is valid.
+        ASSERT_COLLECTION_SAFE_MOD(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
+        ASSERT_COLLECTION_INTEGRITY(other.IsValid()); // Make sure the other ring is valid.
 
         if (other._capacity == 0 || other._countCached == 0)
             return;
@@ -657,7 +657,7 @@ public:
     }
 
     /// <summary> Initializes an empty ring with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext>
+    template<typename AllocContext> // Universal reference
     FORCE_INLINE
     explicit Ring(const int32 capacity, AllocContext&& context)
         : _allocData{ FORWARD(AllocContext, context) }
@@ -737,6 +737,7 @@ public:
 
         // Access
 
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         FORCE_INLINE
         IterHint Hint() const
         {
@@ -782,7 +783,7 @@ public:
         FORCE_INLINE NODISCARD
         explicit operator bool() const 
         {
-            ASSERT(_ring != nullptr);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring != nullptr);
             return _indexOfElement < _ring->_countCached;
         }
 
@@ -811,21 +812,21 @@ public:
         FORCE_INLINE NODISCARD
         bool operator==(const MutEnumerator& other) const
         {
-            ASSERT(_ring == other._ring);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement == other._indexOfElement;
         }
 
         FORCE_INLINE NODISCARD
         bool operator!=(const MutEnumerator& other) const
         {
-            ASSERT(_ring == other._ring);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement != other._indexOfElement;
         }
 
         FORCE_INLINE NODISCARD
         bool operator<(const MutEnumerator& other) const
         {
-            ASSERT(_ring == other._ring);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement < other._indexOfElement;
         }
     };
@@ -854,6 +855,7 @@ public:
 
         // Access
 
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         FORCE_INLINE auto Hint() const -> IterHint
         {
             const int32 remaining = _ring->Count() - _indexOfElement;
@@ -886,7 +888,7 @@ public:
         FORCE_INLINE NODISCARD
         explicit operator bool() const 
         {
-            ASSERT(_ring != nullptr);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring != nullptr);
             return _indexOfElement < _ring->_countCached;
         }
 
@@ -916,21 +918,21 @@ public:
         FORCE_INLINE NODISCARD
         bool operator==(const ConstEnumerator& other) const
         {
-            ASSERT(_ring == other._ring);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement == other._indexOfElement;
         }
 
         FORCE_INLINE NODISCARD
         bool operator!=(const ConstEnumerator& other) const
         {
-            ASSERT(_ring == other._ring);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement != other._indexOfElement;
         }
 
         FORCE_INLINE NODISCARD
         bool operator<(const ConstEnumerator& other) const
         {
-            ASSERT(_ring == other._ring);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement < other._indexOfElement;
         }
     };

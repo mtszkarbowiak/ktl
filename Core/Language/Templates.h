@@ -5,14 +5,84 @@
 #include <algorithm>
 
 
+template<typename T>
+using VoidT = void;
+
+
+// Move Semantics
+
 #define MOVE(x)       std::move(x)
 #define FORWARD(T, x) std::forward<T>(x)
 
-
-template<typename T>
-static void Swap(T& a, T& b)
+namespace SwapInternal // ADL Barrier
 {
-    T temp = MOVE(a);
-    a = MOVE(b);
-    b = MOVE(temp);
+    /// <summary> Dispatch tag for types with a member <c>Swap</c> function. </summary>
+    struct HasSwapTag {};
+    /// <summary> Dispatch tag for types without a member <c>Swap</c> function. </summary>
+    struct NoSwapTag {};
+
+    /// <summary> Default tag for types without a member <c>Swap</c> function. </summary>
+    template<typename T, typename = void>
+    struct HasSwapFunction : std::false_type {};
+
+    /// <summary> Specialization for types with a member <c>Swap</c> function. </summary>
+    template<typename T>
+    struct HasSwapFunction<T, VoidT<decltype(std::declval<T>().Swap(std::declval<T&>()))>> : std::true_type {};
+
+    /// <summary>
+    /// Returns the appropriate dispatch tag informing whether the type has a member <c>Swap</c> function.
+    /// </summary>
+    template<typename T>
+    using GetSwapTag = std::conditional_t<HasSwapFunction<T>::value, HasSwapTag, NoSwapTag>;
+
+    /// <summary>
+    /// Swap implementation for types with a member <c>Swap</c> function.
+    /// </summary>
+    template<typename T>
+    void SwapImpl(T& a, T& b, HasSwapTag) noexcept
+    {
+        a.Swap(b);
+    }
+
+    /// <summary>
+    /// Swap implementation for types without a member <c>Swap</c> function.
+    /// </summary>
+    template<typename T>
+    void SwapImpl(T& a, T& b, NoSwapTag) noexcept
+    {
+        static_assert(
+            std::is_nothrow_move_constructible<T>::value,
+            "Type must be nothrow move constructible."
+        );
+
+        T temp = MOVE(a);
+        a = MOVE(b);
+        b = MOVE(temp);
+    }
 }
+
+/// <summary>
+/// Swaps the values of two objects. If a type has a member <c>Swap</c> function, it will be used.
+/// If it does not, the objects will be moved, assuming the type is no-throw move constructible.
+/// </summary>
+template<typename T>
+void Swap(T& a, T& b) noexcept
+{
+    ::SwapInternal::SwapImpl(a, b, ::SwapInternal::GetSwapTag<T>{});
+}
+
+
+// Copy Semantics
+
+/// <summary> Dispatch tag for types supporting copy semantics. </summary>
+struct IsCopyableTag {};
+/// <summary> Dispatch tag for types not supporting copy semantics. </summary>
+struct NonCopyableTag {};
+
+/// <summary> Returns the appropriate dispatch tag informing whether the type supports copy semantics. </summary>
+template<typename T>
+using GetCopyableTag = typename std::conditional<
+    std::is_copy_constructible<T>::value,
+    IsCopyableTag,
+    NonCopyableTag
+>::type;

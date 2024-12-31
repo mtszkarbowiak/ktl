@@ -80,7 +80,7 @@ public:
 
     /// <summary> Ensures that adding items up to the requested capacity will not invoke the allocator. </summary>
     FORCE_INLINE
-    void EnsureCapacity(const int32 minCapacity)
+    void Reserve(const int32 minCapacity)
     {
         if (minCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
@@ -200,7 +200,7 @@ public:
     FORCE_INLINE
     T& operator[](const int32 index)
     {
-        ASSERT_INDEX(index >= 0 && index < _count);
+        ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _count);
         return DATA_OF(T, _allocData)[index];
     }
 
@@ -208,7 +208,7 @@ public:
     FORCE_INLINE
     const T& operator[](const int32 index) const
     {
-        ASSERT_INDEX(index >= 0 && index < _count);
+        ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _count);
         return DATA_OF(const T, _allocData)[index];
     }
 
@@ -219,7 +219,7 @@ public:
     /// Adds an element to the end of the array, by forwarding it to the constructor.
     /// </summary>
     /// <param name="element"> Element to add. </param>
-    template<typename U>
+    template<typename U> // Universal reference
     FORCE_INLINE
     T& Add(U&& element)
     {
@@ -229,7 +229,7 @@ public:
         );
 
         if (_count == _capacity)
-            EnsureCapacity(_capacity + 1);
+            Reserve(_capacity + 1);
 
         T* target = DATA_OF(T, _allocData) + _count;
 
@@ -242,12 +242,12 @@ public:
 
     /// <summary> Adds an element to the end of the array, by constructing it in-place. </summary>
     /// <param name="args"> Arguments to forward to the constructor. </param>
-    template<typename... Args>
+    template<typename... Args> // Parameter pack
     FORCE_INLINE
     T& Emplace(Args&&... args)
     {
         if (_count == _capacity)
-            EnsureCapacity(_capacity + 1);
+            Reserve(_capacity + 1);
 
         T* target = DATA_OF(T, _allocData) + _count;
 
@@ -265,13 +265,13 @@ public:
     /// <param name="index"> Index at which to insert the element. It must be in the range [0, Count]. </param>
     /// <param name="element"> Element to add. </param>
     /// <returns> Reference to the added element. </returns>
-    template<typename U>
+    template<typename U> // Universal reference
     T& InsertAt(const int32 index, U&& element)
     {
-        ASSERT_INDEX(index >= 0 && index <= _count);  // Allow index == _count for appending
+        ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _count);  // Allow index == _count for appending
 
         if (_count == _capacity)
-            EnsureCapacity(_capacity + 1);
+            Reserve(_capacity + 1);
 
         // Pointer to the slot at the insertion point.
         T* insertPtr = DATA_OF(T, _allocData) + index;
@@ -306,15 +306,15 @@ public:
     /// <remarks>
     /// This operation is significantly slower than basic insertion. It should be used only when the order of the elements matters.
     /// </remarks>
-    template<typename U>
+    template<typename U> // Universal reference
     T& InsertAtStable(const int32 index, U&& element)
     {
-        ASSERT_INDEX(index >= 0 && index <= _count);  // Allow index == _count for appending
+        ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _count);  // Allow index == _count for appending
 
         // Technically, we could reduce number of moves for relocation.
         // However, it would complicate the code even more. A task for another day.
         if (_count == _capacity)
-            EnsureCapacity(_capacity + 1);
+            Reserve(_capacity + 1);
 
         // Pointer to the first slot.
         T* dataPtr = DATA_OF(T, _allocData);
@@ -356,7 +356,7 @@ public:
     /// <param name="index"> Index of the element to remove. It must be in the range [0, Count). </param>
     void RemoveAt(const int32 index)
     {
-        ASSERT_INDEX(index >= 0 && index < _count); // Ensure index is valid
+        ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index < _count); // Ensure index is valid
 
         T* basePtr    = DATA_OF(T, _allocData);
         T* removedPtr = basePtr + index;
@@ -379,7 +379,7 @@ public:
     /// </remarks>
     void RemoveAtStable(const int32 index)
     {
-        ASSERT_INDEX(index >= 0 && index < _count); // Ensure index is valid
+        ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index < _count); // Ensure index is valid
 
         T* basePtr    = DATA_OF(T, _allocData);
 
@@ -437,7 +437,7 @@ public:
     Span<T> AddElements(const T* source, const int32 count)
     {
         const int32 newCount = _count + count;
-        EnsureCapacity(newCount);
+        Reserve(newCount);
 
         T* target = DATA_OF(T, _allocData) + _count;
         BulkOperations::CopyLinearContent<T>(source, target, count);
@@ -469,7 +469,7 @@ public:
     Span<T> AddRepetitions(const T& source, const int32 count)
     {
         const int32 newCount = _count + count;
-        EnsureCapacity(newCount);
+        Reserve(newCount);
 
         for (int i = 0; i < count; ++i) {
             Add(source);
@@ -486,7 +486,7 @@ protected:
     FORCE_INLINE
     void MoveToEmpty(Array&& other) noexcept
     {
-        ASSERT(_count == 0 && _capacity == 0); // Array must be empty, but the collection must be initialized!
+        ASSERT_COLLECTION_SAFE_MOD(_count == 0 && _capacity == 0); // Array must be empty, but the collection must be initialized!
 
         if (other._capacity == 0 || other._count == 0)
             return;
@@ -555,7 +555,7 @@ public:
     }
 
     /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext>
+    template<typename AllocContext> // Universal reference
     FORCE_INLINE
     explicit Array(const int32 capacity, AllocContext&& context)
         : _allocData{ FORWARD(AllocContext, context) }
@@ -637,6 +637,7 @@ public:
 
         // Access
 
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         FORCE_INLINE NODISCARD
         IterHint Hint() const
         {
@@ -644,13 +645,25 @@ public:
             return { remaining, remaining };
         }
 
-        FORCE_INLINE T& operator*()  { return (*_array)[_index]; }
+        FORCE_INLINE T& operator*()
+        {
+            return (*_array)[_index];
+        }
 
-        FORCE_INLINE T* operator->() { return &(*_array)[_index]; }
+        FORCE_INLINE T* operator->()
+        {
+            return &(*_array)[_index];
+        }
 
-        FORCE_INLINE const T& operator*() const  { return (*_array)[_index]; }
+        FORCE_INLINE const T& operator*() const
+        {
+            return (*_array)[_index];
+        }
 
-        FORCE_INLINE const T* operator->() const { return &(*_array)[_index]; }
+        FORCE_INLINE const T* operator->() const
+        {
+            return &(*_array)[_index];
+        }
 
         /// <summary> Returns the index of the current element. </summary>
         FORCE_INLINE NODISCARD
@@ -666,7 +679,7 @@ public:
         FORCE_INLINE NODISCARD
         explicit operator bool() const 
         {
-            ASSERT(_array != nullptr);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
             return _index < _array->_count;
         }
 
@@ -694,21 +707,21 @@ public:
         FORCE_INLINE NODISCARD
         bool operator==(const MutEnumerator& other) const
         {
-            ASSERT(_array == other._array);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
         FORCE_INLINE NODISCARD
         bool operator!=(const MutEnumerator& other) const
         {
-            ASSERT(_array == other._array);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
         FORCE_INLINE NODISCARD
         bool operator<(const MutEnumerator& other) const
         {
-            ASSERT(_array == other._array);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
         }
     };
@@ -737,6 +750,7 @@ public:
 
         // Access
 
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         FORCE_INLINE NODISCARD
         IterHint Hint() const
         {
@@ -745,10 +759,16 @@ public:
         }
 
         FORCE_INLINE
-        const T& operator*() const  { return (*_array)[_index]; }
+        const T& operator*() const
+        {
+            return (*_array)[_index];
+        }
 
         FORCE_INLINE
-        const T* operator->() const { return &(*_array)[_index]; }
+        const T* operator->() const
+        {
+            return &(*_array)[_index];
+        }
 
         /// <summary> Returns the index of the current element. </summary>
         FORCE_INLINE NODISCARD
@@ -764,7 +784,7 @@ public:
         FORCE_INLINE NODISCARD
         explicit operator bool() const 
         {
-            ASSERT(_array != nullptr);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
             return _index < _array->_count;
         }
 
@@ -792,21 +812,21 @@ public:
         FORCE_INLINE NODISCARD
         bool operator==(const ConstEnumerator& other) const
         {
-            ASSERT(_array == other._array);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
         FORCE_INLINE NODISCARD
         bool operator!=(const ConstEnumerator& other) const
         {
-            ASSERT(_array == other._array);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
         FORCE_INLINE NODISCARD
         bool operator<(const ConstEnumerator& other) const
         {
-            ASSERT(_array == other._array);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
         }
     };

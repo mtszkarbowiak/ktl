@@ -65,7 +65,7 @@ public:
     static int32 InitCapacity(const int32 minCapacity)
     {
         const int32 requiredCapacity = Math::Max(minCapacity, DefaultElements);
-        ASSERT(requiredCapacity <= MaxElements);
+        ASSERT_ALLOCATOR_SAFETY(requiredCapacity <= MaxElements);
         return requiredCapacity;
     }
 
@@ -81,7 +81,7 @@ public:
     {
         // This method returns next capacity and assumes there already is an active allocation.
         // Values lower than the default capacity mean that the collection is empty (or corrupted).
-        ASSERT(oldCapacity >= DefaultElements);
+        ASSERT_ALLOCATOR_SAFETY(oldCapacity >= DefaultElements);
         // If the collection is empty, just use the default capacity.
         // You will use only one branch (in the collection) to allocate the memory, instead of two.
 
@@ -100,7 +100,7 @@ public:
 
         // Make sure the capacity is at least as big as the requested minimal capacity.
         // This is a safety check to ensure that the collection can store the requested number of elements.
-        ASSERT(newCapacity >= minCapacity);
+        ASSERT_ALLOCATOR_SAFETY(newCapacity >= minCapacity);
         // If the capacity is not at least as big as the requested minimal capacity,
         // the collection will not be able to store the requested number of elements.
 
@@ -131,13 +131,13 @@ public:
         // Make sure the allocated capacity is at least as big as the requested capacity.
         // This is a safety check to ensure that the collection can store the requested number of elements.
         // (Allocator could return 0 if the allocation failed.)
-        ASSERT(allocatedCapacity >= capacity);
+        ASSERT_ALLOCATOR_SAFETY(allocatedCapacity >= capacity);
 
         // If the allocated capacity is not at least as big as the requested capacity,
         // the collection will not be able to store the requested number of elements.
         // Get the pointer to the allocated memory.
         const Element* elements = DATA_OF(Element, alloc);
-        ASSERT(elements);
+        ASSERT_ALLOCATOR_SAFETY(elements);
         // Make sure the pointer is correctly aligned.
         ASSERT_CORRECT_ALIGNMENT(Element, elements);
 

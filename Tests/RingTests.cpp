@@ -9,7 +9,24 @@
 
 // Capacity Management
 
-TEST(Ring_Capacity, Reserve_OnInit)
+TEST(Ring_Capacity, Reserve_Call)
+{
+    constexpr int32 MinReservedCapacity = 128;
+    GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
+
+    Ring<int32> ring;
+    ring.Reserve(MinReservedCapacity);
+
+    GTEST_ASSERT_TRUE(ring.IsAllocated());
+    GTEST_ASSERT_GE  (ring.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE  (ring.Capacity(), MinReservedCapacity * 2);
+
+    ring.Reset();
+
+    GTEST_ASSERT_FALSE(ring.IsAllocated());
+}
+
+TEST(Ring_Capacity, Reserve_Ctor)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -17,32 +34,15 @@ TEST(Ring_Capacity, Reserve_OnInit)
     Ring<int32> ring{ MinReservedCapacity };
 
     GTEST_ASSERT_TRUE(ring.IsAllocated());
-    GTEST_ASSERT_GE  (ring.Capacity(), MinReservedCapacity);
-    GTEST_ASSERT_LE  (ring.Capacity(), MinReservedCapacity * 2);
+    GTEST_ASSERT_GE(ring.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE(ring.Capacity(), MinReservedCapacity * 2);
 
     ring.Reset();
 
     GTEST_ASSERT_FALSE(ring.IsAllocated());
 }
 
-TEST(Ring_Capacity, Reserve_OnRequest)
-{
-    constexpr int32 MinReservedCapacity = 128;
-    GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
-
-    Ring<int32> ring;
-    ring.EnsureCapacity(MinReservedCapacity);
-
-    GTEST_ASSERT_TRUE(ring.IsAllocated());
-    GTEST_ASSERT_GE  (ring.Capacity(), MinReservedCapacity);
-    GTEST_ASSERT_LE  (ring.Capacity(), MinReservedCapacity * 2);
-
-    ring.Reset();
-
-    GTEST_ASSERT_FALSE(ring.IsAllocated());
-}
-
-TEST(Ring_Capacity, Reserve_OnAdd)
+TEST(Ring_Capacity, Reserve_Add)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -60,7 +60,7 @@ TEST(Ring_Capacity, Reserve_OnAdd)
     GTEST_ASSERT_FALSE(ring.IsAllocated());
 }
 
-TEST(Ring_Capacity, ShrinkToFit_Free)
+TEST(Ring_Capacity, Compact_Free)
 {
     using Item = int32;
     Ring<Item> array;
@@ -84,7 +84,7 @@ TEST(Ring_Capacity, ShrinkToFit_Free)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Ring_Capacity, ShrinkToFit_Reloc)
+TEST(Ring_Capacity, Compact_Reloc)
 {
     constexpr int32 TestCapacity1 = 256;
     constexpr int32 TestCapacity2 = 3;
@@ -229,7 +229,7 @@ TEST(Ring_Relocation, Reserve)
             ring.PushBack(TestTracker{ i });
 
         // Reloc: n constructions
-        ring.EnsureCapacity(RING_DEFAULT_CAPACITY * 2);
+        ring.Reserve(RING_DEFAULT_CAPACITY * 2);
 
         const int32 newCapacity = ring.Capacity();
         GTEST_ASSERT_GT(newCapacity, initCapacity); // Relocation must occur
@@ -245,7 +245,7 @@ TEST(Ring_Relocation, Reserve)
     LIFECYCLE_TEST_DIFF(5 * ElementCount)
 }
 
-TEST(Ring_Relocation, ShrinkToFit)
+TEST(Ring_Relocation, Compact)
 {
     constexpr int32 ElementCount = 12;
 
@@ -269,7 +269,7 @@ TEST(Ring_Relocation, ShrinkToFit)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Ring_Relocation, MoveConstruct_NoDragAlloc)
+TEST(Ring_Relocation, MoveCtor_NoDragAlloc)
 {
     const int32 ElementCount = 12;
 
@@ -293,7 +293,7 @@ TEST(Ring_Relocation, MoveConstruct_NoDragAlloc)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Ring_Relocation, MoveAssignment_NoDragAlloc)
+TEST(Ring_Relocation, MoveAsgn_NoDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -322,7 +322,7 @@ TEST(Ring_Relocation, MoveAssignment_NoDragAlloc)
     LIFECYCLE_TEST_DIFF(3 * ElementCount + 2)
 }
 
-TEST(Ring_Relocation, MoveConstruct_DragAlloc)
+TEST(Ring_Relocation, MoveCtor_DragAlloc)
 {
     const int32 ElementCount = 12;
 
@@ -346,7 +346,7 @@ TEST(Ring_Relocation, MoveConstruct_DragAlloc)
     LIFECYCLE_TEST_DIFF(2 * ElementCount)
 }
 
-TEST(Ring_Relocation, MoveAssignment_DragAlloc)
+TEST(Ring_Relocation, MoveAsgn_DragAlloc)
 {
     const int32 ElementCount = 12;
 
@@ -378,7 +378,7 @@ TEST(Ring_Relocation, MoveAssignment_DragAlloc)
 
 // Element Copying
 
-TEST(Ring_Copying, CopyCtr)
+TEST(Ring_Copying, CopyCtor)
 {
     constexpr int32 ElementCount = 12;
     LIFECYCLE_TEST_INTO
@@ -394,7 +394,7 @@ TEST(Ring_Copying, CopyCtr)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Ring_Copying, CopyAsg)
+TEST(Ring_Copying, CopyAsgn)
 {
     constexpr int32 ElementCount = 12;
     LIFECYCLE_TEST_INTO

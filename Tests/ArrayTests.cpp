@@ -9,7 +9,24 @@
 
 // Capacity Management
 
-TEST(Array_Capacity, Reserve_OnInit) //TODO Fix tests naming.
+TEST(Array_Capacity, Reserve_Call)
+{
+    constexpr int32 MinReservedCapacity = 128;
+    GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
+
+    Array<int32> array;
+    array.Reserve(MinReservedCapacity);
+
+    GTEST_ASSERT_TRUE(array.IsAllocated());
+    GTEST_ASSERT_GE(array.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE(array.Capacity(), MinReservedCapacity * 2);
+
+    array.Reset();
+
+    GTEST_ASSERT_FALSE(array.IsAllocated());
+}
+
+TEST(Array_Capacity, Reserve_Ctor) //TODO Fix tests naming.
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -25,24 +42,7 @@ TEST(Array_Capacity, Reserve_OnInit) //TODO Fix tests naming.
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Array_Capacity, Reserve_OnRequest)
-{
-    constexpr int32 MinReservedCapacity = 128;
-    GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
-
-    Array<int32> array;
-    array.EnsureCapacity(MinReservedCapacity);
-
-    GTEST_ASSERT_TRUE(array.IsAllocated());
-    GTEST_ASSERT_GE  (array.Capacity(), MinReservedCapacity);
-    GTEST_ASSERT_LE  (array.Capacity(), MinReservedCapacity * 2);
-
-    array.Reset();
-
-    GTEST_ASSERT_FALSE(array.IsAllocated());
-}
-
-TEST(Array_Capacity, Reserve_OnAdd)
+TEST(Array_Capacity, Reserve_Add)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -60,7 +60,7 @@ TEST(Array_Capacity, Reserve_OnAdd)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Array_Capacity, ShrinkToFit_Free)
+TEST(Array_Capacity, Compact_Free)
 {
     using Item = int32;
     Array<Item> array;
@@ -84,7 +84,7 @@ TEST(Array_Capacity, ShrinkToFit_Free)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Array_Capacity, ShrinkToFit_Reloc)
+TEST(Array_Capacity, Compact_Reloc)
 {
     constexpr int32 TestCapacity1 = 256;
     constexpr int32 TestCapacity2 = 3;
@@ -208,7 +208,7 @@ TEST(Array_Relocation, Reserve)
             array.Emplace(i);
 
         // Reloc: n constructions
-        array.EnsureCapacity(ElementCount * 3);
+        array.Reserve(ElementCount * 3);
         // Note: This reservation forces reallocation. Element are obligated to be moved.
 
         // Init: n constructions (emplace, no temporary)
@@ -221,7 +221,7 @@ TEST(Array_Relocation, Reserve)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Array_Relocation, ShrinkToFit)
+TEST(Array_Relocation, Compact)
 {
     constexpr int32 InitCapacity = 128;
     constexpr int32 ElementCount = 12;
@@ -247,7 +247,7 @@ TEST(Array_Relocation, ShrinkToFit)
     LIFECYCLE_TEST_DIFF(2 * ElementCount)
 }
 
-TEST(Array_Relocation, MoveConstruct_NoDragAlloc)
+TEST(Array_Relocation, MoveCtor_NoDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -272,7 +272,7 @@ TEST(Array_Relocation, MoveConstruct_NoDragAlloc)
     LIFECYCLE_TEST_DIFF(2 * ElementCount)
 }
 
-TEST(Array_Relocation, MoveAssignment_NoDragAlloc)
+TEST(Array_Relocation, MoveAsgn_NoDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -301,7 +301,7 @@ TEST(Array_Relocation, MoveAssignment_NoDragAlloc)
     LIFECYCLE_TEST_DIFF(2 * ElementCount + 1)
 }
 
-TEST(Array_Relocation, MoveConstruct_DragAlloc)
+TEST(Array_Relocation, MoveCtor_DragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -325,7 +325,7 @@ TEST(Array_Relocation, MoveConstruct_DragAlloc)
     LIFECYCLE_TEST_DIFF(1 * ElementCount)
 }
 
-TEST(Array_Relocation, MoveAssignment_DragAlloc)
+TEST(Array_Relocation, MoveAsgn_DragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -357,7 +357,7 @@ TEST(Array_Relocation, MoveAssignment_DragAlloc)
 
 // Element Copying
 
-TEST(Array_Copying, CopyCtr)
+TEST(Array_Copying, CopyCtor)
 {
     constexpr int32 ElementCount = 12;
     LIFECYCLE_TEST_INTO
@@ -374,7 +374,7 @@ TEST(Array_Copying, CopyCtr)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Array_Copying, CopyAsg)
+TEST(Array_Copying, CopyAsgn)
 {
     constexpr int32 ElementCount = 12;
     LIFECYCLE_TEST_INTO
