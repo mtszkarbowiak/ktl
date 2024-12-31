@@ -9,23 +9,7 @@
 
 // Capacity Management
 
-TEST(Ring_Capacity, Reserve_OnInit)
-{
-    constexpr int32 MinReservedCapacity = 128;
-    GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
-
-    Ring<int32> ring{ MinReservedCapacity };
-
-    GTEST_ASSERT_TRUE(ring.IsAllocated());
-    GTEST_ASSERT_GE  (ring.Capacity(), MinReservedCapacity);
-    GTEST_ASSERT_LE  (ring.Capacity(), MinReservedCapacity * 2);
-
-    ring.Reset();
-
-    GTEST_ASSERT_FALSE(ring.IsAllocated());
-}
-
-TEST(Ring_Capacity, Reserve_OnRequest)
+TEST(Ring_Capacity, Reserve_Call)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -42,7 +26,23 @@ TEST(Ring_Capacity, Reserve_OnRequest)
     GTEST_ASSERT_FALSE(ring.IsAllocated());
 }
 
-TEST(Ring_Capacity, Reserve_OnAdd)
+TEST(Ring_Capacity, Reserve_Ctor)
+{
+    constexpr int32 MinReservedCapacity = 128;
+    GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
+
+    Ring<int32> ring{ MinReservedCapacity };
+
+    GTEST_ASSERT_TRUE(ring.IsAllocated());
+    GTEST_ASSERT_GE(ring.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE(ring.Capacity(), MinReservedCapacity * 2);
+
+    ring.Reset();
+
+    GTEST_ASSERT_FALSE(ring.IsAllocated());
+}
+
+TEST(Ring_Capacity, Reserve_Add)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -269,7 +269,7 @@ TEST(Ring_Relocation, ShrinkToFit)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Ring_Relocation, MoveConstruct_NoDragAlloc)
+TEST(Ring_Relocation, MoveCtor_NoDragAlloc)
 {
     const int32 ElementCount = 12;
 
@@ -293,7 +293,7 @@ TEST(Ring_Relocation, MoveConstruct_NoDragAlloc)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Ring_Relocation, MoveAssignment_NoDragAlloc)
+TEST(Ring_Relocation, MoveAsgn_NoDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -322,7 +322,7 @@ TEST(Ring_Relocation, MoveAssignment_NoDragAlloc)
     LIFECYCLE_TEST_DIFF(3 * ElementCount + 2)
 }
 
-TEST(Ring_Relocation, MoveConstruct_DragAlloc)
+TEST(Ring_Relocation, MoveCtor_DragAlloc)
 {
     const int32 ElementCount = 12;
 
@@ -346,7 +346,7 @@ TEST(Ring_Relocation, MoveConstruct_DragAlloc)
     LIFECYCLE_TEST_DIFF(2 * ElementCount)
 }
 
-TEST(Ring_Relocation, MoveAssignment_DragAlloc)
+TEST(Ring_Relocation, MoveAsgn_DragAlloc)
 {
     const int32 ElementCount = 12;
 
@@ -378,7 +378,7 @@ TEST(Ring_Relocation, MoveAssignment_DragAlloc)
 
 // Element Copying
 
-TEST(Ring_Copying, CopyCtr)
+TEST(Ring_Copying, CopyCtor)
 {
     constexpr int32 ElementCount = 12;
     LIFECYCLE_TEST_INTO
@@ -394,7 +394,7 @@ TEST(Ring_Copying, CopyCtr)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Ring_Copying, CopyAsg)
+TEST(Ring_Copying, CopyAsgn)
 {
     constexpr int32 ElementCount = 12;
     LIFECYCLE_TEST_INTO
