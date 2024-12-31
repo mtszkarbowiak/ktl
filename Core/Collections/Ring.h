@@ -737,6 +737,7 @@ public:
 
         // Access
 
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         FORCE_INLINE
         IterHint Hint() const
         {
@@ -854,6 +855,7 @@ public:
 
         // Access
 
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         FORCE_INLINE auto Hint() const -> IterHint
         {
             const int32 remaining = _ring->Count() - _indexOfElement;

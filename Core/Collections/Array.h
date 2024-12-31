@@ -637,6 +637,7 @@ public:
 
         // Access
 
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         FORCE_INLINE NODISCARD
         IterHint Hint() const
         {
@@ -644,13 +645,25 @@ public:
             return { remaining, remaining };
         }
 
-        FORCE_INLINE T& operator*()  { return (*_array)[_index]; }
+        FORCE_INLINE T& operator*()
+        {
+            return (*_array)[_index];
+        }
 
-        FORCE_INLINE T* operator->() { return &(*_array)[_index]; }
+        FORCE_INLINE T* operator->()
+        {
+            return &(*_array)[_index];
+        }
 
-        FORCE_INLINE const T& operator*() const  { return (*_array)[_index]; }
+        FORCE_INLINE const T& operator*() const
+        {
+            return (*_array)[_index];
+        }
 
-        FORCE_INLINE const T* operator->() const { return &(*_array)[_index]; }
+        FORCE_INLINE const T* operator->() const
+        {
+            return &(*_array)[_index];
+        }
 
         /// <summary> Returns the index of the current element. </summary>
         FORCE_INLINE NODISCARD
@@ -737,6 +750,7 @@ public:
 
         // Access
 
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         FORCE_INLINE NODISCARD
         IterHint Hint() const
         {
@@ -745,10 +759,16 @@ public:
         }
 
         FORCE_INLINE
-        const T& operator*() const  { return (*_array)[_index]; }
+        const T& operator*() const
+        {
+            return (*_array)[_index];
+        }
 
         FORCE_INLINE
-        const T* operator->() const { return &(*_array)[_index]; }
+        const T* operator->() const
+        {
+            return &(*_array)[_index];
+        }
 
         /// <summary> Returns the index of the current element. </summary>
         FORCE_INLINE NODISCARD

@@ -640,6 +640,7 @@ public:
 
         // Access
 
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         FORCE_INLINE NODISCARD
         IterHint Hint() const
         {
@@ -743,6 +744,7 @@ public:
 
         // Access
 
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         FORCE_INLINE NODISCARD
         IterHint Hint() const
         {
