@@ -65,3 +65,43 @@ TEST(TypeUtils, SwapByMember)
     GTEST_ASSERT_EQ(a._value, 2);
     GTEST_ASSERT_EQ(b._value, 1);
 }
+
+TEST(TypeUtils, CopyAbleDispatch)
+{
+    int32 result;
+
+    struct
+    {
+        int32* _theResult;
+
+        void Check(IsCopyableTag)
+        {
+            *_theResult = 1;
+        }
+
+        void Check(NonCopyableTag)
+        {
+            *_theResult = 2;
+        }
+    }
+    tester{ &result };
+
+    struct CopyableExample
+    {
+        CopyableExample(const CopyableExample&) = default;
+    };
+
+    struct NotCopyableExample
+    {
+        NotCopyableExample(const NotCopyableExample&) = delete;
+    };
+
+    using Tag1 = GetCopyableTag<CopyableExample>;
+    using Tag2 = GetCopyableTag<NotCopyableExample>;
+
+    tester.Check(Tag1{});
+    GTEST_ASSERT_EQ(result, 1);
+
+    tester.Check(Tag2{});
+    GTEST_ASSERT_EQ(result, 2);
+}
