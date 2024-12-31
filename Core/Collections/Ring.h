@@ -125,7 +125,7 @@ public:
 
     /// <summary> Ensures that adding items up to the requested capacity will not invoke the allocator. </summary>
     FORCE_INLINE
-    void EnsureCapacity(const int32 minCapacity)
+    void Reserve(const int32 minCapacity)
     {
         if (minCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
@@ -353,7 +353,7 @@ public:
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
-        EnsureCapacity(_countCached + 1);
+        Reserve(_countCached + 1);
 
         T* target = DATA_OF(T, _allocData) + _tail;
 
@@ -371,7 +371,7 @@ public:
     FORCE_INLINE
     T& EmplaceBack(Args&&... args)
     {
-        EnsureCapacity(_countCached + 1);
+        Reserve(_countCached + 1);
 
         T* target = DATA_OF(T, _allocData) + _tail;
 
@@ -395,7 +395,7 @@ public:
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
-        EnsureCapacity(_countCached + 1);
+        Reserve(_countCached + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
         T* target = DATA_OF(T, _allocData) + _head;
@@ -412,7 +412,7 @@ public:
     FORCE_INLINE
     T& EmplaceFront(Args&&... args)
     {
-        EnsureCapacity(_countCached + 1);
+        Reserve(_countCached + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
         T* target = DATA_OF(T, _allocData) + _head;

@@ -15,7 +15,7 @@ TEST(Ring_Capacity, Reserve_Call)
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
 
     Ring<int32> ring;
-    ring.EnsureCapacity(MinReservedCapacity);
+    ring.Reserve(MinReservedCapacity);
 
     GTEST_ASSERT_TRUE(ring.IsAllocated());
     GTEST_ASSERT_GE  (ring.Capacity(), MinReservedCapacity);
@@ -229,7 +229,7 @@ TEST(Ring_Relocation, Reserve)
             ring.PushBack(TestTracker{ i });
 
         // Reloc: n constructions
-        ring.EnsureCapacity(RING_DEFAULT_CAPACITY * 2);
+        ring.Reserve(RING_DEFAULT_CAPACITY * 2);
 
         const int32 newCapacity = ring.Capacity();
         GTEST_ASSERT_GT(newCapacity, initCapacity); // Relocation must occur

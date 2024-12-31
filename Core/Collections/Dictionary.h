@@ -299,7 +299,7 @@ public:
     }
 
     /// <summary> Potentially rebuilds the dictionary to achieve the specified minimal capacity. </summary>
-    void EnsureCapacity(const int32 minCapacity)
+    void Reserve(const int32 minCapacity)
     {
         if (_capacity >= minCapacity)
             return;
@@ -424,7 +424,7 @@ public:
             Compact(); // If the number of deleted elements is too high, shrink the table
 
         const int32 ensuredCapacity = (_elementsCount + 1) * HASH_MAPS_DEFAULT_SLACK_RATIO + _deletedCount;
-        EnsureCapacity(ensuredCapacity);
+        Reserve(ensuredCapacity);
 
         //TODO Prevent double rebuilding
         
@@ -534,7 +534,7 @@ private:
             // Copy is expensive - Let's rebuild the dictionary.
             // Note: If we weren't rebuilding, we could have used BulkOperations::CopyLinearContent.
 
-            EnsureCapacity(other.Capacity());
+            Reserve(other.Capacity());
 
             for (auto iterator = other.Buckets(); iterator; ++iterator)
                 Add(iterator->Key(), iterator->Value());

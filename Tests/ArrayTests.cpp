@@ -15,7 +15,7 @@ TEST(Array_Capacity, Reserve_Call)
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
 
     Array<int32> array;
-    array.EnsureCapacity(MinReservedCapacity);
+    array.Reserve(MinReservedCapacity);
 
     GTEST_ASSERT_TRUE(array.IsAllocated());
     GTEST_ASSERT_GE(array.Capacity(), MinReservedCapacity);
@@ -208,7 +208,7 @@ TEST(Array_Relocation, Reserve)
             array.Emplace(i);
 
         // Reloc: n constructions
-        array.EnsureCapacity(ElementCount * 3);
+        array.Reserve(ElementCount * 3);
         // Note: This reservation forces reallocation. Element are obligated to be moved.
 
         // Init: n constructions (emplace, no temporary)
