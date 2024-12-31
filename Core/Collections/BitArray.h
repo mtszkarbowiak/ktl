@@ -273,7 +273,7 @@ public:
     FORCE_INLINE NODISCARD
     auto GetBit(const int32 index) const -> bool
     {
-        ASSERT_INDEX(index >= 0 && index < _bitCount);
+        ASSERT(index >= 0 && index < _bitCount);
 
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex = index % BitsPerBlock;
@@ -291,7 +291,7 @@ public:
     FORCE_INLINE
     void SetBit(const int32 index, const bool value)
     {
-        ASSERT_INDEX(index >= 0 && index < _bitCount);
+        ASSERT(index >= 0 && index < _bitCount);
 
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
@@ -325,7 +325,7 @@ public:
     FORCE_INLINE NODISCARD
     auto GetBlock(const int32 blockIndex) const -> Block
     {
-        ASSERT_INDEX(blockIndex >= 0 && blockIndex < _blockCapacity);
+        ASSERT(blockIndex >= 0 && blockIndex < _blockCapacity);
         const Block* srcBlock = DATA_OF(Block, _allocData) + blockIndex;
         return *srcBlock;
     }
@@ -334,7 +334,7 @@ public:
     FORCE_INLINE
     void SetBlock(const int32 blockIndex, const Block value)
     {
-        ASSERT_INDEX(blockIndex >= 0 && blockIndex < _blockCapacity);
+        ASSERT(blockIndex >= 0 && blockIndex < _blockCapacity);
         Block* dstBlock = DATA_OF(Block, _allocData) + blockIndex;
         *dstBlock = value;
     }
@@ -379,7 +379,7 @@ public:
     /// <summary> Inserts a bit without changing the order of the other bits. </summary>
     void InsertAtStable(const int32 index, const bool value)
     {
-        ASSERT_INDEX(index >= 0 && index <= _bitCount); // Allow index == _bitCount for appending
+        ASSERT(index >= 0 && index <= _bitCount); // Allow index == _bitCount for appending
 
         Reserve(_bitCount + 1); // Ensure enough space for the new bit.
 
@@ -421,7 +421,7 @@ public:
     /// <summary> Removes the bit at the specified index without changing the order of the other bits. </summary>
     void RemoveAtStable(const int32 index)
     {
-        ASSERT_INDEX(index >= 0 && index < _bitCount); // Ensure the index is valid.
+        ASSERT(index >= 0 && index < _bitCount); // Ensure the index is valid.
 
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex = index % BitsPerBlock;

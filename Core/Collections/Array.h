@@ -200,7 +200,7 @@ public:
     FORCE_INLINE
     T& operator[](const int32 index)
     {
-        ASSERT_INDEX(index >= 0 && index < _count);
+        ASSERT(index >= 0 && index < _count);
         return DATA_OF(T, _allocData)[index];
     }
 
@@ -208,7 +208,7 @@ public:
     FORCE_INLINE
     const T& operator[](const int32 index) const
     {
-        ASSERT_INDEX(index >= 0 && index < _count);
+        ASSERT(index >= 0 && index < _count);
         return DATA_OF(const T, _allocData)[index];
     }
 
@@ -268,7 +268,7 @@ public:
     template<typename U> // Universal reference
     T& InsertAt(const int32 index, U&& element)
     {
-        ASSERT_INDEX(index >= 0 && index <= _count);  // Allow index == _count for appending
+        ASSERT(index >= 0 && index <= _count);  // Allow index == _count for appending
 
         if (_count == _capacity)
             Reserve(_capacity + 1);
@@ -309,7 +309,7 @@ public:
     template<typename U> // Universal reference
     T& InsertAtStable(const int32 index, U&& element)
     {
-        ASSERT_INDEX(index >= 0 && index <= _count);  // Allow index == _count for appending
+        ASSERT(index >= 0 && index <= _count);  // Allow index == _count for appending
 
         // Technically, we could reduce number of moves for relocation.
         // However, it would complicate the code even more. A task for another day.
@@ -356,7 +356,7 @@ public:
     /// <param name="index"> Index of the element to remove. It must be in the range [0, Count). </param>
     void RemoveAt(const int32 index)
     {
-        ASSERT_INDEX(index >= 0 && index < _count); // Ensure index is valid
+        ASSERT(index >= 0 && index < _count); // Ensure index is valid
 
         T* basePtr    = DATA_OF(T, _allocData);
         T* removedPtr = basePtr + index;
@@ -379,7 +379,7 @@ public:
     /// </remarks>
     void RemoveAtStable(const int32 index)
     {
-        ASSERT_INDEX(index >= 0 && index < _count); // Ensure index is valid
+        ASSERT(index >= 0 && index < _count); // Ensure index is valid
 
         T* basePtr    = DATA_OF(T, _allocData);
 

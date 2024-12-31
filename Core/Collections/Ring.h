@@ -293,7 +293,7 @@ public:
     /// <summary> Accesses the element at the given index. </summary>
     T& operator[](const int32 index)
     {
-        ASSERT_INDEX(index >= 0 && index < _countCached);
+        ASSERT(index >= 0 && index < _countCached);
         const int32 realIndex = (_head + index) % _capacity;
         return DATA_OF(T, _allocData)[realIndex];
     }
@@ -301,7 +301,7 @@ public:
     /// <summary> Accesses the element at the given index. </summary>
     const T& operator[](const int32 index) const
     {
-        ASSERT_INDEX(index >= 0 && index < _countCached);
+        ASSERT(index >= 0 && index < _countCached);
         const int32 realIndex = (_head + index) % _capacity;
         return DATA_OF(const T, _allocData)[realIndex];
     }

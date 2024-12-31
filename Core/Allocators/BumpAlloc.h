@@ -135,7 +135,7 @@ public:
         FORCE_INLINE
         int32 Allocate(const int32 size)
         {
-            ASSERT_MEMORY(_data == nullptr);
+            ASSERT(_data == nullptr);
             return _context->Allocate(size, _data);
         }
 
