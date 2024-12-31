@@ -344,7 +344,7 @@ public:
     // Element Manipulation
 
     /// <summary> Adds an element to the end of the ring. </summary>
-    template<typename U>
+    template<typename U> // Universal reference
     FORCE_INLINE
     T& PushBack(U&& element)
     {
@@ -367,7 +367,7 @@ public:
     }
 
     /// <summary> Adds an element to the end of the ring. </summary>
-    template<typename... Args>
+    template<typename... Args> // Parameter pack
     FORCE_INLINE
     T& EmplaceBack(Args&&... args)
     {
@@ -386,7 +386,7 @@ public:
 
 
     /// <summary> Adds an element to the beginning of the ring. </summary>
-    template<typename U>
+    template<typename U> // Universal reference
     FORCE_INLINE
     T& PushFront(U&& element)
     {
@@ -408,7 +408,7 @@ public:
     }
 
     /// <summary> Adds an element to the beginning of the ring. </summary>
-    template<typename... Args>
+    template<typename... Args> // Parameter pack
     FORCE_INLINE
     T& EmplaceFront(Args&&... args)
     {
@@ -657,7 +657,7 @@ public:
     }
 
     /// <summary> Initializes an empty ring with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext>
+    template<typename AllocContext> // Universal reference
     FORCE_INLINE
     explicit Ring(const int32 capacity, AllocContext&& context)
         : _allocData{ FORWARD(AllocContext, context) }

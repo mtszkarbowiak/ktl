@@ -219,7 +219,7 @@ public:
     /// Adds an element to the end of the array, by forwarding it to the constructor.
     /// </summary>
     /// <param name="element"> Element to add. </param>
-    template<typename U>
+    template<typename U> // Universal reference
     FORCE_INLINE
     T& Add(U&& element)
     {
@@ -242,7 +242,7 @@ public:
 
     /// <summary> Adds an element to the end of the array, by constructing it in-place. </summary>
     /// <param name="args"> Arguments to forward to the constructor. </param>
-    template<typename... Args>
+    template<typename... Args> // Parameter pack
     FORCE_INLINE
     T& Emplace(Args&&... args)
     {
@@ -265,7 +265,7 @@ public:
     /// <param name="index"> Index at which to insert the element. It must be in the range [0, Count]. </param>
     /// <param name="element"> Element to add. </param>
     /// <returns> Reference to the added element. </returns>
-    template<typename U>
+    template<typename U> // Universal reference
     T& InsertAt(const int32 index, U&& element)
     {
         ASSERT_INDEX(index >= 0 && index <= _count);  // Allow index == _count for appending
@@ -306,7 +306,7 @@ public:
     /// <remarks>
     /// This operation is significantly slower than basic insertion. It should be used only when the order of the elements matters.
     /// </remarks>
-    template<typename U>
+    template<typename U> // Universal reference
     T& InsertAtStable(const int32 index, U&& element)
     {
         ASSERT_INDEX(index >= 0 && index <= _count);  // Allow index == _count for appending
@@ -555,7 +555,7 @@ public:
     }
 
     /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext>
+    template<typename AllocContext> // Universal reference
     FORCE_INLINE
     explicit Array(const int32 capacity, AllocContext&& context)
         : _allocData{ FORWARD(AllocContext, context) }
