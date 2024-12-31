@@ -1,8 +1,8 @@
 # GameDev Fundamentals Library
 
-> Note: This library is very work-in-progress. Originally, it was supposed to be only a proof-of-concept. Adding the features and stability have higher priority than performance. When the library has all the features, specific benchmarks will be added.
+> Note: This library is very work-in-progress. Originally, it was supposed to be only a proof-of-concept. Features and stability currently take priority over performance. When the library has all the features, specific benchmarks will be added.
 
-> Note: For examples of usage, see the test directory. It contains examples of example [collections](Tests/RingTests.cpp) or [queries](Tests/QueryingTests.cpp).
+> Note: For examples of usage, see the test directory: [collections](Tests/RingTests.cpp), [queries](Tests/QueryingTests.cpp), etc.
 
 ## I. State of Features
 
@@ -18,7 +18,7 @@ Collections:
 - [x] `Array` - Dynamic array, stack.
 - [x] `Ring` - Circular buffer, double-ended queue.
 - [ ] `Dictionary` - Unordered hash table.
-- [ ] `HasSet` - Unordered set.
+- [ ] `HashSet` - Unordered set.
 - [x] `BitArray` - Specialized array for bits.
 - [ ] `ChunkedArray` - Array of arrays for very large collections.
 
@@ -26,7 +26,7 @@ Allocators:
 
 - [x] `HeapAlloc` - Standard allocator for dynamic memory.
 - [ ] `PolymorphicAlloc` - Allocator that can use other allocators as backups.
-- [x] `InlinedAlloc` - Psuedo-allocator for stack-allocated objects and more.
+- [x] `InlinedAlloc` - Pseudo-allocator for stack-allocated objects and more.
 - [ ] `BumpAlloc` - Fast allocator for temporary memory.
 - [ ] `BumpConcurrentAlloc` - Thread-safe version of `BumpAlloc`.
 - [ ] `PoolAlloc` - Allocator for fixed-size objects.
@@ -43,13 +43,13 @@ Algorithms
 ## II. Objectives
 
 - **Game Development**: The library is designed to be used in a game development environment where performance is a critical concern. As the primary source of performance issues in games is memory management, the library provides a set of data structures and algorithms that are designed to be efficient and flexible in terms of memory usage.
-- **Parity with [Flax Engine](https://github.com/FlaxEngine/FlaxEngine)**: The library was originaly created as a replacement for the Flax Engine's core library. Making improvements required changing the design on the conceptual level thus it deviated too much for drop-in replacement.
+- **Compatibility with [Flax Engine](https://github.com/FlaxEngine/FlaxEngine)**: The library was originally created as a replacement for the Flax Engine's core library. Making improvements required changing the design on the conceptual level thus it deviated too much for drop-in replacement.
 
 
 ## III. Key Assumptions
 
 1. **Performance Priority**: The library is designed to be used in a game development environment where performance is a critical concern. It is assumed that handling memory correctly is the cornerstone of performance.
-2. **C++14**: The library is written in for Cpp 14. Using higher versions may enable additional features, but compatibility with Flax requires Cpp 14.
+2. **C++14**: The library is written in for C++ 14. Using higher versions may enable additional features, but compatibility with Flax requires C++ 14.
 3. **Memory Management**: The library is designed to be used in a game development environment where memory management is a critical concern. The library provides a set of data structures and algorithms that are designed to be efficient and flexible in terms of memory usage.
 4. **Exception Handling**: The library does not use exceptions for error handling. Making the code handle them correctly enforces very strict rules and performance overhead. They can be used only for critical unrecoverable errors.
 5. **Memory Limits**: Allocations are limited to 4GB. This is a reasonable limit for most game development scenarios. Thus, the library uses 32-bit integers for memory sizes. Pointers remain 64-bit.
@@ -79,7 +79,7 @@ Allocation policy is a class storing general traits of an allocation, it include
 - 2.6. Allocation failures are signaled by returning a null pointer and zero size.
 - 2.7. State of the allcation data may change only: on initialization, on allocation, on deallocation.
 - 2.8. Allocation policy may declare the minimum and maximum size of allocatable memory blocks. Requesting a size outside this range is an error.
-- 2.9. It discovers the size of the allocated block on allocation, but does not retain this information.
+- 2.9. The size of the allocated block is determined during allocation but is not retained afterward.
 - 2.10. All allocations data must have a default constructor, even if it puts the object in an invalid state.
 - 2.11. Copying allocation data duplicates the binding, not the memory block.
 - 2.12. Moving allocation data transfers the binding, with the possibility of *dragging* the items (moving the owner without invoking move operators), based on collection policy.
@@ -94,7 +94,7 @@ Collections manage object lifetimes and manage required memory through allocatio
 - 3.2. Collections may not assume that the object is default constructible.
 - 3.3. Collections should provide API to manage the memory block, especially reserving and compacting.
 - 3.4. Collections should use fast operations for C-style objects (no constructors, destructors, etc.).
-- 3.5. ~~Every collection must use doubling strategy for resizing. This allows for heavy optimizations regarding hashign, iterating, etc. which involve modulo of capacity.~~
+- 3.5. ~~Every collection must use doubling strategy for resizing. This allows for heavy optimizations regarding hashing, iterating, etc. which involve modulo of capacity.~~
 - 3.6. Collections may define default capacity i.e. minimal capacity of the collection.
 - 3.7. Default capacity must obey constraints of the allocation policy.
 - 3.8. Collections must be ready to accept different hash types.
@@ -102,12 +102,12 @@ Collections manage object lifetimes and manage required memory through allocatio
 ### 4. Iterators
 
 - 4.1. Collections provide two types of iterators: STL-style and enumerators (C#-style).
-- 4.2. Enumerators are NOT re-enterant, making them singificantly simpler to implement, [and more importantly, to use](https://www.youtube.com/watch?v=49ZYW4gHBIQ&t=3414s) than [ranges](https://en.cppreference.com/w/cpp/ranges). This also makes them more similar to LINQ in C# (or Rust iterators).
+- 4.2. Enumerators are NOT re-enterant, making them significantly simpler to implement, [and more importantly, to use](https://www.youtube.com/watch?v=49ZYW4gHBIQ&t=3414s) than [ranges](https://en.cppreference.com/w/cpp/ranges). This also makes them more similar to LINQ in C# (or Rust iterators).
 - 4.3. STL-style iterators must obey the STL iterator concept to enable STL algorithms.
 - 4.4. Enumerators provide simple API: `operator(bool)` for end condition, `operator++()` for moving to the next element and `operator*()` for accessing the current element.
 - 4.5. Enumerators provide an enumeration space hints, so more advanced queries can predict number of elements: `Hint() -> struct IterHint{ Min; Max; }`. This reduces the need for dynamic memory allocation.
 
-## V. Aknowledgements
+## V. Acknowledgements
 
 Created by Mateusz Karbowiak 2024
 
