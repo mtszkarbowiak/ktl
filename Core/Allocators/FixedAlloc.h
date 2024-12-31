@@ -64,7 +64,7 @@ public:
         FORCE_INLINE NODISCARD
         constexpr int32 Allocate(const int32 size)
         {
-            ASSERT(size == Size || size == 0);
+            ASSERT_ALLOCATOR_SAFETY(size == Size || size == 0);
             return (size == Size) ? size : 0;
         }
 

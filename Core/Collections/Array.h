@@ -200,7 +200,7 @@ public:
     FORCE_INLINE
     T& operator[](const int32 index)
     {
-        ASSERT(index >= 0 && index < _count);
+        ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _count);
         return DATA_OF(T, _allocData)[index];
     }
 
@@ -208,7 +208,7 @@ public:
     FORCE_INLINE
     const T& operator[](const int32 index) const
     {
-        ASSERT(index >= 0 && index < _count);
+        ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _count);
         return DATA_OF(const T, _allocData)[index];
     }
 
@@ -268,7 +268,7 @@ public:
     template<typename U> // Universal reference
     T& InsertAt(const int32 index, U&& element)
     {
-        ASSERT(index >= 0 && index <= _count);  // Allow index == _count for appending
+        ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _count);  // Allow index == _count for appending
 
         if (_count == _capacity)
             Reserve(_capacity + 1);
@@ -309,7 +309,7 @@ public:
     template<typename U> // Universal reference
     T& InsertAtStable(const int32 index, U&& element)
     {
-        ASSERT(index >= 0 && index <= _count);  // Allow index == _count for appending
+        ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _count);  // Allow index == _count for appending
 
         // Technically, we could reduce number of moves for relocation.
         // However, it would complicate the code even more. A task for another day.
@@ -356,7 +356,7 @@ public:
     /// <param name="index"> Index of the element to remove. It must be in the range [0, Count). </param>
     void RemoveAt(const int32 index)
     {
-        ASSERT(index >= 0 && index < _count); // Ensure index is valid
+        ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index < _count); // Ensure index is valid
 
         T* basePtr    = DATA_OF(T, _allocData);
         T* removedPtr = basePtr + index;
@@ -379,7 +379,7 @@ public:
     /// </remarks>
     void RemoveAtStable(const int32 index)
     {
-        ASSERT(index >= 0 && index < _count); // Ensure index is valid
+        ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index < _count); // Ensure index is valid
 
         T* basePtr    = DATA_OF(T, _allocData);
 
@@ -486,7 +486,7 @@ protected:
     FORCE_INLINE
     void MoveToEmpty(Array&& other) noexcept
     {
-        ASSERT(_count == 0 && _capacity == 0); // Array must be empty, but the collection must be initialized!
+        ASSERT_COLLECTION_SAFE_MOD(_count == 0 && _capacity == 0); // Array must be empty, but the collection must be initialized!
 
         if (other._capacity == 0 || other._count == 0)
             return;
@@ -679,7 +679,7 @@ public:
         FORCE_INLINE NODISCARD
         explicit operator bool() const 
         {
-            ASSERT(_array != nullptr);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
             return _index < _array->_count;
         }
 
@@ -707,21 +707,21 @@ public:
         FORCE_INLINE NODISCARD
         bool operator==(const MutEnumerator& other) const
         {
-            ASSERT(_array == other._array);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
         FORCE_INLINE NODISCARD
         bool operator!=(const MutEnumerator& other) const
         {
-            ASSERT(_array == other._array);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
         FORCE_INLINE NODISCARD
         bool operator<(const MutEnumerator& other) const
         {
-            ASSERT(_array == other._array);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
         }
     };
@@ -784,7 +784,7 @@ public:
         FORCE_INLINE NODISCARD
         explicit operator bool() const 
         {
-            ASSERT(_array != nullptr);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
             return _index < _array->_count;
         }
 
@@ -812,21 +812,21 @@ public:
         FORCE_INLINE NODISCARD
         bool operator==(const ConstEnumerator& other) const
         {
-            ASSERT(_array == other._array);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
         FORCE_INLINE NODISCARD
         bool operator!=(const ConstEnumerator& other) const
         {
-            ASSERT(_array == other._array);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
         FORCE_INLINE NODISCARD
         bool operator<(const ConstEnumerator& other) const
         {
-            ASSERT(_array == other._array);
+            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
         }
     };

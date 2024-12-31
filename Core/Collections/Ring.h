@@ -143,7 +143,7 @@ public:
             _tail = 0;
             _countCached = 0;
 
-            ASSERT(IsValid());
+            ASSERT_COLLECTION_INTEGRITY(IsValid());
             return;
         }
 
@@ -202,7 +202,7 @@ public:
         _head      = 0;
         _tail      = _countCached;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
     }
 
     /// <summary>
@@ -284,7 +284,7 @@ public:
         _allocData = MOVE(newData);
         _capacity  = allocatedCapacity;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
     }
 
 
@@ -293,7 +293,7 @@ public:
     /// <summary> Accesses the element at the given index. </summary>
     T& operator[](const int32 index)
     {
-        ASSERT(index >= 0 && index < _countCached);
+        ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _countCached);
         const int32 realIndex = (_head + index) % _capacity;
         return DATA_OF(T, _allocData)[realIndex];
     }
@@ -301,7 +301,7 @@ public:
     /// <summary> Accesses the element at the given index. </summary>
     const T& operator[](const int32 index) const
     {
-        ASSERT(index >= 0 && index < _countCached);
+        ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _countCached);
         const int32 realIndex = (_head + index) % _capacity;
         return DATA_OF(const T, _allocData)[realIndex];
     }
@@ -311,7 +311,7 @@ public:
     FORCE_INLINE
     T& PeekFront()
     {
-        ASSERT(_countCached > 0); // Ring must not be empty!
+        ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         return DATA_OF(T, _allocData)[_head];
     }
 
@@ -319,7 +319,7 @@ public:
     FORCE_INLINE
     const T& PeekFront() const
     {
-        ASSERT(_countCached > 0); // Ring must not be empty!
+        ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         return DATA_OF(const T, _allocData)[_head];
     }
 
@@ -327,7 +327,7 @@ public:
     FORCE_INLINE
     T& PeekBack()
     {
-        ASSERT(_countCached > 0); // Ring must not be empty!
+        ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         const int32 index = (_capacity + _tail - 1) % _capacity;
         return DATA_OF(T, _allocData)[index];
     }
@@ -335,7 +335,7 @@ public:
     /// <summary> Accesses the last element in the ring. </summary>
     const T& PeekBack() const
     {
-        ASSERT(_countCached > 0); // Ring must not be empty!
+        ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         const int32 index = (_capacity + _tail - 1) % _capacity;
         return DATA_OF(const T, _allocData)[index];
     }
@@ -361,7 +361,7 @@ public:
         _tail = (_tail + 1) % _capacity;
         _countCached += 1;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
 
         return *target;
     }
@@ -379,7 +379,7 @@ public:
         _tail = (_tail + 1) % _capacity;
         _countCached += 1;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
 
         return *target;
     }
@@ -402,7 +402,7 @@ public:
         new (target) T(FORWARD(U, element));
         _countCached += 1;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
 
         return *target;
     }
@@ -419,7 +419,7 @@ public:
         new (target) T(FORWARD(Args, args)...);
         _countCached += 1;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
 
         return *target;
     }
@@ -433,26 +433,26 @@ public:
     FORCE_INLINE
     void PopBack()
     {
-        ASSERT(_countCached > 0); // Ring must not be empty!
+        ASSERT_COLLECTION_SAFE_MOD(_countCached > 0); // Ring must not be empty!
         _tail = (_tail - 1 + _capacity) % _capacity;
         T* target = DATA_OF(T, _allocData) + _tail;
         target->~T();
         _countCached -= 1;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
     }
 
     /// <summary> Removes the first element from the ring. </summary>
     FORCE_INLINE
     void PopFront()
     {
-        ASSERT(_countCached > 0); // Ring must not be empty!
+        ASSERT_COLLECTION_SAFE_MOD(_countCached > 0); // Ring must not be empty!
         T* target = DATA_OF(T, _allocData) + _head;
         target->~T();
         _head = (_head + 1) % _capacity;
         _countCached -= 1;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
     }
 
 
@@ -490,7 +490,7 @@ public:
         _tail        = 0;
         _countCached = 0;
 
-        ASSERT(IsValid());
+        ASSERT_COLLECTION_INTEGRITY(IsValid());
     }
 
     /// <summary> Removes all elements from the array and frees the allocation. </summary>
@@ -510,8 +510,8 @@ public:
 protected:
     void MoveToEmpty(Ring&& other) noexcept
     {
-        ASSERT(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
-        ASSERT(other.IsValid()); // Make sure the other ring is valid.
+        ASSERT_COLLECTION_SAFE_MOD(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
+        ASSERT_COLLECTION_INTEGRITY(other.IsValid()); // Make sure the other ring is valid.
 
         if (other._capacity == 0 || other._countCached == 0)
             return;
@@ -580,8 +580,8 @@ protected:
     {
         static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
 
-        ASSERT(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
-        ASSERT(other.IsValid()); // Make sure the other ring is valid.
+        ASSERT_COLLECTION_SAFE_MOD(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
+        ASSERT_COLLECTION_INTEGRITY(other.IsValid()); // Make sure the other ring is valid.
 
         if (other._capacity == 0 || other._countCached == 0)
             return;
@@ -783,7 +783,7 @@ public:
         FORCE_INLINE NODISCARD
         explicit operator bool() const 
         {
-            ASSERT(_ring != nullptr);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring != nullptr);
             return _indexOfElement < _ring->_countCached;
         }
 
@@ -812,21 +812,21 @@ public:
         FORCE_INLINE NODISCARD
         bool operator==(const MutEnumerator& other) const
         {
-            ASSERT(_ring == other._ring);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement == other._indexOfElement;
         }
 
         FORCE_INLINE NODISCARD
         bool operator!=(const MutEnumerator& other) const
         {
-            ASSERT(_ring == other._ring);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement != other._indexOfElement;
         }
 
         FORCE_INLINE NODISCARD
         bool operator<(const MutEnumerator& other) const
         {
-            ASSERT(_ring == other._ring);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement < other._indexOfElement;
         }
     };
@@ -888,7 +888,7 @@ public:
         FORCE_INLINE NODISCARD
         explicit operator bool() const 
         {
-            ASSERT(_ring != nullptr);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring != nullptr);
             return _indexOfElement < _ring->_countCached;
         }
 
@@ -918,21 +918,21 @@ public:
         FORCE_INLINE NODISCARD
         bool operator==(const ConstEnumerator& other) const
         {
-            ASSERT(_ring == other._ring);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement == other._indexOfElement;
         }
 
         FORCE_INLINE NODISCARD
         bool operator!=(const ConstEnumerator& other) const
         {
-            ASSERT(_ring == other._ring);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement != other._indexOfElement;
         }
 
         FORCE_INLINE NODISCARD
         bool operator<(const ConstEnumerator& other) const
         {
-            ASSERT(_ring == other._ring);
+            ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement < other._indexOfElement;
         }
     };

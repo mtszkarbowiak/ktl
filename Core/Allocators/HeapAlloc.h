@@ -54,7 +54,7 @@ public:
 
         ~Data()
         {
-            ASSERT(_ptr == nullptr);
+            ASSERT_ALLOCATOR_SAFETY(_ptr == nullptr);
         }
 
 
@@ -88,7 +88,7 @@ public:
         FORCE_INLINE
         int32 Allocate(const int32 size)
         {
-            ASSERT(_ptr == nullptr);
+            ASSERT_ALLOCATOR_SAFETY(_ptr == nullptr);
 
             _ptr = static_cast<byte*>(MALLOC(size));
             return _ptr ? size : 0;
@@ -97,7 +97,7 @@ public:
         FORCE_INLINE
         void Free()
         {
-            ASSERT(_ptr != nullptr);
+            ASSERT_ALLOCATOR_SAFETY(_ptr != nullptr);
 
             FREE(_ptr);
             _ptr = nullptr;

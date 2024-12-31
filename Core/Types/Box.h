@@ -44,7 +44,7 @@ public:
     FORCE_INLINE NODISCARD
     constexpr auto Get() -> T*
     {
-        ASSERT(_allocData.Get() != nullptr); // Box must not be empty!
+        ASSERT_COLLECTION_SAFE_ACCESS(_allocData.Get() != nullptr); // Box must not be empty!
         return reinterpret_cast<T*>(_allocData.Get());
     }
 
@@ -53,7 +53,7 @@ public:
     FORCE_INLINE NODISCARD
     constexpr auto Get() const -> const T*
     {
-        ASSERT(_allocData.Get() != nullptr); // Box must not be empty!
+        ASSERT_COLLECTION_SAFE_ACCESS(_allocData.Get() != nullptr); // Box must not be empty!
         return reinterpret_cast<const T*>(_allocData.Get());
     }
 

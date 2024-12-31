@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Types/Numbers.h"
-#include "Math/Arithmetic.h"
 #include "Language/Keywords.h"
 
 /// <summary>
@@ -23,7 +22,7 @@ public:
     FORCE_INLINE NODISCARD
     static int32 Natural(const int32 capacity)
     {
-        ASSERT(capacity >= 2); // The collection must have at least 2 elements.
+        ASSERT_COLLECTION_SAFE_MOD(capacity >= 2); // The collection must have at least 2 elements.
         return capacity + (capacity >> 1);
     }
 
@@ -45,7 +44,7 @@ public:
     FORCE_INLINE NODISCARD
     static int32 Balanced(const int32 capacity)
     {
-        ASSERT(capacity >= 2); // The collection must have at least 2 elements.
+        ASSERT_COLLECTION_SAFE_MOD(capacity >= 2); // The collection must have at least 2 elements.
         return capacity < Threshold
             ? capacity << 1
             : capacity + (capacity >> 1);
@@ -58,7 +57,7 @@ public:
     FORCE_INLINE NODISCARD
     static int32 Relaxed(const int32 capacity)
     {
-        ASSERT(capacity >= 4); // The collection must have at least 4 elements.
+        ASSERT_COLLECTION_SAFE_MOD(capacity >= 4); // The collection must have at least 4 elements.
         return capacity + (capacity >> 2);
     }
 

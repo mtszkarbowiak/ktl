@@ -13,7 +13,7 @@ namespace Statistics
     template<typename Enumerator>
     auto static Min(Enumerator&& enumerator)
     {
-        ASSERT((enumerator)); // Enumerator must not be empty.
+        ASSERT_COLLECTION_SAFE_ACCESS((enumerator)); // Enumerator must not be empty.
 
         auto* min = &*enumerator;
 
@@ -32,7 +32,7 @@ namespace Statistics
     template<typename Enumerator>
     auto static Max(Enumerator&& enumerator)
     {
-        ASSERT((enumerator)); // Enumerator must not be empty.
+        ASSERT_COLLECTION_SAFE_ACCESS((enumerator)); // Enumerator must not be empty.
 
         auto* max = &*enumerator;
 
@@ -55,7 +55,7 @@ namespace Statistics
     template<typename Enumerator>
     auto static Sum(Enumerator&& enumerator)
     {
-        ASSERT(static_cast<bool>(enumerator)); // Enumerator must not be empty.
+        ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(enumerator)); // Enumerator must not be empty.
 
         auto sum{ *enumerator };
         ++enumerator;
@@ -76,7 +76,7 @@ namespace Statistics
     template<typename Enumerator>
     auto static Average(Enumerator&& enumerator)
     {
-        ASSERT(static_cast<bool>(enumerator)); // Enumerator must not be empty.
+        ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(enumerator)); // Enumerator must not be empty.
 
         auto sum{ *enumerator };
         int32 count = 1;
@@ -140,7 +140,7 @@ namespace Statistics
 
         while (enumeratorA)
         {
-            ASSERT(static_cast<bool>(enumeratorB));
+            ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(enumeratorB));
 
             const Number& a = *enumeratorA;
             const Number& b = *enumeratorB;
