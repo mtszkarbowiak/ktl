@@ -5,6 +5,10 @@
 #include <algorithm>
 
 
+template<typename T>
+using VoidT = void;
+
+
 // Move Semantics
 
 #define MOVE(x)       std::move(x)
@@ -21,7 +25,7 @@ namespace SwapUtils
 
     // Use SFINAE to check for the Swap function.
     template<typename T>
-    struct HasSwapFunction<T, std::void_t<decltype(std::declval<T>().Swap(std::declval<T&>()))>> : std::true_type {};
+    struct HasSwapFunction<T, VoidT<decltype(std::declval<T>().Swap(std::declval<T&>()))>> : std::true_type {};
 
     // Get the appropriate tag based on whether T has a Swap function
     template<typename T>
