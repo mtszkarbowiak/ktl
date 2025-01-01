@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.10)
 project(MkStl VERSION 1.0)
 
 # Set the required C++ standard
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD ${CMAKE_CXX_STANDARD})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
