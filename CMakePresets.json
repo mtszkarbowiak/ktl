@@ -7,21 +7,48 @@
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "installDir": "${sourceDir}/out/install/${presetName}",
-          "cacheVariables": {
-            "CMAKE_C_COMPILER": "cl.exe",
-            "CMAKE_CXX_COMPILER": "cl.exe",
-            "CMAKE_CXX_STANDARD": "14"
-          },
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "14"
+            },
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
                 "rhs": "Windows"
             }
         },
+
         {
-            "name": "x64-debug",
-            "displayName": "x64 Debug",
+            "name": "msvc-base",
+            "hidden": true,
             "inherits": "windows-base",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe"
+            }
+        },
+        {
+            "name": "gcc-base",
+            "hidden": true,
+            "inherits": "windows-base",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++"
+            }
+        },
+        {
+            "name": "clang-base",
+            "hidden": true,
+            "inherits": "windows-base",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
+            }
+        },
+
+        {
+            "name": "msvc-x64-debug",
+            "displayName": "MSVC x64 Debug",
+            "inherits": "msvc-base",
             "architecture": {
                 "value": "x64",
                 "strategy": "external"
@@ -31,19 +58,68 @@
             }
         },
         {
-            "name": "x64-release",
-            "displayName": "x64 Release",
-            "inherits": "x64-debug",
+            "name": "msvc-x64-release",
+            "displayName": "MSVC x64 Release",
+            "inherits": "msvc-x64-debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
+      
         {
-            "name": "x86-debug",
-            "displayName": "x86 Debug",
-            "inherits": "windows-base",
+            "name": "gcc-cpp14",
+            "hidden": true,
+            "inherits": "gcc-base",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "14"
+            }
+        },
+        {
+            "name": "gcc-cpp17",
+            "hidden": true,
+            "inherits": "gcc-base",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "17"
+            }
+        },
+        {
+            "name": "gcc-cpp20",
+            "hidden": true,
+            "inherits": "gcc-base",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "20"
+            }
+        },
+        {
+            "name": "clang-cpp14",
+            "hidden": true,
+            "inherits": "clang-base",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "14"
+            }
+        },
+        {
+            "name": "clang-cpp17",
+            "hidden": true,
+            "inherits": "clang-base",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "17"
+            }
+        },
+        {
+            "name": "clang-cpp20",
+            "hidden": true,
+            "inherits": "clang-base",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "20"
+            }
+        },
+        {
+            "name": "gcc-x64-debug-cpp14",
+            "displayName": "GCC x64 Debug (C++14)",
+            "inherits": "gcc-cpp14",
             "architecture": {
-                "value": "x86",
+                "value": "x64",
                 "strategy": "external"
             },
             "cacheVariables": {
@@ -51,9 +127,109 @@
             }
         },
         {
-            "name": "x86-release",
-            "displayName": "x86 Release",
-            "inherits": "x86-debug",
+            "name": "gcc-x64-release-cpp14",
+            "displayName": "GCC x64 Release (C++14)",
+            "inherits": "gcc-x64-debug-cpp14",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "gcc-x64-debug-cpp17",
+            "displayName": "GCC x64 Debug (C++17)",
+            "inherits": "gcc-cpp17",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "gcc-x64-release-cpp17",
+            "displayName": "GCC x64 Release (C++17)",
+            "inherits": "gcc-x64-debug-cpp17",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "gcc-x64-debug-cpp20",
+            "displayName": "GCC x64 Debug (C++20)",
+            "inherits": "gcc-cpp20",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "gcc-x64-release-cpp20",
+            "displayName": "GCC x64 Release (C++20)",
+            "inherits": "gcc-x64-debug-cpp20",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "clang-x64-debug-cpp14",
+            "displayName": "Clang x64 Debug (C++14)",
+            "inherits": "clang-cpp14",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "clang-x64-release-cpp14",
+            "displayName": "Clang x64 Release (C++14)",
+            "inherits": "clang-x64-debug-cpp14",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "clang-x64-debug-cpp17",
+            "displayName": "Clang x64 Debug (C++17)",
+            "inherits": "clang-cpp17",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "clang-x64-release-cpp17",
+            "displayName": "Clang x64 Release (C++17)",
+            "inherits": "clang-x64-debug-cpp17",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "clang-x64-debug-cpp20",
+            "displayName": "Clang x64 Debug (C++20)",
+            "inherits": "clang-cpp20",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "clang-x64-release-cpp20",
+            "displayName": "Clang x64 Release (C++20)",
+            "inherits": "clang-x64-debug-cpp20",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
