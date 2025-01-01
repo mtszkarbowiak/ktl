@@ -65,15 +65,9 @@
     #define CONSTINIT           constinit
     #define CONSTEXPR_LAMBDA    constexpr
 
-    #define LIKELY(x)           [[likely]] x
-    #define UNLIKELY(x)         [[unlikely]] x
-
 #else // C++17 and below
     #define IF_CONSTEXPR
     #define CONSTINIT           constexpr
     #define CONSTEXPR_LAMBDA    constexpr
-
-    #define LIKELY_HINT(x)      LIKELY(x)
-    #define UNLIKELY_HINT(x)    UNLIKELY(x)
 
 #endif
