@@ -77,3 +77,8 @@
     #define UNLIKELY_HINT(x)    UNLIKELY(x)
 
 #endif
+
+
+// Clusters of Keywords
+
+#define ACCESSSOR     FORCE_INLINE constexpr NODISCARD

@@ -38,15 +38,13 @@ class Array
 
 public:
     /// <summary> Checks if the array has an active allocation. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr bool IsAllocated() const 
+    ACCESSSOR bool IsAllocated() const
     {
         return _capacity > 0;
     }
 
     /// <summary> Number of elements that can be stored without invoking the allocator. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr int32 Capacity() const 
+    ACCESSSOR int32 Capacity() const 
     {
         return _capacity;
     }
@@ -55,22 +53,19 @@ public:
     // Count Access
 
     /// <summary> Checks if the array has any elements. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr bool IsEmpty() const 
+    ACCESSSOR bool IsEmpty() const
     {
         return _count == 0;
     }
 
     /// <summary> Number of currently stored elements. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr int32 Count() const 
+    ACCESSSOR int32 Count() const
     {
         return _count;
     }
 
     /// <summary> Number of elements that can be added without invoking the allocator. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr int32 Slack() const 
+    ACCESSSOR int32 Slack() const
     {
         return _capacity - _count;
     }
@@ -179,8 +174,7 @@ public:
     /// Accesses the first element of the array.
     /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
     /// </summary>
-    FORCE_INLINE NODISCARD
-    T* Data()
+    ACCESSSOR T* Data()
     {
         return DATA_OF(T, _allocData);
     }
@@ -189,24 +183,21 @@ public:
     /// Accesses the first element of the array.
     /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
     /// </summary>
-    FORCE_INLINE NODISCARD
-    const T* Data() const
+    ACCESSSOR const T* Data() const
     {
         return DATA_OF(const T, _allocData);
     }
 
 
     /// <summary> Accesses the element at the given index. </summary>
-    FORCE_INLINE
-    T& operator[](const int32 index)
+    ACCESSSOR T& operator[](const int32 index)
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _count);
         return DATA_OF(T, _allocData)[index];
     }
 
     /// <summary> Accesses the element at the given index. </summary>
-    FORCE_INLINE
-    const T& operator[](const int32 index) const
+    ACCESSSOR const T& operator[](const int32 index) const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _count);
         return DATA_OF(const T, _allocData)[index];
@@ -420,8 +411,7 @@ public:
 
 
     /// <summary> Creates a span of the stored elements. </summary>
-    FORCE_INLINE NODISCARD
-    Span<T> AsSpan() noexcept
+    ACCESSSOR Span<T> AsSpan() noexcept
     {
         return Span<T>{ DATA_OF(T, _allocData), _count };
     }
@@ -483,7 +473,6 @@ public:
 
 
 protected:
-    FORCE_INLINE
     void MoveToEmpty(Array&& other) noexcept
     {
         ASSERT_COLLECTION_SAFE_MOD(_count == 0 && _capacity == 0); // Array must be empty, but the collection must be initialized!
@@ -524,17 +513,18 @@ protected:
 
 public:
     /// <summary> Initializes an empty array with no active allocation. </summary>
-    FORCE_INLINE
-    constexpr Array() = default;
+    FORCE_INLINE constexpr
+    Array() = default;
 
     /// <summary> Initializes an array by moving the allocation from another array. </summary>
-    FORCE_INLINE
+    FORCE_INLINE constexpr
     Array(Array&& other) noexcept
     {
         MoveToEmpty(MOVE(other));
     }
 
     /// <summary> Initializes an array by copying another array. </summary>
+    FORCE_INLINE constexpr
     Array(const Array& other)
     {
         if (other._count == 0)
@@ -547,8 +537,8 @@ public:
     }
 
     /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
-    FORCE_INLINE
-    explicit Array(const int32 capacity)
+    FORCE_INLINE explicit
+    Array(const int32 capacity)
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
@@ -556,8 +546,8 @@ public:
 
     /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
     template<typename AllocContext> // Universal reference
-    FORCE_INLINE
-    explicit Array(const int32 capacity, AllocContext&& context)
+    FORCE_INLINE explicit
+    Array(const int32 capacity, AllocContext&& context)
         : _allocData{ FORWARD(AllocContext, context) }
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
@@ -605,7 +595,8 @@ public:
 
     /// <summary> Creates an array with the specified elements. </summary>
     template<typename U>
-    static Array<T> Of(std::initializer_list<U> list)
+    static constexpr NODISCARD
+    Array<T> Of(std::initializer_list<U> list)
     {
         const int32 capacity = static_cast<int32>(list.size());
         Array<T> result{ capacity };
@@ -628,7 +619,8 @@ public:
         int32  _index;
 
     public:
-        explicit MutEnumerator(Array& array)
+        FORCE_INLINE explicit
+        MutEnumerator(Array& array)
             : _array{ &array }
             , _index{ 0 }
         {
@@ -645,29 +637,28 @@ public:
             return { remaining, remaining };
         }
 
-        FORCE_INLINE T& operator*()
+        ACCESSSOR T& operator*()
         {
             return (*_array)[_index];
         }
 
-        FORCE_INLINE T* operator->()
+        ACCESSSOR T* operator->()
         {
             return &(*_array)[_index];
         }
 
-        FORCE_INLINE const T& operator*() const
+        ACCESSSOR const T& operator*() const
         {
             return (*_array)[_index];
         }
 
-        FORCE_INLINE const T* operator->() const
+        ACCESSSOR const T* operator->() const
         {
             return &(*_array)[_index];
         }
 
         /// <summary> Returns the index of the current element. </summary>
-        FORCE_INLINE NODISCARD
-        int32 Index() const 
+        ACCESSSOR int32 Index() const
         {
             return _index;
         }
@@ -676,8 +667,7 @@ public:
         // Iteration
 
         /// <summary> Check if the enumerator points to a valid element. </summary>
-        FORCE_INLINE NODISCARD
-        explicit operator bool() const 
+        ACCESSSOR explicit operator bool() const 
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
             return _index < _array->_count;
@@ -704,22 +694,19 @@ public:
 
         // Identity
 
-        FORCE_INLINE NODISCARD
-        bool operator==(const MutEnumerator& other) const
+        ACCESSSOR bool operator==(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
-        FORCE_INLINE NODISCARD
-        bool operator!=(const MutEnumerator& other) const
+        ACCESSSOR bool operator!=(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
-        FORCE_INLINE NODISCARD
-        bool operator<(const MutEnumerator& other) const
+        ACCESSSOR bool operator<(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
@@ -735,13 +722,15 @@ public:
         int32        _index;
 
     public:
-        explicit ConstEnumerator(const Array& array)
+        FORCE_INLINE explicit
+        ConstEnumerator(const Array& array)
             : _array{ &array }
             , _index{ 0 }
         {
         }
 
-        explicit ConstEnumerator(const MutEnumerator& enumerator)
+        FORCE_INLINE explicit
+        ConstEnumerator(const MutEnumerator& enumerator)
             : _array{ enumerator._array }
             , _index{ enumerator._index }
         {
@@ -751,28 +740,24 @@ public:
         // Access
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        FORCE_INLINE NODISCARD
-        IterHint Hint() const
+        ACCESSSOR IterHint Hint() const
         {
             const int32 remaining = _array->_count - _index;
             return { remaining, remaining };
         }
 
-        FORCE_INLINE
-        const T& operator*() const
+        ACCESSSOR const T& operator*() const
         {
             return (*_array)[_index];
         }
 
-        FORCE_INLINE
-        const T* operator->() const
+        ACCESSSOR const T* operator->() const
         {
             return &(*_array)[_index];
         }
 
         /// <summary> Returns the index of the current element. </summary>
-        FORCE_INLINE NODISCARD
-        int32 Index() const 
+        ACCESSSOR int32 Index() const
         {
             return _index;
         }
@@ -781,8 +766,8 @@ public:
         // Iteration
 
         /// <summary> Check if the enumerator points to a valid element. </summary>
-        FORCE_INLINE NODISCARD
-        explicit operator bool() const 
+        ACCESSSOR explicit
+        operator bool() const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
             return _index < _array->_count;
@@ -809,22 +794,19 @@ public:
 
         // Identity
 
-        FORCE_INLINE NODISCARD
-        bool operator==(const ConstEnumerator& other) const
+        ACCESSSOR bool operator==(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
-        FORCE_INLINE NODISCARD
-        bool operator!=(const ConstEnumerator& other) const
+        ACCESSSOR bool operator!=(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
-        FORCE_INLINE NODISCARD
-        bool operator<(const ConstEnumerator& other) const
+        ACCESSSOR bool operator<(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
@@ -832,15 +814,13 @@ public:
     };
 
     /// <summary> Creates an enumerator for the array. </summary>
-    FORCE_INLINE NODISCARD
-    MutEnumerator Values()
+    ACCESSSOR MutEnumerator Values()
     {
         return MutEnumerator{ *this };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
-    FORCE_INLINE NODISCARD
-    ConstEnumerator Values() const
+    ACCESSSOR ConstEnumerator Values() const
     {
         return ConstEnumerator{ *this };
     }
@@ -848,44 +828,38 @@ public:
 
 
     /// <summary> STL-style begin iterator. </summary>
-    FORCE_INLINE NODISCARD
-    T* begin()
+    ACCESSSOR T* begin()
     {
         return DATA_OF(T, _allocData);
     }
 
     /// <summary> STL-style begin iterator. </summary>
-    FORCE_INLINE NODISCARD
-    const T* begin() const
+    ACCESSSOR const T* begin() const
     {
         return DATA_OF(const T, _allocData);
     }
 
     /// <summary> STL-style const begin iterator. </summary>
-    FORCE_INLINE NODISCARD
-    const T* cbegin() const
+    ACCESSSOR const T* cbegin() const
     {
         return DATA_OF(const T, _allocData);
     }
 
 
     /// <summary> STL-style end iterator. </summary>
-    FORCE_INLINE NODISCARD
-    T* end()
+    ACCESSSOR T* end()
     {
         return DATA_OF(T, _allocData) + _count;
     }
 
     /// <summary> STL-style end iterator. </summary>
-    FORCE_INLINE NODISCARD
-    const T* end() const
+    ACCESSSOR const T* end() const
     {
         return DATA_OF(const T, _allocData) + _count;
     }
 
     /// <summary> STL-style const end iterator. </summary>
-    FORCE_INLINE NODISCARD
-    const T* cend() const
+    ACCESSSOR const T* cend() const
     {
         return DATA_OF(const T, _allocData) + _count;
     }
