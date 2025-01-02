@@ -60,13 +60,13 @@ protected:
 
 public:
     /// <summary> Checks if the ring has an active allocation. </summary>
-    ACCESSSOR bool IsAllocated() const
+    NO_DISCARD FORCE_INLINE bool IsAllocated() const
     {
         return _capacity > 0;
     }
 
     /// <summary> Number of elements that can be stored without invoking the allocator. </summary>
-    ACCESSSOR int32 Capacity() const
+    NO_DISCARD FORCE_INLINE int32 Capacity() const
     {
         return _capacity;
     }
@@ -75,39 +75,39 @@ public:
     // Count Access
 
     /// <summary> Checks if the ring has any elements. </summary>
-    ACCESSSOR bool IsEmpty() const
+    NO_DISCARD FORCE_INLINE bool IsEmpty() const
     {
         return _head == _tail;
     }
 
     /// <summary> Number of currently stored elements. </summary>
-    ACCESSSOR int32 Count() const
+    NO_DISCARD FORCE_INLINE int32 Count() const
     {
         return _countCached;
     }
 
     /// <summary> Number of elements that can be added without invoking the allocator. </summary>
-    ACCESSSOR int32 Slack() const
+    NO_DISCARD FORCE_INLINE int32 Slack() const
     {
         return _capacity - _countCached;
     }
 
 protected:
     /// <summary> Index of the first element in the ring. </summary>
-    ACCESSSOR int32 Head() const
+    NO_DISCARD FORCE_INLINE int32 Head() const
     {
         return _head;
     }
 
     /// <summary> Index of the next free slot in the ring. </summary>
-    ACCESSSOR int32 Tail() const
+    NO_DISCARD FORCE_INLINE int32 Tail() const
     {
         return _tail;
     }
 
 public:
     /// <summary> Checks if the ring is wrapped around the capacity, meaning that elements are stored in two segments. </summary>
-    ACCESSSOR bool IsWrapped() const
+    NO_DISCARD FORCE_INLINE bool IsWrapped() const
     {
         return _head > _tail;
     }
@@ -281,7 +281,7 @@ public:
     // Element Access
 
     /// <summary> Accesses the element at the given index. </summary>
-    ACCESSSOR T& operator[](const int32 index)
+    NO_DISCARD FORCE_INLINE T& operator[](const int32 index)
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _countCached);
         const int32 realIndex = (_head + index) % _capacity;
@@ -289,7 +289,7 @@ public:
     }
 
     /// <summary> Accesses the element at the given index. </summary>
-    ACCESSSOR const T& operator[](const int32 index) const
+    NO_DISCARD FORCE_INLINE const T& operator[](const int32 index) const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _countCached);
         const int32 realIndex = (_head + index) % _capacity;
@@ -298,21 +298,21 @@ public:
 
 
     /// <summary> Accesses the first element in the ring. </summary>
-    ACCESSSOR T& PeekFront()
+    NO_DISCARD FORCE_INLINE T& PeekFront()
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         return DATA_OF(T, _allocData)[_head];
     }
 
     /// <summary> Accesses the first element in the ring. </summary>
-    ACCESSSOR const T& PeekFront() const
+    NO_DISCARD FORCE_INLINE const T& PeekFront() const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         return DATA_OF(const T, _allocData)[_head];
     }
 
     /// <summary> Accesses the last element in the ring. </summary>
-    ACCESSSOR T& PeekBack()
+    NO_DISCARD FORCE_INLINE T& PeekBack()
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         const int32 index = (_capacity + _tail - 1) % _capacity;
@@ -320,7 +320,7 @@ public:
     }
 
     /// <summary> Accesses the last element in the ring. </summary>
-    ACCESSSOR const T& PeekBack() const
+    NO_DISCARD FORCE_INLINE const T& PeekBack() const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         const int32 index = (_capacity + _tail - 1) % _capacity;
@@ -721,34 +721,34 @@ public:
         // Access
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        ACCESSSOR IterHint Hint() const
+        NO_DISCARD FORCE_INLINE IterHint Hint() const
         {
             const int32 remaining = _ring->Count() - _indexOfElement;
             return { remaining, remaining };
         }
 
-        ACCESSSOR T& operator*()
+        NO_DISCARD FORCE_INLINE T& operator*()
         {
             return DATA_OF(T, _ring->_allocData)[_indexOfSlot];
         }
 
-        ACCESSSOR T* operator->()
+        NO_DISCARD FORCE_INLINE T* operator->()
         {
             return DATA_OF(T, _ring->_allocData) + _indexOfSlot;
         }
 
-        ACCESSSOR const T& operator*() const
+        NO_DISCARD FORCE_INLINE const T& operator*() const
         {
             return DATA_OF(const T, _ring->_allocData)[_indexOfSlot];
         }
 
-        ACCESSSOR const T* operator->() const
+        NO_DISCARD FORCE_INLINE const T* operator->() const
         {
             return DATA_OF(const T, _ring->_allocData) + _indexOfSlot;
         }
 
         /// <summary> Returns the index of the current element. </summary>
-        ACCESSSOR int32 Index() const
+        NO_DISCARD FORCE_INLINE int32 Index() const
         {
             return _indexOfElement;
         }
@@ -757,7 +757,7 @@ public:
         // Iteration
 
         /// <summary> Check if the enumerator points to a valid element. </summary>
-        ACCESSSOR explicit
+        NO_DISCARD FORCE_INLINE explicit
         operator bool() const 
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring != nullptr);
@@ -786,19 +786,19 @@ public:
 
         // Identity
 
-        ACCESSSOR bool operator==(const MutEnumerator& other) const
+        NO_DISCARD FORCE_INLINE bool operator==(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement == other._indexOfElement;
         }
 
-        ACCESSSOR bool operator!=(const MutEnumerator& other) const
+        NO_DISCARD FORCE_INLINE bool operator!=(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement != other._indexOfElement;
         }
 
-        ACCESSSOR bool operator<(const MutEnumerator& other) const
+        NO_DISCARD FORCE_INLINE bool operator<(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement < other._indexOfElement;
@@ -832,24 +832,24 @@ public:
         // Access
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        ACCESSSOR IterHint Hint() const
+        NO_DISCARD FORCE_INLINE IterHint Hint() const
         {
             const int32 remaining = _ring->Count() - _indexOfElement;
             return { remaining, remaining };
         }
 
-        ACCESSSOR const T& operator*() const
+        NO_DISCARD FORCE_INLINE const T& operator*() const
         {
             return DATA_OF(const T, _ring->_allocData)[_indexOfSlot];
         }
 
-        ACCESSSOR const T* operator->() const
+        NO_DISCARD FORCE_INLINE const T* operator->() const
         {
             return DATA_OF(const T, _ring->_allocData) + _indexOfSlot;
         }
 
         /// <summary> Returns the index of the current element. </summary>
-        ACCESSSOR int32 Index() const
+        NO_DISCARD FORCE_INLINE int32 Index() const
         {
             return _indexOfElement;
         }
@@ -858,7 +858,7 @@ public:
         // Iteration
 
         /// <summary> Check if the enumerator points to a valid element. </summary>
-        ACCESSSOR explicit
+        NO_DISCARD FORCE_INLINE explicit
         operator bool() const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring != nullptr);
@@ -888,19 +888,19 @@ public:
 
         // Identity
 
-        ACCESSSOR bool operator==(const ConstEnumerator& other) const
+        NO_DISCARD FORCE_INLINE bool operator==(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement == other._indexOfElement;
         }
 
-        ACCESSSOR bool operator!=(const ConstEnumerator& other) const
+        NO_DISCARD FORCE_INLINE bool operator!=(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement != other._indexOfElement;
         }
 
-        ACCESSSOR bool operator<(const ConstEnumerator& other) const
+        NO_DISCARD FORCE_INLINE bool operator<(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement < other._indexOfElement;
@@ -908,13 +908,13 @@ public:
     };
 
     /// <summary> Creates an enumerator for the array. </summary>
-    ACCESSSOR MutEnumerator Values()
+    NO_DISCARD FORCE_INLINE MutEnumerator Values()
     {
         return MutEnumerator{ *this };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
-    ACCESSSOR ConstEnumerator Values() const
+    NO_DISCARD FORCE_INLINE ConstEnumerator Values() const
     {
         return ConstEnumerator{ *this };
     }
