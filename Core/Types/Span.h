@@ -17,75 +17,99 @@ class Span
     int32 _count{};
 
 
+    // Constructors
+
 public:
-    explicit Span(T* data, const int32 size)
+    /// <summary> Initializes an empty span. </summary>
+    FORCE_INLINE
+    Span() = default;
+
+    /// <summary> Initializes a span with the specified data and size. </summary>
+    FORCE_INLINE
+    Span(T* data, const int32 size)
         : _data{ data }
         , _count{ size }
     {
+        ASSERT_COLLECTION_SAFE_MOD(size >= 0); // Span size must be non-negative.
+        ASSERT_COLLECTION_SAFE_MOD((size == 0) || (data != nullptr)); // Span data must be valid if the size is non-zero.
     }
 
-    Span(const Span&) = default;
-
-    Span(Span&&) noexcept = default;
-
-
-    Span& operator=(const Span&)= default;
-
-    Span& operator=(Span&&) noexcept = default;
-
-    ~Span() = default;
+    /// <summary> Initializes a span between the specified begin and end pointers. </summary>
+    FORCE_INLINE
+    Span(T* begin, T* end)
+        : _data{ begin }
+        , _count{ static_cast<int32>(end - begin) }
+    {
+        ASSERT_COLLECTION_SAFE_MOD(begin <= end); // Span begin must be before the end.
+    }
 
 
     // Properties
 
     /// <summary> Returns the number of elements in the span. </summary>
-    FORCE_INLINE
+    NO_DISCARD FORCE_INLINE
     int32 Count() const
     {
         return _count;
     }
 
     /// <summary>
-    /// Returns the pointer to the underlying data i.e.
-    /// the first element or <c>nullptr</c> if the span is empty.
+    /// Returns the pointer to the underlying data i.e. the first element, unless span length is zero.
     /// </summary>
-    FORCE_INLINE
+    /// <remarks>
+    /// If the underlying data is <c>null</c>, the span length is also zero.
+    /// </remarks>
+    NO_DISCARD FORCE_INLINE
     T* Data()
     {
         return _data;
     }
 
     /// <summary>
-    /// Returns the pointer to the underlying data i.e.
-    /// the first element or <c>nullptr</c> if the span is empty.
+    /// Returns the pointer to the underlying data i.e. the first element, unless span length is zero.
     /// </summary>
-    FORCE_INLINE
+    /// <remarks>
+    /// If the underlying data is <c>null</c>, the span length is also zero.
+    /// </remarks>
+    NO_DISCARD FORCE_INLINE
     const T* Data() const
     {
         return _data;
     }
 
     /// <summary> Checks if the span points to any elements. </summary>
-    FORCE_INLINE
-    explicit operator bool() const
+    NO_DISCARD FORCE_INLINE explicit
+    operator bool() const
     {
-        return
-            static_cast<bool>(_data) || 
-            static_cast<bool>(_count);
+        const bool result = _count > 0;
+        ASSERT_COLLECTION_INTEGRITY(!result || (_data != nullptr)); // Span data must be valid if the size is non-zero.
+        return result;
     }
 
 
     // Element Access
 
-    FORCE_INLINE
+    NO_DISCARD FORCE_INLINE
+    bool IsValidIndex(const int32 index) const
+    {
+        const bool obeysRange = (index >= 0 && index < _count); // Index must be within the span range.
+        const bool isNotNull = (_data != nullptr); // Span data must be valid if the size is non-zero, implying that the data is not null.
+        return obeysRange && isNotNull;
+    }
+
+    /// <summary> Accesses the element at the given index. </summary>
+    NO_DISCARD FORCE_INLINE
     T& operator[](const int32 index)
     {
+        ASSERT_COLLECTION_SAFE_ACCESS(IsValidIndex(index)); // Ensure span is not empty and index is valid
         return _data[index];
     }
 
-    FORCE_INLINE
+    /// <summary> Accesses the element at the given index. </summary>
+    NO_DISCARD FORCE_INLINE
     const T& operator[](const int32 index) const
     {
+        ASSERT_COLLECTION_SAFE_ACCESS(IsValidIndex(index)); // Ensure span is not empty and index is valid
         return _data[index];
     }
 
