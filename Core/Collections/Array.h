@@ -38,13 +38,15 @@ class Array
 
 public:
     /// <summary> Checks if the array has an active allocation. </summary>
-    NO_DISCARD FORCE_INLINE bool IsAllocated() const
+    NO_DISCARD FORCE_INLINE constexpr
+    bool IsAllocated() const
     {
         return _capacity > 0;
     }
 
     /// <summary> Number of elements that can be stored without invoking the allocator. </summary>
-    NO_DISCARD FORCE_INLINE int32 Capacity() const 
+    NO_DISCARD FORCE_INLINE constexpr
+    int32 Capacity() const 
     {
         return _capacity;
     }
@@ -53,19 +55,22 @@ public:
     // Count Access
 
     /// <summary> Checks if the array has any elements. </summary>
-    NO_DISCARD FORCE_INLINE bool IsEmpty() const
+    NO_DISCARD FORCE_INLINE constexpr
+    bool IsEmpty() const
     {
         return _count == 0;
     }
 
     /// <summary> Number of currently stored elements. </summary>
-    NO_DISCARD FORCE_INLINE int32 Count() const
+    NO_DISCARD FORCE_INLINE constexpr
+    int32 Count() const
     {
         return _count;
     }
 
     /// <summary> Number of elements that can be added without invoking the allocator. </summary>
-    NO_DISCARD FORCE_INLINE int32 Slack() const
+    NO_DISCARD FORCE_INLINE constexpr
+    int32 Slack() const
     {
         return _capacity - _count;
     }
@@ -174,7 +179,8 @@ public:
     /// Accesses the first element of the array.
     /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
     /// </summary>
-    NO_DISCARD FORCE_INLINE T* Data()
+    NO_DISCARD FORCE_INLINE constexpr
+    T* Data()
     {
         return DATA_OF(T, _allocData);
     }
@@ -183,21 +189,24 @@ public:
     /// Accesses the first element of the array.
     /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
     /// </summary>
-    NO_DISCARD FORCE_INLINE const T* Data() const
+    NO_DISCARD FORCE_INLINE constexpr
+    const T* Data() const
     {
         return DATA_OF(const T, _allocData);
     }
 
 
     /// <summary> Accesses the element at the given index. </summary>
-    NO_DISCARD FORCE_INLINE T& operator[](const int32 index)
+    NO_DISCARD FORCE_INLINE constexpr
+    T& operator[](const int32 index)
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _count);
         return DATA_OF(T, _allocData)[index];
     }
 
     /// <summary> Accesses the element at the given index. </summary>
-    NO_DISCARD FORCE_INLINE const T& operator[](const int32 index) const
+    NO_DISCARD FORCE_INLINE constexpr
+    const T& operator[](const int32 index) const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _count);
         return DATA_OF(const T, _allocData)[index];
@@ -211,7 +220,7 @@ public:
     /// </summary>
     /// <param name="element"> Element to add. </param>
     template<typename U> // Universal reference
-    FORCE_INLINE
+    MAY_DISCARD FORCE_INLINE
     T& Add(U&& element)
     {
         static_assert(
@@ -234,7 +243,7 @@ public:
     /// <summary> Adds an element to the end of the array, by constructing it in-place. </summary>
     /// <param name="args"> Arguments to forward to the constructor. </param>
     template<typename... Args> // Parameter pack
-    FORCE_INLINE
+    MAY_DISCARD FORCE_INLINE
     T& Emplace(Args&&... args)
     {
         if (_count == _capacity)
@@ -257,6 +266,7 @@ public:
     /// <param name="element"> Element to add. </param>
     /// <returns> Reference to the added element. </returns>
     template<typename U> // Universal reference
+    MAY_DISCARD FORCE_INLINE
     T& InsertAt(const int32 index, U&& element)
     {
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _count);  // Allow index == _count for appending
@@ -298,6 +308,7 @@ public:
     /// This operation is significantly slower than basic insertion. It should be used only when the order of the elements matters.
     /// </remarks>
     template<typename U> // Universal reference
+    MAY_DISCARD
     T& InsertAtStable(const int32 index, U&& element)
     {
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _count);  // Allow index == _count for appending
@@ -345,6 +356,7 @@ public:
     /// Removes element at the specified index, disregarding the order of the elements.
     /// </summary>
     /// <param name="index"> Index of the element to remove. It must be in the range [0, Count). </param>
+    FORCE_INLINE
     void RemoveAt(const int32 index)
     {
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index < _count); // Ensure index is valid
@@ -411,7 +423,8 @@ public:
 
 
     /// <summary> Creates a span of the stored elements. </summary>
-    NO_DISCARD FORCE_INLINE Span<T> AsSpan() noexcept
+    NO_DISCARD FORCE_INLINE constexpr
+    Span<T> AsSpan() noexcept
     {
         return Span<T>{ DATA_OF(T, _allocData), _count };
     }
@@ -424,6 +437,7 @@ public:
     /// Array has specialized method for adding multiple elements at once,
     /// because they may be returned from a function as a span.
     /// </remarks>
+    MAY_DISCARD
     Span<T> AddElements(const T* source, const int32 count)
     {
         const int32 newCount = _count + count;
@@ -444,6 +458,7 @@ public:
     /// Array has specialized method for adding multiple elements at once,
     /// because they may be returned from a function as a span.
     /// </remarks>
+    MAY_DISCARD
     Span<T> AddElements(const Span<T> source)
     {
         return AddElements(source.Data(), source.Count());
@@ -456,6 +471,7 @@ public:
     /// Array has specialized method for adding multiple elements at once,
     /// because they may be returned from a function as a span.
     /// </remarks>
+    MAY_DISCARD
     Span<T> AddRepetitions(const T& source, const int32 count)
     {
         const int32 newCount = _count + count;
@@ -595,7 +611,7 @@ public:
 
     /// <summary> Creates an array with the specified elements. </summary>
     template<typename U>
-    static constexpr
+    NO_DISCARD static constexpr
     Array<T> Of(std::initializer_list<U> list)
     {
         const int32 capacity = static_cast<int32>(list.size());
@@ -630,35 +646,40 @@ public:
         // Access
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         IterHint Hint() const
         {
             const int32 remaining = _array->_count - _index;
             return { remaining, remaining };
         }
 
-        NO_DISCARD FORCE_INLINE T& operator*()
+        NO_DISCARD FORCE_INLINE
+        T& operator*()
         {
             return (*_array)[_index];
         }
 
-        NO_DISCARD FORCE_INLINE T* operator->()
+        NO_DISCARD FORCE_INLINE
+        T* operator->()
         {
             return &(*_array)[_index];
         }
 
-        NO_DISCARD FORCE_INLINE const T& operator*() const
+        NO_DISCARD FORCE_INLINE
+        const T& operator*() const
         {
             return (*_array)[_index];
         }
 
-        NO_DISCARD FORCE_INLINE const T* operator->() const
+        NO_DISCARD FORCE_INLINE
+        const T* operator->() const
         {
             return &(*_array)[_index];
         }
 
         /// <summary> Returns the index of the current element. </summary>
-        NO_DISCARD FORCE_INLINE int32 Index() const
+        NO_DISCARD FORCE_INLINE
+        int32 Index() const
         {
             return _index;
         }
@@ -667,14 +688,15 @@ public:
         // Iteration
 
         /// <summary> Check if the enumerator points to a valid element. </summary>
-        NO_DISCARD FORCE_INLINE explicit operator bool() const 
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const 
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
             return _index < _array->_count;
         }
 
         /// <summary> Moves the enumerator to the next element. </summary>
-        FORCE_INLINE
+        MAY_DISCARD FORCE_INLINE
         MutEnumerator& operator++()
         {
             _index += 1;
@@ -683,7 +705,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
-        FORCE_INLINE
+        MAY_DISCARD FORCE_INLINE
         MutEnumerator operator++(int)
         {
             MutEnumerator copy{ *this };
@@ -694,19 +716,22 @@ public:
 
         // Identity
 
-        NO_DISCARD FORCE_INLINE bool operator==(const MutEnumerator& other) const
+        NO_DISCARD FORCE_INLINE
+        bool operator==(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
-        NO_DISCARD FORCE_INLINE bool operator!=(const MutEnumerator& other) const
+        NO_DISCARD FORCE_INLINE
+        bool operator!=(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
-        NO_DISCARD FORCE_INLINE bool operator<(const MutEnumerator& other) const
+        NO_DISCARD FORCE_INLINE
+        bool operator<(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
@@ -740,24 +765,28 @@ public:
         // Access
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        NO_DISCARD FORCE_INLINE IterHint Hint() const
+        NO_DISCARD FORCE_INLINE
+        IterHint Hint() const
         {
             const int32 remaining = _array->_count - _index;
             return { remaining, remaining };
         }
 
-        NO_DISCARD FORCE_INLINE const T& operator*() const
+        NO_DISCARD FORCE_INLINE
+        const T& operator*() const
         {
             return (*_array)[_index];
         }
 
-        NO_DISCARD FORCE_INLINE const T* operator->() const
+        NO_DISCARD FORCE_INLINE
+        const T* operator->() const
         {
             return &(*_array)[_index];
         }
 
         /// <summary> Returns the index of the current element. </summary>
-        NO_DISCARD FORCE_INLINE int32 Index() const
+        NO_DISCARD FORCE_INLINE
+        int32 Index() const
         {
             return _index;
         }
@@ -774,7 +803,7 @@ public:
         }
 
         /// <summary> Moves the enumerator to the next element. </summary>
-        FORCE_INLINE
+        MAY_DISCARD FORCE_INLINE
         ConstEnumerator& operator++()
         {
             _index += 1;
@@ -783,7 +812,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
-        FORCE_INLINE
+        MAY_DISCARD FORCE_INLINE
         ConstEnumerator operator++(int)
         {
             ConstEnumerator copy{ *this };
@@ -794,19 +823,22 @@ public:
 
         // Identity
 
-        NO_DISCARD FORCE_INLINE bool operator==(const ConstEnumerator& other) const
+        NO_DISCARD FORCE_INLINE
+        bool operator==(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
-        NO_DISCARD FORCE_INLINE bool operator!=(const ConstEnumerator& other) const
+        NO_DISCARD FORCE_INLINE
+        bool operator!=(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
-        NO_DISCARD FORCE_INLINE bool operator<(const ConstEnumerator& other) const
+        NO_DISCARD FORCE_INLINE
+        bool operator<(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
@@ -814,13 +846,15 @@ public:
     };
 
     /// <summary> Creates an enumerator for the array. </summary>
-    NO_DISCARD FORCE_INLINE MutEnumerator Values()
+    NO_DISCARD FORCE_INLINE
+    MutEnumerator Values()
     {
         return MutEnumerator{ *this };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
-    NO_DISCARD FORCE_INLINE ConstEnumerator Values() const
+    NO_DISCARD FORCE_INLINE
+    ConstEnumerator Values() const
     {
         return ConstEnumerator{ *this };
     }
@@ -828,38 +862,44 @@ public:
 
 
     /// <summary> STL-style begin iterator. </summary>
-    NO_DISCARD FORCE_INLINE T* begin()
+    NO_DISCARD FORCE_INLINE
+    T* begin()
     {
         return DATA_OF(T, _allocData);
     }
 
     /// <summary> STL-style begin iterator. </summary>
-    NO_DISCARD FORCE_INLINE const T* begin() const
+    NO_DISCARD FORCE_INLINE
+    const T* begin() const
     {
         return DATA_OF(const T, _allocData);
     }
 
     /// <summary> STL-style const begin iterator. </summary>
-    NO_DISCARD FORCE_INLINE const T* cbegin() const
+    NO_DISCARD FORCE_INLINE
+    const T* cbegin() const
     {
         return DATA_OF(const T, _allocData);
     }
 
 
     /// <summary> STL-style end iterator. </summary>
-    NO_DISCARD FORCE_INLINE T* end()
+    NO_DISCARD FORCE_INLINE
+    T* end()
     {
         return DATA_OF(T, _allocData) + _count;
     }
 
     /// <summary> STL-style end iterator. </summary>
-    NO_DISCARD FORCE_INLINE const T* end() const
+    NO_DISCARD FORCE_INLINE
+    const T* end() const
     {
         return DATA_OF(const T, _allocData) + _count;
     }
 
     /// <summary> STL-style const end iterator. </summary>
-    NO_DISCARD FORCE_INLINE const T* cend() const
+    NO_DISCARD FORCE_INLINE
+    const T* cend() const
     {
         return DATA_OF(const T, _allocData) + _count;
     }
