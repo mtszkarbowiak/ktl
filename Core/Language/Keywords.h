@@ -48,12 +48,14 @@
 // C++ Versions
 
 #if __cplusplus >= 201703L // C++17 and above
-    #define NODISCARD           [[nodiscard]]
+    #define NODISCARD           /* DEPRECATED */
+    #define NODISCARD2          [[nodiscard]]
     #define FALLTHROUGH         [[fallthrough]]
     #define MAYBE_UNUSED        [[maybe_unused]]
 
 #else // C++14 and below
     #define NODISCARD         
+    #define NODISCARD2         
     #define FALLTHROUGH       
     #define MAYBE_UNUSED
 
