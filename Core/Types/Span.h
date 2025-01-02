@@ -116,6 +116,230 @@ public:
 
     // Iterators
 
-    //TODO Add iterators to Span.
-    //TODO Idea: Unify Array and Span enumerators 'PointerIterator'.
+    /// <summary> Creates a mutable-element enumerator for the span. </summary>
+    /// <remarks>
+    /// This is the most basic iterator which uses raw memory pointers and does not track the iterated collection.
+    /// To be used for any collection storing elements linearly in memory.
+    /// </remarks>
+    class MutEnumerator
+    {
+        T* _begin{};
+        T* _end{};
+
+    public:
+        FORCE_INLINE
+        MutEnumerator(T* begin, T* end)
+            : _begin{ begin }
+            , _end{ end }
+        {
+            ASSERT_COLLECTION_SAFE_MOD(begin <= end); // Span begin must be before the end.
+        }
+
+        FORCE_INLINE
+        explicit MutEnumerator(Span& span)
+            : _begin{ span.Data() }
+            , _end{ span.Data() + span.Count() }
+        {
+        }
+
+
+        // Access
+
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
+        NO_DISCARD FORCE_INLINE
+        IterHint Hint() const
+        {
+            const int32 remaining = static_cast<int32>(_end - _begin);
+            return { remaining, remaining };
+        }
+
+        
+        NO_DISCARD FORCE_INLINE
+        T& operator*()
+        {
+            return *_begin;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        T* operator->()
+        {
+            return _begin;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        const T& operator*() const
+        {
+            return *_begin;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        const T* operator->() const
+        {
+            return _begin;
+        }
+
+
+        // Iteration
+
+        /// <summary> Check if the enumerator points to a valid element. </summary>
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
+        {
+            return static_cast<bool>(_begin) && _begin < _end;
+        }
+
+        /// <summary> Moves the enumerator to the next element. </summary>
+        MAY_DISCARD FORCE_INLINE
+        MutEnumerator& operator++()
+        {
+            ++_begin;
+            return *this;
+        }
+
+        /// <summary> Moves the enumerator to the next element. </summary>
+        /// <remarks> Prefixed increment operator is faster. </remarks>
+        MutEnumerator operator++(int)
+        {
+            MutEnumerator copy = *this;
+            ++(*this);
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        bool operator==(const MutEnumerator& other) const
+        {
+            return _begin == other._begin && _end == other._end;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        bool operator!=(const MutEnumerator& other) const
+        {
+            return _begin != other._begin || _end != other._end;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        bool operator<(const MutEnumerator& other) const
+        {
+            ASSERT_COLLECTION_SAFE_ACCESS(_end == other._end); // Enumerators must be of the same span to be compared.
+            return _begin < other._begin;
+        }
+    };
+
+
+    /// <summary> Creates a const-element enumerator for the span. </summary>
+    /// <remarks>
+    /// This is the most basic iterator which uses raw memory pointers and does not track the iterated collection.
+    /// To be used for any collection storing elements linearly in memory.
+    /// </remarks>
+    class ConstEnumerator
+    {
+        const T* _begin{};
+        const T* _end{};
+
+    public:
+        FORCE_INLINE
+        ConstEnumerator(const T* begin, const T* end)
+            : _begin{ begin }
+            , _end{ end }
+        {
+            ASSERT_COLLECTION_SAFE_MOD(begin <= end); // Span begin must be before the end.
+        }
+
+        FORCE_INLINE explicit
+        ConstEnumerator(const Span& span)
+            : _begin{ span.Data() }
+            , _end{ span.Data() + span.Count() }
+        {
+        }
+
+        FORCE_INLINE explicit
+        ConstEnumerator(const MutEnumerator& enumerator)
+            : _begin{ enumerator._begin }
+            , _end{ enumerator._end }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        const T& operator*() const
+        {
+            return *_begin;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        const T* operator->() const
+        {
+            return _begin;
+        }
+        
+
+        // Iteration
+
+        /// <summary> Check if the enumerator points to a valid element. </summary>
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
+        {
+            return static_cast<bool>(_begin) && _begin < _end;
+        }
+
+        /// <summary> Moves the enumerator to the next element. </summary>
+        MAY_DISCARD FORCE_INLINE
+        ConstEnumerator& operator++()
+        {
+            ++_begin;
+            return *this;
+        }
+
+        /// <summary> Moves the enumerator to the next element. </summary>
+        /// <remarks> Prefixed increment operator is faster. </remarks>
+        ConstEnumerator operator++(int)
+        {
+            ConstEnumerator copy = *this;
+            ++(*this);
+            return copy;
+        }
+
+        
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        bool operator==(const MutEnumerator& other) const
+        {
+            return _begin == other._begin && _end == other._end;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        bool operator!=(const MutEnumerator& other) const
+        {
+            return _begin != other._begin || _end != other._end;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        bool operator<(const MutEnumerator& other) const
+        {
+            ASSERT_COLLECTION_SAFE_ACCESS(_end == other._end); // Enumerators must be of the same span to be compared.
+            return _begin < other._begin;
+        }
+    };
+
+    
+
+    /// <summary> Creates an enumerator for the array. </summary>
+    NO_DISCARD FORCE_INLINE
+    MutEnumerator Values()
+    {
+        return MutEnumerator{ *this };
+    }
+
+    /// <summary> Creates an enumerator for the array. </summary>
+    NO_DISCARD FORCE_INLINE
+    ConstEnumerator Values() const
+    {
+        return ConstEnumerator{ *this };
+    }
 };
