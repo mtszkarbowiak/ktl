@@ -6,19 +6,33 @@
 
 
 /// <summary>
-/// Basic container for storing dynamically resizable arrays of elements in one contiguous memory block.
+/// A container for dynamically resizable arrays of elements,
+/// stored in a single contiguous block of memory.
 /// </summary>
 ///
-/// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, and not a reference. </typeparam>
-/// <typeparam name="A"> Type of the allocator to use. Can be either dragging or non-dragging.</typeparam>
-/// <typeparam name="G"> Function to calculate the next capacity (before capping by allocator). </typeparam>
+/// <typeparam name="T">
+/// The type of elements stored in the array.
+/// Must be movable (both constructor and assignment), non-const, and non-reference.
+/// </typeparam>
+/// <typeparam name="A">
+/// (Optional) The type of the allocator to use.
+/// Can be either a dragging or non-dragging allocator.
+/// </typeparam>
+/// <typeparam name="G">
+/// (Optional) A reference to a function that calculates the next capacity
+/// before applying allocator limits.
+/// </typeparam>
 ///
 /// <remarks>
-/// 1. <c>Array</c> works effectively as a stack. If you need a queue, consider using <c>Ring</c> instead.
-/// 2. The container is designed to invoke the allocator as little as possible.
-/// Thus it will keep the allocation active even when the array is empty,
-/// unless explicitly freed by calling <c>Reset</c>.
-/// 3. <c>Array</c> STL inspiration is <c>std::vector</c>.
+/// 1. The <c>Array</c> class is inspired by STL's <c>std::vector</c> and Unreal Engine's
+/// <c>TArray</c>, with a difference that it does not have a specialization for <c>bool</c>.
+/// 2. It operates effectively as a stack, with the array's end representing the top of the stack.
+/// 3. The amortized time complexity of adding elements is constant.
+/// 4. The default capacity is defined by <c>ARRAY_DEFAULT_CAPACITY</c>.
+/// 5. The container minimizes allocator invocations, keeping the allocation active even when the
+/// array is empty, unless explicitly freed by calling <c>Reset</c> (or destructor).
+/// 6. <c>Array</c> is not thread-safe.
+/// External synchronization is required if used in a multi-threaded environment.
 /// </remarks>
 template<
     typename T,
@@ -694,6 +708,7 @@ public:
 
 
     // Constraints
+
     static_assert(!std::is_reference<Element>                ::value, "Type must not be a reference type.");
     static_assert(!std::is_const<Element>                    ::value, "Type must not be a const-qualified type.");
 

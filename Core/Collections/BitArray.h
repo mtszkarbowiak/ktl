@@ -5,16 +5,29 @@
 #include "Collections/CollectionsUtils.h"
 
 /// <summary>
-/// Specialized container for storing dynamically resizable arrays of logic values.
-/// It stores the elements in a contiguous memory block and uses doubling growth strategy.
+/// A specialized container for storing dynamically
+/// resizable arrays of logical values (bits).
 /// </summary>
+///
+/// <typeparam name="A">
+/// (Optional) The type of the allocator to use.
+/// Can be either a dragging or non-dragging allocator.
+/// </typeparam>
+/// <typeparam name="G">
+/// (Optional) A reference to a function that calculates the next capacity
+/// before applying allocator limits.
+/// </typeparam>
+///
 /// <remarks>
-/// The container is designed to invoke the allocator as little as possible.
-/// Thus it will keep the allocation active even when the array is empty,
-/// unless explicitly freed by calling <c>Reset</c>.
+/// 1. The <c>BitArray</c> class STL equivalent is the specialization of <c>std::vector<bool></c>.
+/// 2. It operates effectively as a stack, with the array's end representing the top of the stack.
+/// 3. The amortized time complexity of adding elements is constant.
+/// 4. The default capacity is defined by <c>ARRAY_DEFAULT_CAPACITY</c>.
+/// 5. The container minimizes allocator invocations, keeping the allocation active even when the
+/// array is empty, unless explicitly freed by calling <c>Reset</c> (or destructor).
+/// 6. <c>BitArray</c> is not thread-safe.
+/// External synchronization is required if used in a multi-threaded environment.
 /// </remarks>
-/// <typeparam name="A"> Type of the allocator to use. </typeparam>
-/// <typeparam name="G"> Function to calculate the next capacity (before capping by allocator). </typeparam>
 template<
     typename A = DefaultAlloc,
     int32(&G)(int32) = Growing::Default
@@ -23,12 +36,11 @@ class BitArray
 {
 public:
     /// <summary> Underlying data type used to store the bits. </summary>
-    using Block     = uint64;
-
-private:
+    using Block       = uint64;
     using AllocData   = typename A::Data;
     using AllocHelper = AllocHelperOf<Block, A, ARRAY_DEFAULT_CAPACITY, G>;
 
+private:
     AllocData _allocData{};
     int32     _blockCapacity{};
     int32     _bitCount{};

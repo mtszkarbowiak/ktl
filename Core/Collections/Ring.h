@@ -5,21 +5,35 @@
 #include "Collections/CollectionsUtils.h"
 
 /// <summary>
-/// Double-ended container for storing dynamically resizable queues of elements.
-/// The items are stored in one or two segments, depending on the head-tail relationship.
-/// Both segments share one and the same memory block.
+/// A double-ended container for storing dynamically resizable queues of elements.
+/// The elements are stored in one or two segments, depending on the head-tail relationship.
+/// Both segments share a single contiguous memory block.
 /// </summary>
 ///
-/// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, and not a reference. </typeparam>
-/// <typeparam name="A"> Type of the allocator to use. Can be either dragging or non-dragging.</typeparam>
-/// <typeparam name="G"> Function to calculate the next capacity (before capping by allocator). </typeparam>
+/// <typeparam name="T">
+/// The type of elements stored in the array.
+/// Must be movable (both constructor and assignment), non-const, and non-reference.
+/// </typeparam>
+/// <typeparam name="A">
+/// (Optional) The type of the allocator to use.
+/// Can be either a dragging or non-dragging allocator.
+/// </typeparam>
+/// <typeparam name="G">
+/// (Optional) A reference to a function that calculates the next capacity
+/// before applying allocator limits.
+/// </typeparam>
 ///
 /// <remarks>
-/// 1. <c>Ring</c> works effectively as a queue. If you need a stack, consider using <c>Array</c> instead.
-/// 2. The container is designed to invoke the allocator as little as possible.
-/// Thus it will keep the allocation active even when the array is empty,
-/// unless explicitly freed by calling <c>Reset</c>.
-/// 3. <c>Ring</c> STL inspiration is <c>std::deque</c>.
+/// 1. The <c>Ring</c> class has similar API to STL's <c>std::deque</c>,
+/// but uses a single memory block instead of multiple blocks.
+/// 2. It operates effectively as a queue, with two ends representing the front and back of the
+/// queue. It is recommended to use the <c>PushBack</c> as the primary method for adding elements.
+/// 3. The amortized time complexity of adding elements is constant.
+/// 4. The default capacity is defined by <c>RING_DEFAULT_CAPACITY</c>.
+/// 5. The container minimizes allocator invocations, keeping the allocation active even when the
+/// array is empty, unless explicitly freed by calling <c>Reset</c> (or destructor).
+/// 6. <c>Ring</c> is not thread-safe.
+/// External synchronization is required if used in a multi-threaded environment.
 /// </remarks>
 template<
     typename T,
