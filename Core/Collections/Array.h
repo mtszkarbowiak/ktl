@@ -30,6 +30,11 @@ class Array
     using AllocData   = typename Alloc::Data;
     using AllocHelper = AllocHelperOf<T, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
 
+public:
+    using MutEnumerator   = typename Span<T>::MutEnumerator;
+    using ConstEnumerator = typename Span<T>::ConstEnumerator;
+
+private:
     AllocData _allocData{};
     int32     _capacity{};
     int32     _count{};
@@ -626,239 +631,21 @@ public:
 
     // Iterators
 
-    /// <summary>
-    /// Iterator for the array which provides end condition and allows to iterate over the elements in a range-based for loop.
-    /// </summary>
-    class MutEnumerator
-    {
-        Array* _array;
-        int32  _index;
-
-    public:
-        FORCE_INLINE explicit
-        MutEnumerator(Array& array)
-            : _array{ &array }
-            , _index{ 0 }
-        {
-        }
-
-
-        // Access
-
-        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        NO_DISCARD FORCE_INLINE
-        IterHint Hint() const
-        {
-            const int32 remaining = _array->_count - _index;
-            return { remaining, remaining };
-        }
-
-        NO_DISCARD FORCE_INLINE
-        T& operator*()
-        {
-            return (*_array)[_index];
-        }
-
-        NO_DISCARD FORCE_INLINE
-        T* operator->()
-        {
-            return &(*_array)[_index];
-        }
-
-        NO_DISCARD FORCE_INLINE
-        const T& operator*() const
-        {
-            return (*_array)[_index];
-        }
-
-        NO_DISCARD FORCE_INLINE
-        const T* operator->() const
-        {
-            return &(*_array)[_index];
-        }
-
-        /// <summary> Returns the index of the current element. </summary>
-        NO_DISCARD FORCE_INLINE
-        int32 Index() const
-        {
-            return _index;
-        }
-
-
-        // Iteration
-
-        /// <summary> Check if the enumerator points to a valid element. </summary>
-        NO_DISCARD FORCE_INLINE explicit
-        operator bool() const 
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
-            return _index < _array->_count;
-        }
-
-        /// <summary> Moves the enumerator to the next element. </summary>
-        MAY_DISCARD FORCE_INLINE
-        MutEnumerator& operator++()
-        {
-            _index += 1;
-            return *this;
-        }
-
-        /// <summary> Moves the enumerator to the next element. </summary>
-        /// <remarks> Prefixed increment operator is faster. </remarks>
-        MAY_DISCARD FORCE_INLINE
-        MutEnumerator operator++(int)
-        {
-            MutEnumerator copy{ *this };
-            _index += 1;
-            return copy;
-        }
-
-
-        // Identity
-
-        NO_DISCARD FORCE_INLINE
-        bool operator==(const MutEnumerator& other) const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index == other._index;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        bool operator!=(const MutEnumerator& other) const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index != other._index;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        bool operator<(const MutEnumerator& other) const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index < other._index;
-        }
-    };
-
-    /// <summary>
-    /// Iterator for the array which provides end condition and allows to iterate over the elements in a range-based for loop.
-    /// </summary>
-    class ConstEnumerator
-    {
-        const Array* _array;
-        int32        _index;
-
-    public:
-        FORCE_INLINE explicit
-        ConstEnumerator(const Array& array)
-            : _array{ &array }
-            , _index{ 0 }
-        {
-        }
-
-        FORCE_INLINE explicit
-        ConstEnumerator(const MutEnumerator& enumerator)
-            : _array{ enumerator._array }
-            , _index{ enumerator._index }
-        {
-        }
-
-
-        // Access
-
-        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        NO_DISCARD FORCE_INLINE
-        IterHint Hint() const
-        {
-            const int32 remaining = _array->_count - _index;
-            return { remaining, remaining };
-        }
-
-        NO_DISCARD FORCE_INLINE
-        const T& operator*() const
-        {
-            return (*_array)[_index];
-        }
-
-        NO_DISCARD FORCE_INLINE
-        const T* operator->() const
-        {
-            return &(*_array)[_index];
-        }
-
-        /// <summary> Returns the index of the current element. </summary>
-        NO_DISCARD FORCE_INLINE
-        int32 Index() const
-        {
-            return _index;
-        }
-
-
-        // Iteration
-
-        /// <summary> Check if the enumerator points to a valid element. </summary>
-        NO_DISCARD FORCE_INLINE explicit
-        operator bool() const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
-            return _index < _array->_count;
-        }
-
-        /// <summary> Moves the enumerator to the next element. </summary>
-        MAY_DISCARD FORCE_INLINE
-        ConstEnumerator& operator++()
-        {
-            _index += 1;
-            return *this;
-        }
-
-        /// <summary> Moves the enumerator to the next element. </summary>
-        /// <remarks> Prefixed increment operator is faster. </remarks>
-        MAY_DISCARD FORCE_INLINE
-        ConstEnumerator operator++(int)
-        {
-            ConstEnumerator copy{ *this };
-            _index += 1;
-            return copy;
-        }
-
-
-        // Identity
-
-        NO_DISCARD FORCE_INLINE
-        bool operator==(const ConstEnumerator& other) const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index == other._index;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        bool operator!=(const ConstEnumerator& other) const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index != other._index;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        bool operator<(const ConstEnumerator& other) const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index < other._index;
-        }
-    };
-
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
     MutEnumerator Values()
     {
-        return MutEnumerator{ *this };
+        T* data = DATA_OF(T, _allocData);
+        return MutEnumerator{ data, data + _count };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
     ConstEnumerator Values() const
     {
-        return ConstEnumerator{ *this };
+        const T* data = DATA_OF(const T, _allocData);
+        return ConstEnumerator{ data, data + _count };
     }
-
 
 
     /// <summary> STL-style begin iterator. </summary>

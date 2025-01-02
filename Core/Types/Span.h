@@ -43,6 +43,14 @@ public:
         ASSERT_COLLECTION_SAFE_MOD(begin <= end); // Span begin must be before the end.
     }
 
+    /// <summary> Initializes a span from C-style array. </summary>
+    template<size_t N>
+    FORCE_INLINE explicit
+    Span(T(&array)[N])
+        : Span{ array, static_cast<int32>(N) }
+    {
+    }
+
 
     // Properties
 
@@ -327,7 +335,6 @@ public:
         }
     };
 
-    
 
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
