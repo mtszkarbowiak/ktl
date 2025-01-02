@@ -77,7 +77,7 @@ namespace Querying
         {
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         explicit operator bool() const noexcept
         {
             return static_cast<bool>(_producer);
@@ -98,7 +98,7 @@ namespace Querying
             return copy;
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         auto operator*()
         {
             return _selector(*_producer);
@@ -136,7 +136,7 @@ namespace Querying
             SkipInvalid(); // Ensure we start on a valid element.
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         explicit operator bool() const noexcept
         {
             return static_cast<bool>(_producer); // Valid if the producer is valid.
@@ -158,7 +158,7 @@ namespace Querying
             return copy;
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         decltype(auto) operator*()
         {
             return *_producer; // Return the current element.

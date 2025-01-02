@@ -595,7 +595,7 @@ public:
 
     /// <summary> Creates an array with the specified elements. </summary>
     template<typename U>
-    static constexpr NODISCARD
+    static constexpr
     Array<T> Of(std::initializer_list<U> list)
     {
         const int32 capacity = static_cast<int32>(list.size());
@@ -630,7 +630,7 @@ public:
         // Access
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         IterHint Hint() const
         {
             const int32 remaining = _array->_count - _index;

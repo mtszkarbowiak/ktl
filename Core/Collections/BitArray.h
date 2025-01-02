@@ -37,13 +37,13 @@ private:
 
 
 protected:
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     auto Data()  -> Block*
     {
         return DATA_OF(Block, _allocData);
     }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     auto Data() const  -> const Block*
     {
         return DATA_OF(const Block, _allocData);
@@ -51,7 +51,7 @@ protected:
 
 
     /// <summary> Calculates the number of blocks required to store the given number of bits. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     static constexpr auto BlocksForBits(const int32 bitCount)  -> int32
     {
         return (bitCount + BitsPerBlock - 1) / BitsPerBlock;
@@ -61,14 +61,14 @@ public:
     // Capacity Access
 
     /// <summary> Checks if the bit-array has an active allocation. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr auto IsAllocated() const  -> bool
     {
         return _blockCapacity > 0;
     }
 
     /// <summary> Number of bits that can be stored without invoking the allocator. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr auto Capacity() const  -> int32
     {
         return _blockCapacity * BitsPerBlock;
@@ -78,14 +78,14 @@ public:
     // Count Access
 
     /// <summary> Checks if the bit-array has any bits. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr auto IsEmpty() const  -> bool
     {
         return _bitCount == 0;
     }
 
     /// <summary> Number of currently stored bits. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr auto Count() const  -> int32
     {
         return _bitCount;
@@ -247,7 +247,7 @@ public:
     /// This method uses a proxy object to allow the assignment operator to be used.
     /// To read bit without overhead use <c>GetBit</c> method.
     /// </remarks>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     auto operator[](const int32 index) const -> ConstBitRef
     {
         return ConstBitRef{ this, index };
@@ -258,7 +258,7 @@ public:
     /// This method uses a proxy object to allow the assignment operator to be used.
     /// To modify bit without overhead use <c>SetBit</c> method.
     /// </remarks>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     auto operator[](const int32 index) -> MutBitRef
     {
         return MutBitRef{ this, index };
@@ -270,7 +270,7 @@ public:
     /// <summary> Returns the bit value. </summary>
     /// <param name="index"> Index of the bit to access. Must be in the range [0, Count). </param>
     /// <returns> Value of the bit at the specified index. </returns>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     auto GetBit(const int32 index) const -> bool
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _bitCount);
@@ -322,7 +322,7 @@ public:
 
 
     /// <summary> Accesses the block of bits bit at the specified index. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     auto GetBlock(const int32 blockIndex) const -> Block
     {
         ASSERT_COLLECTION_SAFE_ACCESS(blockIndex >= 0 && blockIndex < _blockCapacity);
@@ -616,21 +616,21 @@ public:
 
         // Identity
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         auto operator==(const MutEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         auto operator!=(const MutEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         auto operator<(const MutEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
@@ -641,20 +641,20 @@ public:
         // Access
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         IterHint Hint() const
         {
             const int32 remaining = _array->Count() - _index;
             return { remaining, remaining };
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         auto operator*() -> MutBitRef
         {
             return MutBitRef{ _array, _index };
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         auto operator*() const -> ConstBitRef
         {
             return ConstBitRef{ _array, _index };
@@ -664,7 +664,7 @@ public:
         // End Condition
 
         /// <summary> Check if the enumerator reached the end of the array. </summary>
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         explicit operator bool() const 
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
@@ -720,21 +720,21 @@ public:
 
         // Identity
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         auto operator==(const ConstEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         auto operator!=(const ConstEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         auto operator<(const ConstEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
@@ -745,14 +745,14 @@ public:
         // Access
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         IterHint Hint() const
         {
             const int32 remaining = _array->Count() - _index;
             return { remaining, remaining };
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         auto operator*() const -> ConstBitRef
         {
             return ConstBitRef{ _array, _index };
@@ -761,7 +761,7 @@ public:
 
         // End Condition and Movement
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         explicit operator bool() const 
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
@@ -776,13 +776,13 @@ public:
         }
     };
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     auto Values() -> MutEnumerator
     {
         return MutEnumerator{ *this };
     }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     auto Values() const -> ConstEnumerator
     {
         return ConstEnumerator{ *this };

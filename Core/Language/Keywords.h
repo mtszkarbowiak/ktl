@@ -54,8 +54,8 @@
     #define MAYBE_UNUSED        [[maybe_unused]]
 
 #else // C++14 and below
-    #define NODISCARD         
-    #define NODISCARD2         
+    #define         
+    #define2         
     #define FALLTHROUGH       
     #define MAYBE_UNUSED
 
@@ -83,4 +83,4 @@
 
 // Clusters of Keywords
 
-#define ACCESSSOR     FORCE_INLINE constexpr NODISCARD
+#define ACCESSSOR     FORCE_INLINE constexpr

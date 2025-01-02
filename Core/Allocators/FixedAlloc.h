@@ -41,7 +41,7 @@ public:
             // Pass
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         constexpr bool MovesItems() const
         {
             return false;
@@ -61,7 +61,7 @@ public:
         }
 
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         constexpr int32 Allocate(const int32 size)
         {
             ASSERT_ALLOCATOR_SAFETY(size == Size || size == 0);
@@ -75,13 +75,13 @@ public:
         }
 
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         constexpr const byte* Get() const
         {
             return _data;
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         constexpr byte* Get()
         {
             return _data;

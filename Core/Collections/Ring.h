@@ -41,7 +41,7 @@ class Ring
 
 protected:
     /// <summary> Checks if the ring is in a valid state. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr bool IsValid() const
     {
         // This test is only valid if the capacity is non-zero.
@@ -687,7 +687,7 @@ public:
 
     /// <summary> Creates an array with the specified elements. </summary>
     template<typename U>
-    static constexpr NODISCARD
+    static constexpr
     Ring<T> Of(std::initializer_list<U> list)
     {
         const int32 capacity = static_cast<int32>(list.size());

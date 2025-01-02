@@ -29,16 +29,16 @@ private:
     BucketState _state;
 
 public:
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     BucketState State() const { return _state; }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     const K& Key() const { return _key; }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     const V& Value() const { return _value; }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     V& Value() { return _value; }
 
 
@@ -138,14 +138,14 @@ class Dictionary
 
 public:
     /// <summary> Checks if the array has an active allocation. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr bool IsAllocated() const noexcept
     {
         return _capacity > 0;
     }
 
     /// <summary> Number of elements that can be stored without invoking the allocator. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr int32 Capacity() const noexcept
     {
         return _capacity;
@@ -339,14 +339,14 @@ public:
     // Count Access
 
     /// <summary> Number of valid key-value pairs in the dictionary. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     int32 Count() const noexcept
     {
         return _elementsCount;
     }
 
     /// <summary> Checks if the dictionary has no valid key-value pairs. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     bool IsEmpty() const noexcept
     {
         return _elementsCount == 0;
@@ -357,7 +357,7 @@ public:
     // Element Access
 
     /// <summary> Checks if there is a bucket associated with the specified key. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     bool Contains(const K& key) const
     {
         if (_elementsCount == 0)
@@ -373,7 +373,7 @@ public:
     /// Tries to get the value associated with the specified key.
     /// If the key does not exist, nullptr is returned.
     /// </summary>
-    NODISCARD FORCE_INLINE
+    FORCE_INLINE
     V* TryGet(const K& key)
     {
         if (_elementsCount == 0)
@@ -392,7 +392,7 @@ public:
     /// Tries to get the value associated with the specified key.
     /// If the key does not exist, nullptr is returned.
     /// </summary>
-    NODISCARD FORCE_INLINE
+    FORCE_INLINE
     const V* TryGet(const K& key) const
     {
         if (_elementsCount == 0)
@@ -416,7 +416,7 @@ public:
     /// Warning: The lifetime of the bucket has not started yet.
     /// </remarks>
     template<typename K_, typename V_>
-    NODISCARD
+   
     Bucket* Add(K_&& key, V_&& value)
     {
         // 1. Ensure correct capacity
@@ -661,7 +661,7 @@ public:
     // Note: Dictionary is a complex collection, thus it has so many different enumerators.
 
 private:
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     int32 SkipToOccupied(const int32 index) const
     {
         for (int32 i = index; i < _capacity; ++i)
@@ -689,13 +689,13 @@ public:
 
         // Access
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const K& operator*() const
         {
             return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Key();
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const K* operator->() const
         {
             return &DATA_OF(const Bucket, _dictionary->_allocData)[_index].Key();
@@ -704,7 +704,7 @@ public:
 
         // Iteration
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         explicit operator bool() const noexcept
         {
             return _index < _dictionary->_capacity;
@@ -743,25 +743,25 @@ public:
 
         // Access
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         V& operator*()
         {
             return DATA_OF(Bucket, _dictionary->_allocData)[_index].Value();
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const V& operator*() const
         {
             return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         V* operator->()
         {
             return &DATA_OF(Bucket, _dictionary->_allocData)[_index].Value();
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const V* operator->() const
         {
             return &DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
@@ -770,7 +770,7 @@ public:
 
         // Iteration
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         explicit operator bool() const noexcept
         {
             return _index < _dictionary->_capacity;
@@ -809,13 +809,13 @@ public:
 
         // Access
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const V& operator*() const
         {
             return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const V* operator->() const
         {
             return &DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
@@ -823,7 +823,7 @@ public:
 
         // Iteration
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         explicit operator bool() const noexcept
         {
             return _index < _dictionary->_capacity;
@@ -868,10 +868,10 @@ public:
         /// The bucket itself must not be modified, as it would break the dictionary.
         /// Use <c>Value</c> and <c>Key</c> to access the bucket content.
         /// </remarks>
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         Bucket& operator*() = delete;
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const Bucket& operator*() const
         {
             return DATA_OF(const Bucket, _dictionary->_allocData)[_index];
@@ -882,29 +882,29 @@ public:
         /// The bucket itself must not be modified, as it would break the dictionary.
         /// Use <c>Value</c> and <c>Key</c> to access the bucket content.
         /// </remarks>
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         Bucket* operator->() = delete;
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const Bucket* operator->() const
         {
             return &DATA_OF(const Bucket, _dictionary->_allocData)[_index];
         }
 
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const K& Key() const
         {
             return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Key();
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         V& Value()
         {
             return DATA_OF(Bucket, _dictionary->_allocData)[_index].Value();
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const V& Value() const
         {
             return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
@@ -913,7 +913,7 @@ public:
 
         // Iteration
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         explicit operator bool() const noexcept
         {
             return _index < _dictionary->_capacity;
@@ -952,26 +952,26 @@ public:
 
         // Access
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const Bucket& operator*() const
         {
             return DATA_OF(const Bucket, _dictionary->_allocData)[_index];
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const Bucket* operator->() const
         {
             return &DATA_OF(const Bucket, _dictionary->_allocData)[_index];
         }
 
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const K& Key() const
         {
             return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Key();
         }
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         const V& Value() const
         {
             return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
@@ -980,7 +980,7 @@ public:
 
         // Iteration
 
-        FORCE_INLINE NODISCARD
+        FORCE_INLINE
         explicit operator bool() const noexcept
         {
             return _index < _dictionary->_capacity;
@@ -1004,31 +1004,31 @@ public:
     };
 
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     KeyEnumerator Keys() const
     {
         return KeyEnumerator{ *this };
     }
     
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     MutValEnumerator Values()
     {
         return MutValEnumerator{ *this };
     }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     ConstValEnumerator Values() const
     {
         return ConstValEnumerator{ *this };
     }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     MutBucketEnumerator Buckets()
     {
         return MutBucketEnumerator{ this };
     }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     ConstBucketEnumerator Buckets() const
     {
         return ConstBucketEnumerator{ this };
