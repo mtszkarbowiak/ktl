@@ -13,10 +13,11 @@
 /// Thus it will keep the allocation active even when the array is empty,
 /// unless explicitly freed by calling <c>Reset</c>.
 /// </remarks>
-/// <typeparam name="Alloc"> Type of the allocator to use. </typeparam>
+/// <typeparam name="A"> Type of the allocator to use. </typeparam>
+/// <typeparam name="G"> Function to calculate the next capacity (before capping by allocator). </typeparam>
 template<
-    typename Alloc = DefaultAlloc,
-    int32(&Grow)(int32) = Growing::Default
+    typename A = DefaultAlloc,
+    int32(&G)(int32) = Growing::Default
 >
 class BitArray
 {
@@ -25,8 +26,8 @@ public:
     using Block     = uint64;
 
 private:
-    using AllocData   = typename Alloc::Data;
-    using AllocHelper = AllocHelperOf<Block, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
+    using AllocData   = typename A::Data;
+    using AllocHelper = AllocHelperOf<Block, A, ARRAY_DEFAULT_CAPACITY, G>;
 
     AllocData _allocData{};
     int32     _blockCapacity{};

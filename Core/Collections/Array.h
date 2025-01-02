@@ -10,8 +10,8 @@
 /// </summary>
 ///
 /// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, and not a reference. </typeparam>
-/// <typeparam name="Alloc"> Type of the allocator to use. Can be either dragging or non-dragging.</typeparam>
-/// <typeparam name="Grow"> Function to calculate the next capacity (before capping by allocator). </typeparam>
+/// <typeparam name="A"> Type of the allocator to use. Can be either dragging or non-dragging.</typeparam>
+/// <typeparam name="G"> Function to calculate the next capacity (before capping by allocator). </typeparam>
 ///
 /// <remarks>
 /// 1. <c>Array</c> works effectively as a stack. If you need a queue, consider using <c>Ring</c> instead.
@@ -22,15 +22,15 @@
 /// </remarks>
 template<
     typename T,
-    typename Alloc = HeapAlloc,
-    int32(&Grow)(int32) = Growing::Default
+    typename A = HeapAlloc,
+    int32(&G)(int32) = Growing::Default
 >
 class Array
 {
 public:
     using Element     = T;
-    using AllocData   = typename Alloc::Data;
-    using AllocHelper = AllocHelperOf<Element, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
+    using AllocData   = typename A::Data;
+    using AllocHelper = AllocHelperOf<Element, A, ARRAY_DEFAULT_CAPACITY, G>;
 
     using MutEnumerator   = typename Span<Element>::MutEnumerator;
     using ConstEnumerator = typename Span<Element>::ConstEnumerator;
