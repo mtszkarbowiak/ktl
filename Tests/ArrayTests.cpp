@@ -26,7 +26,7 @@ TEST(Array_Capacity, Reserve_Call)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Array_Capacity, Reserve_Ctor) //TODO Fix tests naming.
+TEST(Array_Capacity, Reserve_Ctor)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);

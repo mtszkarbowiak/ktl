@@ -32,8 +32,8 @@ private:
     int32     _blockCapacity{};
     int32     _bitCount{};
 
-    constexpr static int32 BytesPerBlock = sizeof(Block); //TODO <Style> Place linkage keywords first.
-    constexpr static int32  BitsPerBlock = BytesPerBlock * 8;
+    static constexpr int32 BytesPerBlock = sizeof(Block);
+    static constexpr int32 BitsPerBlock  = BytesPerBlock * 8;
 
 
 protected:
@@ -102,7 +102,7 @@ public:
     // Allocation Manipulation
 
     /// <summary> Ensures that adding bits up to the requested capacity will not invoke the allocator. </summary>
-    void Reserve(const int32 minBitsCapacity) //TODO Unify naming with EnsureCapacity.
+    void Reserve(const int32 minBitsCapacity)
     {
         if (minBitsCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
@@ -539,8 +539,6 @@ public:
     /// <summary> Initializing an empty bit-array with an active context-less allocation of the specified capacity. </summary>
     FORCE_INLINE explicit
     BitArray(const int32 bitCapacity)
-        : _allocData{} //TODO Remove unnecessary initialization.
-        , _bitCount{}
     {
         const int32 requiredBlocks  = BlocksForBits(bitCapacity);
         const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
@@ -552,7 +550,6 @@ public:
     FORCE_INLINE explicit
     BitArray(const int32 bitCapacity, AllocContext&& context)
         : _allocData{ FORWARD(AllocContext, context) }
-        , _bitCount{}
     {
         const int32 requiredBlocks  = BlocksForBits(bitCapacity);
         const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
@@ -778,7 +775,13 @@ public:
             return *this;
         }
 
-        //TODO Implement postfix increment operators.
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> ConstEnumerator
+        {
+            ConstEnumerator copy{ *this };
+            ++_index;
+            return copy;
+        }
     };
 
     NO_DISCARD FORCE_INLINE
