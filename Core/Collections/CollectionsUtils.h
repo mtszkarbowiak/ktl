@@ -206,6 +206,7 @@ public:
         const int32 count
     )
     {
+        ASSERT(count >= 0);
         DefaultLinearContentImpl<Element>(elements, count);
     }
 
@@ -221,6 +222,7 @@ public:
         const int32 count
     )
     {
+        ASSERT(count >= 0);
         MoveLinearContentImpl<Element>(
             source, target, count
         );
@@ -241,6 +243,7 @@ public:
         const int32    count
     )
     {
+        ASSERT(count >= 0);
         CopyLinearContentImpl<Element>(
             source, target, count
         );
@@ -257,6 +260,7 @@ public:
         const int32 count
     )
     {
+        ASSERT(count >= 0);
         DestroyLinearContentImpl<Element>(
             elements, count
         );

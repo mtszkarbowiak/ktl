@@ -41,8 +41,8 @@ class Ring
 
 protected:
     /// <summary> Checks if the ring is in a valid state. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr bool IsValid() const
+    NO_DISCARD FORCE_INLINE constexpr
+    bool IsValid() const
     {
         // This test is only valid if the capacity is non-zero.
         if (_capacity == 0)
@@ -60,15 +60,15 @@ protected:
 
 public:
     /// <summary> Checks if the ring has an active allocation. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr bool IsAllocated() const 
+    NO_DISCARD FORCE_INLINE constexpr
+    bool IsAllocated() const
     {
         return _capacity > 0;
     }
 
     /// <summary> Number of elements that can be stored without invoking the allocator. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr int32 Capacity() const 
+    NO_DISCARD FORCE_INLINE constexpr
+    int32 Capacity() const
     {
         return _capacity;
     }
@@ -77,45 +77,45 @@ public:
     // Count Access
 
     /// <summary> Checks if the ring has any elements. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr bool IsEmpty() const 
+    NO_DISCARD FORCE_INLINE constexpr
+    bool IsEmpty() const
     {
         return _head == _tail;
     }
 
     /// <summary> Number of currently stored elements. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr int32 Count() const 
+    NO_DISCARD FORCE_INLINE constexpr
+    int32 Count() const
     {
         return _countCached;
     }
 
     /// <summary> Number of elements that can be added without invoking the allocator. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr int32 Slack() const 
+    NO_DISCARD FORCE_INLINE constexpr
+    int32 Slack() const
     {
         return _capacity - _countCached;
     }
 
 protected:
     /// <summary> Index of the first element in the ring. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr int32 Head() const 
+    NO_DISCARD FORCE_INLINE constexpr
+    int32 Head() const
     {
         return _head;
     }
 
     /// <summary> Index of the next free slot in the ring. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr int32 Tail() const 
+    NO_DISCARD FORCE_INLINE constexpr
+    int32 Tail() const
     {
         return _tail;
     }
 
 public:
     /// <summary> Checks if the ring is wrapped around the capacity, meaning that elements are stored in two segments. </summary>
-    FORCE_INLINE NODISCARD
-    constexpr bool IsWrapped() const 
+    NO_DISCARD FORCE_INLINE constexpr
+    bool IsWrapped() const
     {
         return _head > _tail;
     }
@@ -124,7 +124,6 @@ public:
     // Allocation Manipulation
 
     /// <summary> Ensures that adding items up to the requested capacity will not invoke the allocator. </summary>
-    FORCE_INLINE
     void Reserve(const int32 minCapacity)
     {
         if (minCapacity < 1)
@@ -209,7 +208,6 @@ public:
     /// Attempts to reduce the capacity to the number of stored elements, without losing any elements.
     /// If the ring is empty, the allocation will be freed.
     /// </summary>
-    FORCE_INLINE
     void Compact()
     {
         // Check if there is possibility of relocation.
@@ -291,6 +289,7 @@ public:
     // Element Access
 
     /// <summary> Accesses the element at the given index. </summary>
+    NO_DISCARD FORCE_INLINE constexpr
     T& operator[](const int32 index)
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _countCached);
@@ -299,6 +298,7 @@ public:
     }
 
     /// <summary> Accesses the element at the given index. </summary>
+    NO_DISCARD FORCE_INLINE constexpr
     const T& operator[](const int32 index) const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _countCached);
@@ -308,7 +308,7 @@ public:
 
 
     /// <summary> Accesses the first element in the ring. </summary>
-    FORCE_INLINE
+    NO_DISCARD FORCE_INLINE constexpr
     T& PeekFront()
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
@@ -316,7 +316,7 @@ public:
     }
 
     /// <summary> Accesses the first element in the ring. </summary>
-    FORCE_INLINE
+    NO_DISCARD FORCE_INLINE constexpr
     const T& PeekFront() const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
@@ -324,7 +324,7 @@ public:
     }
 
     /// <summary> Accesses the last element in the ring. </summary>
-    FORCE_INLINE
+    NO_DISCARD FORCE_INLINE constexpr
     T& PeekBack()
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
@@ -333,6 +333,7 @@ public:
     }
 
     /// <summary> Accesses the last element in the ring. </summary>
+    NO_DISCARD FORCE_INLINE constexpr
     const T& PeekBack() const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
@@ -345,7 +346,7 @@ public:
 
     /// <summary> Adds an element to the end of the ring. </summary>
     template<typename U> // Universal reference
-    FORCE_INLINE
+    MAY_DISCARD
     T& PushBack(U&& element)
     {
         static_assert(
@@ -368,7 +369,7 @@ public:
 
     /// <summary> Adds an element to the end of the ring. </summary>
     template<typename... Args> // Parameter pack
-    FORCE_INLINE
+    MAY_DISCARD
     T& EmplaceBack(Args&&... args)
     {
         Reserve(_countCached + 1);
@@ -387,7 +388,7 @@ public:
 
     /// <summary> Adds an element to the beginning of the ring. </summary>
     template<typename U> // Universal reference
-    FORCE_INLINE
+    MAY_DISCARD
     T& PushFront(U&& element)
     {
         static_assert(
@@ -409,7 +410,7 @@ public:
 
     /// <summary> Adds an element to the beginning of the ring. </summary>
     template<typename... Args> // Parameter pack
-    FORCE_INLINE
+    MAY_DISCARD
     T& EmplaceFront(Args&&... args)
     {
         Reserve(_countCached + 1);
@@ -457,7 +458,6 @@ public:
 
 
     /// <summary> Removes all elements from the array without freeing the allocation. </summary>
-    FORCE_INLINE
     void Clear()
     {
         if (_countCached == 0)
@@ -494,7 +494,7 @@ public:
     }
 
     /// <summary> Removes all elements from the array and frees the allocation. </summary>
-    FORCE_INLINE
+    FORCE_INLINE constexpr
     void Reset()
     {
         if (_capacity == 0)
@@ -633,15 +633,18 @@ protected:
 
 public:
     /// <summary> Initializes an empty ring with no active allocation. </summary>
-    constexpr Ring() = default;
+    constexpr FORCE_INLINE
+    Ring() = default;
 
     /// <summary> Initializes a ring by moving the allocation from another array. </summary>
+    FORCE_INLINE
     Ring(Ring&& other) noexcept
     {
         MoveToEmpty(MOVE(other));
     }
 
     /// <summary> Initializes a ring by copying another ring. </summary>
+    FORCE_INLINE
     Ring(const Ring& other)
     {
         CopyToEmpty(other);
@@ -649,8 +652,8 @@ public:
 
 
     /// <summary> Initializes an empty ring with an active context-less allocation of the specified capacity. </summary>
-    FORCE_INLINE
-    explicit Ring(const int32 capacity)
+    FORCE_INLINE explicit
+    Ring(const int32 capacity)
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
@@ -658,8 +661,8 @@ public:
 
     /// <summary> Initializes an empty ring with an active allocation of the specified capacity and context. </summary>
     template<typename AllocContext> // Universal reference
-    FORCE_INLINE
-    explicit Ring(const int32 capacity, AllocContext&& context)
+    FORCE_INLINE explicit
+    Ring(const int32 capacity, AllocContext&& context)
         : _allocData{ FORWARD(AllocContext, context) }
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
@@ -669,7 +672,7 @@ public:
 
     // Collection Lifecycle - Assignments
 
-    FORCE_INLINE
+    MAY_DISCARD FORCE_INLINE
     Ring& operator=(Ring&& other) noexcept
     {
         if (this != &other) 
@@ -681,6 +684,7 @@ public:
         return *this;
     }
 
+    MAY_DISCARD
     Ring& operator=(const Ring& other)
     {
         if (this != &other) 
@@ -705,7 +709,8 @@ public:
 
     /// <summary> Creates an array with the specified elements. </summary>
     template<typename U>
-    static Ring<T> Of(std::initializer_list<U> list)
+    NO_DISCARD static constexpr
+    Ring<T> Of(std::initializer_list<U> list)
     {
         const int32 capacity = static_cast<int32>(list.size());
         Ring<T> result{ capacity };
@@ -727,7 +732,8 @@ public:
 
 
     public:
-        explicit MutEnumerator(Ring& ring)
+        FORCE_INLINE explicit
+        MutEnumerator(Ring& ring)
             : _ring{ &ring }
             , _indexOfElement{ 0 }
             , _indexOfSlot{ ring.Head() }
@@ -738,40 +744,40 @@ public:
         // Access
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         IterHint Hint() const
         {
             const int32 remaining = _ring->Count() - _indexOfElement;
             return { remaining, remaining };
         }
 
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         T& operator*()
         {
             return DATA_OF(T, _ring->_allocData)[_indexOfSlot];
         }
 
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         T* operator->()
         {
             return DATA_OF(T, _ring->_allocData) + _indexOfSlot;
         }
 
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         const T& operator*() const
         {
             return DATA_OF(const T, _ring->_allocData)[_indexOfSlot];
         }
 
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         const T* operator->() const
         {
             return DATA_OF(const T, _ring->_allocData) + _indexOfSlot;
         }
 
         /// <summary> Returns the index of the current element. </summary>
-        FORCE_INLINE NODISCARD
-        int32 Index() const 
+        NO_DISCARD FORCE_INLINE
+        int32 Index() const
         {
             return _indexOfElement;
         }
@@ -780,15 +786,15 @@ public:
         // Iteration
 
         /// <summary> Check if the enumerator points to a valid element. </summary>
-        FORCE_INLINE NODISCARD
-        explicit operator bool() const 
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const 
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring != nullptr);
             return _indexOfElement < _ring->_countCached;
         }
 
         /// <summary> Moves the enumerator to the next element. </summary>
-        FORCE_INLINE
+        MAY_DISCARD FORCE_INLINE
         MutEnumerator& operator++()
         {
             _indexOfElement += 1;
@@ -798,6 +804,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
+        MAY_DISCARD FORCE_INLINE
         MutEnumerator operator++(int)
         {
             MutEnumerator copy{ *this };
@@ -809,21 +816,21 @@ public:
 
         // Identity
 
-        FORCE_INLINE NODISCARD
+        NO_DISCARD FORCE_INLINE
         bool operator==(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement == other._indexOfElement;
         }
 
-        FORCE_INLINE NODISCARD
+        NO_DISCARD FORCE_INLINE
         bool operator!=(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement != other._indexOfElement;
         }
 
-        FORCE_INLINE NODISCARD
+        NO_DISCARD FORCE_INLINE
         bool operator<(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
@@ -838,14 +845,16 @@ public:
         int32       _indexOfSlot;
 
     public:
-        explicit ConstEnumerator(const Ring& ring)
+        FORCE_INLINE explicit
+        ConstEnumerator(const Ring& ring)
             : _ring{ &ring }
             , _indexOfElement{ 0 }
             , _indexOfSlot{ ring.Head() }
         {
         }
 
-        explicit ConstEnumerator(const MutEnumerator& other)
+        FORCE_INLINE explicit
+        ConstEnumerator(const MutEnumerator& other)
             : _ring{ other._ring }
             , _indexOfElement{ other._indexOfElement }
             , _indexOfSlot{ other._indexOfSlot }
@@ -856,27 +865,28 @@ public:
         // Access
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        FORCE_INLINE auto Hint() const -> IterHint
+        NO_DISCARD FORCE_INLINE
+        IterHint Hint() const
         {
             const int32 remaining = _ring->Count() - _indexOfElement;
             return { remaining, remaining };
         }
 
-        FORCE_INLINE NODISCARD
+        NO_DISCARD FORCE_INLINE
         const T& operator*() const
         {
             return DATA_OF(const T, _ring->_allocData)[_indexOfSlot];
         }
 
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         const T* operator->() const
         {
             return DATA_OF(const T, _ring->_allocData) + _indexOfSlot;
         }
 
         /// <summary> Returns the index of the current element. </summary>
-        FORCE_INLINE NODISCARD
-        int32 Index() const 
+        NO_DISCARD FORCE_INLINE
+        int32 Index() const
         {
             return _indexOfElement;
         }
@@ -885,15 +895,15 @@ public:
         // Iteration
 
         /// <summary> Check if the enumerator points to a valid element. </summary>
-        FORCE_INLINE NODISCARD
-        explicit operator bool() const 
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring != nullptr);
             return _indexOfElement < _ring->_countCached;
         }
 
         /// <summary> Moves the enumerator to the next element. </summary>
-        FORCE_INLINE
+        MAY_DISCARD FORCE_INLINE
         ConstEnumerator& operator++()
         {
             _indexOfElement += 1;
@@ -903,7 +913,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
-        FORCE_INLINE
+        MAY_DISCARD FORCE_INLINE
         ConstEnumerator operator++(int)
         {
             ConstEnumerator copy{ *this };
@@ -915,21 +925,21 @@ public:
 
         // Identity
 
-        FORCE_INLINE NODISCARD
+        NO_DISCARD FORCE_INLINE
         bool operator==(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement == other._indexOfElement;
         }
 
-        FORCE_INLINE NODISCARD
+        NO_DISCARD FORCE_INLINE
         bool operator!=(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement != other._indexOfElement;
         }
 
-        FORCE_INLINE NODISCARD
+        NO_DISCARD FORCE_INLINE
         bool operator<(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
@@ -938,14 +948,14 @@ public:
     };
 
     /// <summary> Creates an enumerator for the array. </summary>
-    FORCE_INLINE NODISCARD
+    NO_DISCARD FORCE_INLINE
     MutEnumerator Values()
     {
         return MutEnumerator{ *this };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
-    FORCE_INLINE NODISCARD
+    NO_DISCARD FORCE_INLINE
     ConstEnumerator Values() const
     {
         return ConstEnumerator{ *this };

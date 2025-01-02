@@ -48,12 +48,14 @@
 // C++ Versions
 
 #if __cplusplus >= 201703L // C++17 and above
-    #define NODISCARD           [[nodiscard]]
+    #define NO_DISCARD          [[nodiscard]]
+    #define MAY_DISCARD         [[maybe_unused]]
     #define FALLTHROUGH         [[fallthrough]]
     #define MAYBE_UNUSED        [[maybe_unused]]
 
 #else // C++14 and below
-    #define NODISCARD         
+    #define NO_DISCARD
+    #define MAY_DISCARD
     #define FALLTHROUGH       
     #define MAYBE_UNUSED
 
@@ -65,8 +67,8 @@
     #define CONSTINIT           constinit
     #define CONSTEXPR_LAMBDA    constexpr
 
-    #define LIKELY(x)           [[likely]] x
-    #define UNLIKELY(x)         [[unlikely]] x
+    #define LIKELY_HINT(x)      [[likely]] x
+    #define UNLIKELY_HINT(x)    [[unlikely]] x
 
 #else // C++17 and below
     #define IF_CONSTEXPR

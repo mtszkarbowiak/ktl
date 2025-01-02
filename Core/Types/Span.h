@@ -39,7 +39,7 @@ public:
     // Properties
 
     /// <summary> Returns the number of elements in the span. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     int32 Count() const
     {
         return _count;
@@ -49,7 +49,7 @@ public:
     /// Returns the pointer to the underlying data i.e.
     /// the first element or <c>nullptr</c> if the span is empty.
     /// </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     T* Data()
     {
         return _data;
@@ -59,14 +59,14 @@ public:
     /// Returns the pointer to the underlying data i.e.
     /// the first element or <c>nullptr</c> if the span is empty.
     /// </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     const T* Data() const
     {
         return _data;
     }
 
     /// <summary> Checks if the span points to any elements. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     explicit operator bool() const
     {
         return
@@ -77,13 +77,13 @@ public:
 
     // Element Access
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     T& operator[](const int32 index)
     {
         return _data[index];
     }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     const T& operator[](const int32 index) const
     {
         return _data[index];

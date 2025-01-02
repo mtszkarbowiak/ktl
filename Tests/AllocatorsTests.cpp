@@ -37,7 +37,8 @@ TEST(FixedAlloc, AllocationCycle)
     // FixedAlloc isn't very interesting, but it's a good example of basic allocators usage.
 
     FixedAllocData alloc;
-    alloc.Allocate(BufferMemory); // Allocation must not have different size than the buffer for fixed alloc.
+    const int32 allocated = alloc.Allocate(BufferMemory); // Allocation must not have different size than the buffer for fixed alloc.
+    GTEST_ASSERT_GE(allocated, BufferMemory);
     GTEST_ASSERT_FALSE(alloc.MovesItems());     
     void* ptr = alloc.Get();
     alloc.Free();
@@ -51,8 +52,10 @@ TEST(HeapAlloc, AllocationCycle)
     // HeapAlloc is a bit more interesting, but still not very useful to learn.
 
     HeapAllocData alloc;
-    GTEST_ASSERT_EQ(alloc.Get(), nullptr);  
-    alloc.Allocate(3 * sizeof(TestInt)); 
+    GTEST_ASSERT_EQ(alloc.Get(), nullptr);
+    constexpr int32 requested = 3 * sizeof(TestInt);
+    const int32 allocated = alloc.Allocate(requested);
+    GTEST_ASSERT_GE(allocated, requested);
     GTEST_ASSERT_NE(alloc.Get(), nullptr);    
     void* ptr = alloc.Get();
     GTEST_ASSERT_TRUE(alloc.MovesItems());
@@ -73,8 +76,10 @@ TEST(BumpAlloc, AllocationCycle)
     BumpAllocContext context{ buffer, sizeof(buffer) };
     {
         BumpAllocData alloc{ context };
-        GTEST_ASSERT_EQ(alloc.Get(), nullptr);   
-        alloc.Allocate(3 * sizeof(TestInt));
+        GTEST_ASSERT_EQ(alloc.Get(), nullptr);
+        constexpr int32 requested = 3 * sizeof(TestInt);
+        const int32 allocated = alloc.Allocate(requested);
+        GTEST_ASSERT_GE(allocated, requested);
         GTEST_ASSERT_NE(alloc.Get(), nullptr);   
         void* ptr = alloc.Get();
         GTEST_ASSERT_TRUE(alloc.MovesItems());   

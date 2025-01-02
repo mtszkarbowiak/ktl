@@ -128,7 +128,7 @@ namespace Statistics
 
     /// <summary> Calculates Residual Sum of Squares. </summary>
     template<typename EnumeratorA, typename EnumeratorB>
-    NODISCARD
+   
     static auto Rss(
         EnumeratorA&& enumeratorA,
         EnumeratorB&& enumeratorB
@@ -166,31 +166,31 @@ namespace Statistics
         float FalseNegative;
 
 
-        NODISCARD
+       
         constexpr float Sum() const
         {
             return TruePositive + TrueNegative + FalsePositive + FalseNegative;
         }
 
-        NODISCARD
+       
         constexpr float Accuracy() const
         {
             return (TruePositive + TrueNegative) / Sum();
         }
 
-        NODISCARD
+       
         constexpr float Precision() const
         {
             return TruePositive / (TruePositive + FalsePositive);
         }
 
-        NODISCARD
+       
         constexpr float Recall() const
         {
             return TruePositive / (TruePositive + FalseNegative);
         }
 
-        NODISCARD
+       
         constexpr float F1() const
         {
             const auto precision = Precision();

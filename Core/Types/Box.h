@@ -24,7 +24,7 @@ public:
     // Element Access
 
     /// <summary> Checks if the box stores no valid element. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr auto IsEmpty() const noexcept -> bool
     {
         // Allocator is nullable.
@@ -32,7 +32,7 @@ public:
     }
 
     /// <summary> Checks if the box stores a valid element. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr auto HasValue() const noexcept -> bool
     {
         // Allocator is nullable.
@@ -41,7 +41,7 @@ public:
 
     /// <summary> Accesses the stored element. </summary>
     /// <remarks> The box must not be empty. </remarks>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr auto Get() -> T*
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_allocData.Get() != nullptr); // Box must not be empty!
@@ -50,7 +50,7 @@ public:
 
     /// <summary> Accesses the stored element. </summary>
     /// <remarks> The box must not be empty. </remarks>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr auto Get() const -> const T*
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_allocData.Get() != nullptr); // Box must not be empty!
@@ -58,17 +58,17 @@ public:
     }
 
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr auto operator*() -> T& { return *Get(); }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr auto operator*() const -> const T& { return *Get(); }
 
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr auto operator->() -> T* { return Get(); }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     constexpr auto operator->() const -> const T* { return Get(); }
 
 
@@ -182,7 +182,7 @@ public:
     // Identity
 
     template<typename OtherAlloc>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     auto operator==(const Box<T, OtherAlloc>& other) const -> bool
     {
         if (IsEmpty() && other.IsEmpty())
@@ -197,7 +197,7 @@ public:
     }
 
     template<typename OtherAlloc>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     auto operator!=(const Box<T, OtherAlloc>& other) const -> bool
     {
         return !(*this == other);
@@ -207,7 +207,7 @@ public:
     // Factorization
 
     /// <summary> Explicitly creates an empty box. </summary>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     static auto Empty() -> Box
     {
         return Box();
@@ -216,7 +216,7 @@ public:
     /// <summary> Creates a box constructed with the specified arguments. </summary>
     /// <remarks> This overload does not allows for allocators with context. </remarks>
     template<typename... Args>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     static auto Make(Args&&... args) -> Box
     {
         Box box;
@@ -229,7 +229,7 @@ public:
     /// <summary> Creates a box constructed with the specified arguments. </summary>
     /// <remarks> This overload allows for allocators with context. </remarks>
     template<typename... Args, typename AllocContext>
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     static auto MakeWithContext(AllocContext&& context, Args&&... args) -> Box
     {
         Box box;

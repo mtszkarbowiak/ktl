@@ -11,26 +11,26 @@
 class Probing
 {
 public:
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     static int32 Linear(const int32 size, const int32 numChecks)
     {
         return numChecks;
     }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     static int32 Quadratic(const int32 size, const int32 numChecks)
     {
         return numChecks * numChecks;
     }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     static int32 DoubleHashing(const int32 size, const int32 numChecks)
     {
         const int32 secondHash = 1 + (size % (size - 1));
         return secondHash * numChecks;
     }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     static int32 Fibonacci(const int32 size, const int32 numChecks)
     {
         int32 fib1 = 1, fib2 = 1;
@@ -43,7 +43,7 @@ public:
         return fib2;
     }
 
-    FORCE_INLINE NODISCARD
+    FORCE_INLINE
     static int32 Prime(const int32 size, const int32 numChecks)
     {
         // Example: Use prime numbers to reduce clustering

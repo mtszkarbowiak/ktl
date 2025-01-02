@@ -76,7 +76,7 @@ public:
     /// <param name="oldCapacity"> Current capacity of the collection. </param>
     /// <param name="minCapacity"> Minimal capacity that the collection should have. </param>
     /// <returns> The new capacity, which the collection should request from the allocator. </returns>
-    NODISCARD
+   
     static int32 NextCapacity(const int32 oldCapacity, const int32 minCapacity)
     {
         // This method returns next capacity and assumes there already is an active allocation.
@@ -116,7 +116,7 @@ public:
     /// The number of elements that can be stored in the allocated memory.
     /// It is guaranteed that the allocated capacity is at least as big as the requested capacity.
     /// </returns>
-    NODISCARD
+   
     static int32 Allocate(AllocData& alloc, const int32 capacity)
     {
         // Calculate the required memory size.
