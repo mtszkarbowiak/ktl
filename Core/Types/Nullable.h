@@ -10,234 +10,151 @@
 /// The value is stored in the nullable object itself.
 /// </summary>
 /// <typeparam name="T"> Type of the stored value. </typeparam>
+template<typename T, bool UseTombstone = (GetMaxTombstoneDepth<T>::Value > 0)>
+class Nullable;
+
+
+/// <summary> Default implementation of nullable type using a sentinel value. </summary>
 template<typename T>
-class Nullable
+class Nullable<T, false>
 {
 public:
     using Element = T;
 
 private:
-    // Storage
-
-    /// <summary>
-    /// Nullable value container that contains a boolean value or null.
-    /// </summary>
-    class FlagStorage final
-    {
-        Element _value;
-        bool _hasValue{ false };
-
-
-    public:
-        NO_DISCARD FORCE_INLINE
-        bool HasValue() const
-        {
-            return _hasValue;
-        }
-        
-        FORCE_INLINE
-        void Reset()
-        {
-            if (_hasValue)
-            {
-                _value.~T();
-                _hasValue = false;
-            }
-        }
-
-        template<typename... Args>
-        FORCE_INLINE
-        void Emplace(Args&&... args)
-        {
-            if (_hasValue) 
-            {
-                _value = Element{ FORWARD(Args, args)... };
-            }
-            else 
-            {
-                new (&_value) Element{ FORWARD(Args, args)... };
-                _hasValue = true;
-            }
-        }
-
-        NO_DISCARD FORCE_INLINE
-        Element& Value()
-        {
-            return _value;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        const Element& Value() const
-        {
-            return _value;
-        }
-    };
-
-    /// <summary>
-    /// Nullable value container that uses a tombstone value to represent null.
-    /// </summary>
-    class TombstoneStorage final
-    {
-        Element _value{ TombstoneDepth{ 1 } }; // Currently only the first tombstone level is supported.
-
-    public:
-        NO_DISCARD FORCE_INLINE
-        bool HasValue() const
-        {
-            return !_value.IsTombstone();
-        }
-
-        FORCE_INLINE
-        void Reset()
-        {
-            if (!_value.IsTombstone())
-            {
-                _value = Element{ TombstoneDepth{ 1 } };
-            }
-        }
-
-        template<typename... Args>
-        FORCE_INLINE
-        void Emplace(Args&&... args)
-        {
-            //TODO Assertion that TombstoneTag is not used.
-            _value = Element{ FORWARD(Args, args)... };
-        }
-
-        NO_DISCARD FORCE_INLINE
-        Element& Value()
-        {
-            return _value;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        const Element& Value() const
-        {
-            return _value;
-        }
-    };
+    Element _value;
+    int8 _nullLevel{ 1 };
 
 public:
-    /// <summary>
-    /// Indicates whether the type supports a tombstone value to represent null.
-    /// </summary>
-    static constexpr bool HasTombstone = GetMaxTombstoneDepth<T>::Value;
-
-private:
-    using Storage = std::conditional_t<
-        HasTombstone, 
-        TombstoneStorage, 
-        FlagStorage
-    >;
-
-    Storage _storage{};
-
-
-    // Element Access
-
-public:
-    NO_DISCARD FORCE_INLINE
     bool HasValue() const
     {
-        return _storage.HasValue();
+        return _nullLevel == 0;
     }
 
-    /// <summary>
-    /// Returns a reference to the stored value. Make sure to check if the value is present.
-    /// </summary>
-    NO_DISCARD FORCE_INLINE
-    const Element& Value() const
+    bool IsTombstone() const
     {
-        ASSERT_COLLECTION_SAFE_ACCESS(_storage.HasValue());
-        return _storage.Value();
+        return _nullLevel > 1;
     }
 
-    /// <summary>
-    /// Returns a reference to the stored value or the fallback value if the value is not present.
-    /// </summary>
-    NO_DISCARD FORCE_INLINE
-    const Element& ValueOr(const Element& fallback) const
+    int8 GetTombstoneLevel() const
     {
-        if (_storage.HasValue())
-        {
-            return _storage.Value();
-        }
-        else 
-        {
-            return fallback;
-        }
+        return _nullLevel - 1; // Go out
     }
 
-    /// <summary>
-    /// Returns a reference to the stored value or the fallback value if the value is not present.
-    /// </summary>
-    NO_DISCARD FORCE_INLINE
-    Element& ValueOr(Element& fallback) const
+    explicit Nullable(const TombstoneDepth tombstoneTag)
+        : _nullLevel{ static_cast<int8>(tombstoneTag.Value + 1) } // Go in
     {
-        if (_storage.HasValue())
-        {
-            return _storage.Value();
-        }
-        else
-        {
-            return fallback;
-        }
+        ASSERT(tombstoneTag.Value >= 0);
     }
 
-
-    // Element Manipulation
-    
-    /// <summary>
-    /// Sets the stored value to null, if it is present.
-    /// </summary>
-    FORCE_INLINE
-    void Reset()
-    {
-        _storage.Reset();
-    }
-
-    /// <summary>
-    /// Assigns a new value to the nullable.
-    /// </summary>
-    template<typename... Args>
-    FORCE_INLINE
-    void Emplace(Args&&... args)
-    {
-        _storage.Emplace(FORWARD(Args, args)...);
-    }
-
-
-    // Lifecycle
-
-    /// <summary>
-    /// Creates a new empty nullable.
-    /// </summary>
     Nullable() = default;
 
-
-    Nullable(Nullable&&) = default;
-
-    Nullable(const Nullable&) = default;
+    void Set(Element&& value)
+    {
+        _value = MOVE(value);
+        _nullLevel = 0;
+    }
 
     explicit Nullable(Element&& value)
+        : _value{ MOVE(value) }
+        , _nullLevel{ 0 }
     {
-        Emplace(MOVE(value));
     }
 
-
-    Nullable& operator=(Nullable&&) = default;
-
-    Nullable& operator=(const Nullable&) = default;
-
-    Nullable& operator=(Element&& value)
+    void Reset()
     {
-        Emplace(MOVE(value));
-        return *this;
+        if (HasValue())
+        {
+            _value.~Element();
+            _nullLevel = 0;
+        }
     }
-
 
     ~Nullable()
     {
-        _storage.Reset();
+        Reset();
     }
+
+    Element& Value()
+    {
+        ASSERT(HasValue());
+        return _value;
+    }
+};
+
+template<typename T>
+struct GetMaxTombstoneDepth<Nullable<T, false>>
+{
+    enum { Value = 64 };
+};
+
+
+/// <summary> Alternative implementation of nullable type using a tombstone value. </summary>
+template<typename T>
+class Nullable<T, true>
+{
+    static_assert(GetMaxTombstoneDepth<T>::Value > 0, "Type does not support tombstone values.");
+
+public:
+    using Element = T;
+
+private:
+    Element _value{ TombstoneDepth{ 1 } };
+
+
+public:
+    bool HasValue() const
+    {
+        return !_value.IsTombstone(); // Use the underlying type's tombstone.
+    }
+
+    bool IsTombstone() const
+    {
+        return GetTombstoneLevel() > 0;
+    }
+
+    int8 GetTombstoneLevel() const
+    {
+        return _value.GetTombstoneLevel() - 1; // Go out
+    }
+
+    explicit Nullable(const TombstoneDepth tombstoneTag)
+        : _value{ TombstoneDepth{ tombstoneTag.Value + 1 } } // Go in
+    {
+        ASSERT(tombstoneTag.Value > 0);
+    }
+
+    Nullable() = default;
+
+    void Set(Element&& value)
+    {
+        _value = MOVE(value); // Should overwrite the tombstone. (or should it?)
+    }
+
+    explicit Nullable(Element&& value)
+        : _value{ MOVE(value) }
+    {
+    }
+
+    void Reset()
+    {
+        _value = Element{TombstoneDepth{ 1 }};
+    }
+
+    ~Nullable()
+    {
+        Reset();
+    }
+
+    Element& Value()
+    {
+        ASSERT(HasValue());
+        return _value;
+    }
+};
+
+template<typename T>
+struct GetMaxTombstoneDepth<Nullable<T, true>>
+{
+    enum { Value = GetMaxTombstoneDepth<T>::Value - 1 };
 };
