@@ -12,6 +12,8 @@
 template<typename T>
 class Nullable final
 {
+    // Storage
+
     /// <summary>
     /// Nullable value container that contains a boolean value or null.
     /// </summary>
@@ -93,6 +95,7 @@ class Nullable final
         FORCE_INLINE
         void Emplace(Args&&... args)
         {
+            //TODO Assertion that TombstoneTag is not used.
             _value = T{ FORWARD(Args, args)... };
         }
 
@@ -123,6 +126,9 @@ private:
     >;
 
     Storage _storage{};
+
+
+    // Element Access
 
 public:
     NO_DISCARD FORCE_INLINE
@@ -156,6 +162,25 @@ public:
             return fallback;
         }
     }
+
+    /// <summary>
+    /// Returns a reference to the stored value or the fallback value if the value is not present.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE
+    T& ValueOr(T& fallback) const
+    {
+        if (_storage.HasValue())
+        {
+            return _storage.Value();
+        }
+        else
+        {
+            return fallback;
+        }
+    }
+
+
+    // Element Manipulation
     
     /// <summary>
     /// Sets the stored value to null, if it is present.
@@ -176,6 +201,8 @@ public:
         _storage.Emplace(FORWARD(Args, args)...);
     }
 
+
+    // Lifecycle
 
     /// <summary>
     /// Creates a new empty nullable.

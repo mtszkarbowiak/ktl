@@ -6,6 +6,7 @@
 #include "Types/Nullable.h"
 #include "Types/Numbers.h"
 
+
 TEST(NullableByFlagTests, EmptyCtor)
 {
     const Nullable<int32> nullable{};
