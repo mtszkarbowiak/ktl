@@ -5,16 +5,17 @@
 #include "Language/Keywords.h"
 #include "Language/Templates.h"
 
-/// <summary>
-/// Wraps a value type so that it can be assigned null.
-/// The value is stored in the nullable object itself.
-/// </summary>
-/// <typeparam name="T"> Type of the stored value. </typeparam>
 template<typename T, bool UseTombstone = (GetMaxTombstoneDepth<T>::Value > 0)>
 class Nullable;
 
-
-/// <summary> Default implementation of nullable type using a sentinel value. </summary>
+/// <summary>
+/// Wrapper over a value type that can be assigned an additional null value.
+/// To represent null, this implementation always uses a sentinel value taking additional byte.
+/// </summary>
+///
+/// <typeparam name="T">
+/// Type of the stored value. It need not to use a tombstone value.
+/// </typeparam>
 template<typename T>
 class Nullable<T, false>
 {
@@ -29,12 +30,14 @@ private:
     // Element Access
 
 public:
+    /// <summary> Checks if the nullable has a value. </summary>
     NO_DISCARD FORCE_INLINE
     bool HasValue() const
     {
         return _nullLevel == 0;
     }
 
+    /// <summary> Reference to the value. Nullable must not be empty. </summary>
     NO_DISCARD FORCE_INLINE
     Element& Value()
     {
@@ -42,6 +45,7 @@ public:
         return _value;
     }
 
+    /// <summary> Reference to the value. Nullable must not be empty. </summary>
     NO_DISCARD FORCE_INLINE
     const Element& Value() const
     {
@@ -49,12 +53,21 @@ public:
         return _value;
     }
 
+    /// <summary> Overwrites the value with the specified one. </summary>
     void Set(Element&& value)
     {
-        _value = MOVE(value);
-        _nullLevel = 0;
+        if (HasValue())
+        {
+            _value = MOVE(value);
+        }
+        else 
+        {
+            new (&_value) Element{ MOVE(value) };
+            _nullLevel = 0;
+        }
     }
 
+    /// <summary> Resets the value to null. </summary>
     void Reset()
     {
         if (HasValue())
@@ -109,7 +122,19 @@ struct GetMaxTombstoneDepth<Nullable<T, false>>
 };
 
 
-/// <summary> Alternative implementation of nullable type using a tombstone value. </summary>
+/// <summary>
+/// Wrapper over a value type that can be assigned an additional null value.
+/// This implementation cedes tracking of null value to the underlying type via tombstone values.
+/// Therefore, it does not require any additional memory to store the null value.
+/// </summary>
+/// 
+/// <typeparam name="T">
+/// Type of the stored value. It must support tombstone values.
+/// </typeparam>
+///
+/// <remarks>
+/// 1. 
+/// </remarks>
 template<typename T>
 class Nullable<T, true>
 {
@@ -125,12 +150,14 @@ private:
     // Element Access
 
 public:
+    /// <summary> Checks if the nullable has a value. </summary>
     NO_DISCARD FORCE_INLINE
     bool HasValue() const
     {
         return !_value.IsTombstone(); // Use the underlying type's tombstone.
     }
 
+    /// <summary> Reference to the value. Nullable must not be empty. </summary>
     NO_DISCARD FORCE_INLINE
     Element& Value()
     {
@@ -138,6 +165,7 @@ public:
         return _value;
     }
 
+    /// <summary> Reference to the value. Nullable must not be empty. </summary>
     NO_DISCARD FORCE_INLINE
     const Element& Value() const
     {
@@ -145,11 +173,13 @@ public:
         return _value;
     }
 
+    /// <summary> Overwrites the value with the specified one. </summary>
     void Set(Element&& value)
     {
         _value = MOVE(value); // Should overwrite the tombstone. (or should it?)
     }
 
+    /// <summary> Resets the value to null. </summary>
     void Reset()
     {
         _value = Element{ TombstoneDepth{ 1 } };
@@ -197,3 +227,17 @@ struct GetMaxTombstoneDepth<Nullable<T, true>>
 {
     enum { Value = GetMaxTombstoneDepth<T>::Value - 1 };
 };
+
+
+/// <summary>
+/// Type alias for a nullable type that enforces usage of sentinel value.
+/// </summary>
+template<typename T>
+using SentinelNullable = Nullable<T, false>;
+
+/// <summary>
+/// Type alias for a nullable type that enforces usage of tombstone value.
+/// All constraints of the underlying type must be met.
+/// </summary>
+template<typename T>
+using TombstoneNullable = Nullable<T, true>;
