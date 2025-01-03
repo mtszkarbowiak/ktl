@@ -19,7 +19,7 @@ private:
     Element* _value;
     
 
-    // Lifecycle
+    // Lifecycle //TODO Put lifecycle in the end.
 
 public:
     FORCE_INLINE
@@ -46,13 +46,6 @@ public:
     }
 
     FORCE_INLINE
-    explicit Ref(TombstoneTag) noexcept
-        : _value{ nullptr }
-    {
-        // Puts the other ref into invalid state.
-    }
-
-    FORCE_INLINE
     Ref& operator=(const Ref& other)
     {
         _value = other._value;
@@ -70,6 +63,29 @@ public:
 
     FORCE_INLINE
     ~Ref() = default;
+
+    
+    // Tombstone
+
+    FORCE_INLINE
+    explicit Ref(MAYBE_UNUSED TombstoneDepth tombstoneTag) noexcept
+        : _value{ nullptr }
+    {
+        ASSERT_COLLECTION_INTEGRITY(tombstoneTag.Value == 1); // Reference does not support any other tombstone depth.
+        // Puts the other ref into invalid state.
+    }
+
+    NO_DISCARD FORCE_INLINE
+    bool IsTombstone() const
+    {
+        return _value == nullptr;
+    }
+
+    NO_DISCARD FORCE_INLINE
+    int8 GetTombstoneLevel() const
+    {
+        return 1; // Reference does not support any other tombstone depth.
+    }
 
 
     // Element Access
@@ -99,15 +115,6 @@ public:
     }
 
 
-    // Tombstone
-
-    NO_DISCARD FORCE_INLINE
-    bool IsTombstone() const
-    {
-        return _value == nullptr;
-    }
-
-
     // Comparison
 
     NO_DISCARD FORCE_INLINE
@@ -130,7 +137,7 @@ public:
 };
 
 template<typename T>
-struct IsTombstoneSupported<Ref<T>>
+struct GetMaxTombstoneDepth<Ref<T>>
 {
-    static constexpr bool Value = true;
+    enum { Value = 1 };
 };

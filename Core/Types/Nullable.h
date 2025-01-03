@@ -78,7 +78,7 @@ private:
     /// </summary>
     class TombstoneStorage final
     {
-        Element _value{ TombstoneTag{} };
+        Element _value{ TombstoneDepth{ 1 } }; // Currently only the first tombstone level is supported.
 
     public:
         NO_DISCARD FORCE_INLINE
@@ -92,7 +92,7 @@ private:
         {
             if (!_value.IsTombstone())
             {
-                _value = Element{ TombstoneTag{} };
+                _value = Element{ TombstoneDepth{ 1 } };
             }
         }
 
@@ -121,7 +121,7 @@ public:
     /// <summary>
     /// Indicates whether the type supports a tombstone value to represent null.
     /// </summary>
-    static constexpr bool HasTombstone = IsTombstoneSupported<Element>::Value;
+    static constexpr bool HasTombstone = GetMaxTombstoneDepth<T>::Value;
 
 private:
     using Storage = std::conditional_t<

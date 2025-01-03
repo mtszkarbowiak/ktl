@@ -18,8 +18,6 @@ class Index
 {
     int32 _value{};
 
-    static constexpr int32 TombstoneValue = -1;
-
 public:
     /// <summary>
     /// Creates index of default value, which is zero.
@@ -37,25 +35,8 @@ public:
         ASSERT(value >= 0); // Value must be non-negative. To create a tombstone, use Nullable.
     }
 
-    /// <summary>
-    /// Creates a tombstone of an index.
-    /// Do not use this constructor directly, use <c>Nullable</c> instead.
-    /// </summary>
-    FORCE_INLINE
-    explicit Index(TombstoneTag)
-        : _value{ TombstoneValue }
-    {
-    }
 
-    /// <summary>
-    /// Checks if the index is a tombstone.
-    /// Do not use this method directly, use <c>Nullable</c> instead.
-    /// </summary>
-    NO_DISCARD FORCE_INLINE
-    bool IsTombstone() const
-    {
-        return _value == TombstoneValue;
-    }
+    // Conversion
 
     /// <summary>
     /// Implicit conversion to integer.
@@ -66,6 +47,40 @@ public:
         ASSERT_COLLECTION_SAFE_ACCESS(!IsTombstone()); // Accessing a tombstone is strictly forbidden.
         return _value;
     }
+
+
+    // Tombstone
+
+    /// <summary>
+    /// Creates a tombstone of an index.
+    /// Do not use this constructor directly, use <c>Nullable</c> instead.
+    /// </summary>
+    FORCE_INLINE
+    explicit Index(TombstoneDepth tombstoneTag)
+        : _value{ -tombstoneTag.Value }
+    {
+        ASSERT(tombstoneTag.Value > 0); // Tombstone depth must be greater than zero.
+    }
+
+    /// <summary>
+    /// Checks if the index is a tombstone.
+    /// Do not use this method directly, use <c>Nullable</c> instead.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE
+    bool IsTombstone() const
+    {
+        return _value < 0;
+    }
+
+    NO_DISCARD FORCE_INLINE
+    int8 GetTombstoneLevel() const
+    {
+        return static_cast<int8>(-_value);
+    }
 };
 
-DECLARE_TOMBSTONE_SUPPORTED(Index)
+template<>
+struct GetMaxTombstoneDepth<Index>
+{
+    enum { Value = 64 }; // More than enough for any collection.
+};
