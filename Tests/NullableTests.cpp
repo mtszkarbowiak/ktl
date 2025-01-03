@@ -3,8 +3,10 @@
 #include <gtest/gtest.h>
 
 #include "Collections/Index.h"
+#include "Debugging/LifecycleTracker.h"
 #include "Types/Nullable.h"
 #include "Types/Numbers.h"
+#include "Types/Ref.h"
 
 
 TEST(NullableByFlagTests, EmptyCtor)
@@ -57,4 +59,42 @@ TEST(NullableByTombstoneTests, ValueCtor_ValueAsgn)
     GTEST_ASSERT_EQ(nullable.Value(), 42);
 }
 
-//TODO Lifecycle tests
+
+TEST(NullableByFlagTests, ValueCtor)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Nullable<TestTracker> nullable{ TestTracker{ 69 } };
+    }
+    LIFECYCLE_TEST_OUT
+}
+
+TEST(NullableByFlagTests, ValueAsgn)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Nullable<TestTracker> nullable;
+        GTEST_ASSERT_FALSE(nullable.HasValue());
+        nullable = TestTracker{ 69 };
+        GTEST_ASSERT_TRUE(nullable.HasValue());
+    }
+    LIFECYCLE_TEST_OUT
+}
+
+
+TEST(NullableByTombstoneTests, RefExample)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        TestTracker tracker{ 69 };
+
+        Nullable<Ref<TestTracker>> nullable{};
+        GTEST_ASSERT_FALSE(nullable.HasValue());
+
+        nullable = Ref<TestTracker>{ tracker };
+        GTEST_ASSERT_TRUE(nullable.HasValue());
+
+        // Unfortunately, for now testing the lifecycle of tombstone is impossible.
+    }
+    LIFECYCLE_TEST_OUT
+}

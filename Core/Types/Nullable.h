@@ -7,11 +7,16 @@
 
 /// <summary>
 /// Wraps a value type so that it can be assigned null.
+/// The value is stored in the nullable object itself.
 /// </summary>
 /// <typeparam name="T"> Type of the stored value. </typeparam>
 template<typename T>
-class Nullable final
+class Nullable
 {
+public:
+    using Element = T;
+
+private:
     // Storage
 
     /// <summary>
@@ -19,7 +24,7 @@ class Nullable final
     /// </summary>
     class FlagStorage final
     {
-        T _value;
+        Element _value;
         bool _hasValue{ false };
 
 
@@ -46,23 +51,23 @@ class Nullable final
         {
             if (_hasValue) 
             {
-                _value = T{ FORWARD(Args, args)... };
+                _value = Element{ FORWARD(Args, args)... };
             }
             else 
             {
-                new (&_value) T{ FORWARD(Args, args)... };
+                new (&_value) Element{ FORWARD(Args, args)... };
                 _hasValue = true;
             }
         }
 
         NO_DISCARD FORCE_INLINE
-        T& Value()
+        Element& Value()
         {
             return _value;
         }
 
         NO_DISCARD FORCE_INLINE
-        const T& Value() const
+        const Element& Value() const
         {
             return _value;
         }
@@ -73,7 +78,7 @@ class Nullable final
     /// </summary>
     class TombstoneStorage final
     {
-        T _value{ TombstoneTag{} };
+        Element _value{ TombstoneTag{} };
 
     public:
         NO_DISCARD FORCE_INLINE
@@ -87,7 +92,7 @@ class Nullable final
         {
             if (!_value.IsTombstone())
             {
-                _value = T{ TombstoneTag{} };
+                _value = Element{ TombstoneTag{} };
             }
         }
 
@@ -96,17 +101,17 @@ class Nullable final
         void Emplace(Args&&... args)
         {
             //TODO Assertion that TombstoneTag is not used.
-            _value = T{ FORWARD(Args, args)... };
+            _value = Element{ FORWARD(Args, args)... };
         }
 
         NO_DISCARD FORCE_INLINE
-        T& Value()
+        Element& Value()
         {
             return _value;
         }
 
         NO_DISCARD FORCE_INLINE
-        const T& Value() const
+        const Element& Value() const
         {
             return _value;
         }
@@ -116,7 +121,7 @@ public:
     /// <summary>
     /// Indicates whether the type supports a tombstone value to represent null.
     /// </summary>
-    static constexpr bool HasTombstone = IsTombstoneSupported<T>::Value;
+    static constexpr bool HasTombstone = IsTombstoneSupported<Element>::Value;
 
 private:
     using Storage = std::conditional_t<
@@ -141,7 +146,7 @@ public:
     /// Returns a reference to the stored value. Make sure to check if the value is present.
     /// </summary>
     NO_DISCARD FORCE_INLINE
-    const T& Value() const
+    const Element& Value() const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_storage.HasValue());
         return _storage.Value();
@@ -151,7 +156,7 @@ public:
     /// Returns a reference to the stored value or the fallback value if the value is not present.
     /// </summary>
     NO_DISCARD FORCE_INLINE
-    const T& ValueOr(const T& fallback) const
+    const Element& ValueOr(const Element& fallback) const
     {
         if (_storage.HasValue())
         {
@@ -167,7 +172,7 @@ public:
     /// Returns a reference to the stored value or the fallback value if the value is not present.
     /// </summary>
     NO_DISCARD FORCE_INLINE
-    T& ValueOr(T& fallback) const
+    Element& ValueOr(Element& fallback) const
     {
         if (_storage.HasValue())
         {
@@ -209,22 +214,30 @@ public:
     /// </summary>
     Nullable() = default;
 
-    /// <summary>
-    /// Creates a nullable with a value created from the provided arguments.
-    /// </summary>
-    template<typename... Args>
-    explicit Nullable(Args&&... args)
+
+    Nullable(Nullable&&) = default;
+
+    Nullable(const Nullable&) = default;
+
+    explicit Nullable(Element&& value)
     {
-        Emplace(FORWARD(Args, args)...);
+        Emplace(MOVE(value));
     }
 
-    /// <summary>
-    /// Assigns a new value to the nullable.
-    /// </summary>
-    template<typename... Args>
-    Nullable& operator=(Args&&... args)
+
+    Nullable& operator=(Nullable&&) = default;
+
+    Nullable& operator=(const Nullable&) = default;
+
+    Nullable& operator=(Element&& value)
     {
-        Emplace(FORWARD(Args, args)...);
+        Emplace(MOVE(value));
         return *this;
+    }
+
+
+    ~Nullable()
+    {
+        _storage.Reset();
     }
 };
