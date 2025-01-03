@@ -64,43 +64,43 @@ TEST(NullableByTombstoneTests, ValueCtor_ValueAsgn)
 }
 
 
-//TEST(NullableByFlagTests, ValueCtor)
-//{
-//    LIFECYCLE_TEST_INTO
-//    {
-//        Nullable<TestTracker> nullable;
-//    }
-//    LIFECYCLE_TEST_OUT
-//}
+TEST(NullableByFlagTests, ValueCtor)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Nullable<TestTracker> nullable;
+    }
+    LIFECYCLE_TEST_OUT
+}
 
-//TEST(NullableByFlagTests, ValueAsgn)
-//{
-//    LIFECYCLE_TEST_INTO
-//    {
-//        Nullable<TestTracker> nullable;
-//        GTEST_ASSERT_FALSE(nullable.HasValue());
-//        nullable = TestTracker{ 69 };
-//        GTEST_ASSERT_TRUE(nullable.HasValue());
-//    }
-//    LIFECYCLE_TEST_OUT
-//}
-//
-//TEST(NullableByTombstoneTests, RefExample)
-//{
-//    LIFECYCLE_TEST_INTO
-//    {
-//        TestTracker tracker{ 69 };
-//
-//        Nullable<Ref<TestTracker>> nullable{};
-//        GTEST_ASSERT_FALSE(nullable.HasValue());
-//
-//        nullable = Ref<TestTracker>{ tracker };
-//        GTEST_ASSERT_TRUE(nullable.HasValue());
-//
-//        // Unfortunately, for now testing the lifecycle of tombstone is impossible.
-//    }
-//    LIFECYCLE_TEST_OUT
-//}
+TEST(NullableByFlagTests, ValueAsgn)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Nullable<TestTracker> nullable;
+        GTEST_ASSERT_FALSE(nullable.HasValue());
+        nullable.Set(TestTracker{ 69 });
+        GTEST_ASSERT_TRUE(nullable.HasValue());
+    }
+    LIFECYCLE_TEST_OUT
+}
+
+TEST(NullableByTombstoneTests, RefExample)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        TestTracker tracker{ 69 };
+
+        Nullable<Ref<TestTracker>> nullable{};
+        GTEST_ASSERT_FALSE(nullable.HasValue());
+
+        nullable.Set(Ref<TestTracker>{ tracker });
+        GTEST_ASSERT_TRUE(nullable.HasValue());
+
+        // Unfortunately, for now testing the lifecycle of tombstone is impossible.
+    }
+    LIFECYCLE_TEST_OUT
+}
 
 
 namespace SentinelNullables
