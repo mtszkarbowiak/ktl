@@ -3,37 +3,51 @@
 #pragma once
 
 #include "Allocators/HeapAlloc.h"
+#include "Collections/AllocHelper.h"
 #include "Language/Templates.h"
 
 /// <summary>
 /// Stores one (or zero) element using a custom allocator.
-/// Use factory methods to create instances of this class.
 /// </summary>
-/// <typeparam name="T"> Type of the element to store. </typeparam>
-/// <typeparam name="Alloc"> Type of the allocator to use. It must be nullable. </typeparam>
-/// <remarks> This class works effectively as advanced `std::unique_ptr`. </remarks>
-template<typename T, typename Alloc = HeapAlloc>
-class Box
+///
+/// <typeparam name="T">
+/// Type of the element to store.
+/// </typeparam>
+/// <typeparam name="A">
+/// (Optional) Type of the allocator to use. It must be nullable.
+/// </typeparam>
+///
+/// <remarks>
+/// 1. Use factory methods to create instances of this class.
+/// 2. This class works effectively as <c>std::unique_ptr</c>, but customizes the allocator.
+/// </remarks>
+template<
+    typename T,
+    typename A = HeapAlloc
+>
+struct Box
 {
-    using AllocData = typename Alloc::Data;
+    using Element   = T;
+    using AllocData = typename A::Data;
 
-    AllocData _allocData;
+private:
+    AllocData _allocData{};
 
 
-public:
     // Element Access
 
+public:
     /// <summary> Checks if the box stores no valid element. </summary>
-    FORCE_INLINE
-    constexpr auto IsEmpty() const noexcept -> bool
+    NO_DISCARD FORCE_INLINE constexpr
+    bool IsEmpty() const
     {
         // Allocator is nullable.
         return _allocData.Get() == nullptr;
     }
 
     /// <summary> Checks if the box stores a valid element. </summary>
-    FORCE_INLINE
-    constexpr auto HasValue() const noexcept -> bool
+    NO_DISCARD FORCE_INLINE constexpr
+    bool HasValue() const
     {
         // Allocator is nullable.
         return _allocData.Get() != nullptr;
@@ -41,35 +55,47 @@ public:
 
     /// <summary> Accesses the stored element. </summary>
     /// <remarks> The box must not be empty. </remarks>
-    FORCE_INLINE
-    constexpr auto Get() -> T*
+    NO_DISCARD FORCE_INLINE constexpr
+    Element* Get()
     {
-        ASSERT_COLLECTION_SAFE_ACCESS(_allocData.Get() != nullptr); // Box must not be empty!
-        return reinterpret_cast<T*>(_allocData.Get());
+        return DATA_OF(Element, _allocData);
     }
 
     /// <summary> Accesses the stored element. </summary>
     /// <remarks> The box must not be empty. </remarks>
-    FORCE_INLINE
-    constexpr auto Get() const -> const T*
+    NO_DISCARD FORCE_INLINE constexpr
+    const Element* Get() const
     {
-        ASSERT_COLLECTION_SAFE_ACCESS(_allocData.Get() != nullptr); // Box must not be empty!
-        return reinterpret_cast<const T*>(_allocData.Get());
+        return DATA_OF(const Element, _allocData);
     }
 
 
-    FORCE_INLINE
-    constexpr auto operator*() -> T& { return *Get(); }
+    NO_DISCARD FORCE_INLINE constexpr
+    Element& operator*()
+    {
+        return *Get();
+    }
 
-    FORCE_INLINE
-    constexpr auto operator*() const -> const T& { return *Get(); }
+    NO_DISCARD FORCE_INLINE constexpr
+    const Element& operator*() const
+    {
+        ASSERT_COLLECTION_SAFE_ACCESS(_allocData.Get() != nullptr); // Box must not be empty!
+        return *Get();
+    }
 
 
-    FORCE_INLINE
-    constexpr auto operator->() -> T* { return Get(); }
+    NO_DISCARD FORCE_INLINE constexpr
+    Element* operator->()
+    {
+        return Get();
+    }
 
-    FORCE_INLINE
-    constexpr auto operator->() const -> const T* { return Get(); }
+    NO_DISCARD FORCE_INLINE constexpr
+    const Element* operator->() const
+    {
+        ASSERT_COLLECTION_SAFE_ACCESS(_allocData.Get() != nullptr); // Box must not be empty!
+        return Get();
+    }
 
 
     // Element Manipulation
@@ -78,79 +104,65 @@ public:
     /// Destroys the stored element and clears the box.
     /// If no element is stored, the box remains empty.
     /// </summary>
-    FORCE_INLINE
+    FORCE_INLINE constexpr
     void Reset()
     {
-        if (IsEmpty())
+        if (!IsEmpty()) 
         {
-            return;
+            Get()->~Element();
+            _allocData.Free();
         }
-
-        Get()->~T();
-        _allocData.Free();
     }
 
     /// <summary> Replaces the stored element with a new one by constructing it. </summary>
     template<typename... Args>
-    FORCE_INLINE
+    FORCE_INLINE constexpr
     void Emplace(Args&&... args)
     {
         Reset();
-        _allocData.Allocate(sizeof(T));
-        new (Get()) T(FORWARD(Args, args)...);
+        _allocData.Allocate(sizeof(Element));
+        new (Get()) Element(FORWARD(Args, args)...);
     }
 
-    /// <summary> Replaces the stored element with a new one by moving or copying it. </summary>
-    template<typename U = T, typename = typename std::enable_if<std::is_same<U, T>::value>::type>
-    FORCE_INLINE
-    void Set(U&& value)
-    {
-        Reset();
-        _allocData.Allocate(sizeof(T));
-        new (Get()) T(value);
-    }
 
     // Lifecycle
 
     /// <summary> Initializes an empty box. </summary>
-    FORCE_INLINE
+    FORCE_INLINE constexpr
     Box() noexcept = default;
 
     
     /// <summary> Copying a box is not allowed. </summary>
     /// <remarks> Blocking copy operation allows using the box as a unique pointer. </remarks>
-    FORCE_INLINE
     Box(const Box& other) = delete;
 
 
     /// <summary> Moves the contents of the other box into this one. </summary>
     FORCE_INLINE
     Box(Box&& other) noexcept
-        : _allocData{}
     {
-        if (other.IsEmpty())
+        if (!other.IsEmpty()) 
         {
-            // Pass.
-        }
-        else if (other._allocData.MovesItems())
-        {
-            _allocData = MOVE(other._allocData);
-        }
-        else
-        {
-            _allocData.Allocate(sizeof(T));
-            new (Get()) T(MOVE(*other.Get()));
-            other.Reset();
+            if (other._allocData.MovesItems()) 
+            {
+                _allocData = MOVE(other._allocData);
+            }
+            else 
+            {
+                _allocData.Allocate(sizeof(Element));
+                new(Get()) Element(MOVE(*other.Get()));
+                other.Reset();
+            }
         }
     }
 
     /// <summary> Copying a box is not allowed. </summary>
     /// <remarks> Blocking copy operation allows using the box as a unique pointer. </remarks>
-    auto operator=(const Box& other)->Box & = delete;
+    Box& operator=(const Box& other) = delete;
 
     /// <summary> Resets the box and moves the contents of the other box into this one. </summary>
     FORCE_INLINE
-    auto operator=(Box&& other) noexcept -> Box&
+    Box& operator=(Box&& other) noexcept
     {
         if (this == &other)
         {
@@ -181,9 +193,9 @@ public:
 
     // Identity
 
-    template<typename OtherAlloc>
-    FORCE_INLINE
-    auto operator==(const Box<T, OtherAlloc>& other) const -> bool
+    template<typename A2>
+    NO_DISCARD FORCE_INLINE constexpr
+    bool operator==(const Box<T, A2>& other) const
     {
         if (IsEmpty() && other.IsEmpty())
         {
@@ -196,9 +208,9 @@ public:
         return *Get() == *other.Get();
     }
 
-    template<typename OtherAlloc>
-    FORCE_INLINE
-    auto operator!=(const Box<T, OtherAlloc>& other) const -> bool
+    template<typename A2>
+    NO_DISCARD FORCE_INLINE constexpr
+    bool operator!=(const Box<T, A2>& other) const
     {
         return !(*this == other);
     }
@@ -207,21 +219,21 @@ public:
     // Factorization
 
     /// <summary> Explicitly creates an empty box. </summary>
-    FORCE_INLINE
-    static auto Empty() -> Box
+    NO_DISCARD static FORCE_INLINE constexpr
+    Box Empty()
     {
-        return Box();
+        return Box{};
     }
 
     /// <summary> Creates a box constructed with the specified arguments. </summary>
     /// <remarks> This overload does not allows for allocators with context. </remarks>
     template<typename... Args>
-    FORCE_INLINE
-    static auto Make(Args&&... args) -> Box
+    NO_DISCARD static FORCE_INLINE constexpr
+    Box Make(Args&&... args)
     {
         Box box;
-        box._allocData.Allocate(sizeof(T));
-        new(box.Get()) T(FORWARD(Args..., args)...);
+        box._allocData.Allocate(sizeof(Element));
+        new(box.Get()) Element(FORWARD(Args..., args)...);
 
         return box;
     }
@@ -229,13 +241,13 @@ public:
     /// <summary> Creates a box constructed with the specified arguments. </summary>
     /// <remarks> This overload allows for allocators with context. </remarks>
     template<typename... Args, typename AllocContext>
-    FORCE_INLINE
-    static auto MakeWithContext(AllocContext&& context, Args&&... args) -> Box
+    NO_DISCARD static FORCE_INLINE constexpr
+    Box MakeWithContext(AllocContext&& context, Args&&... args)
     {
         Box box;
         box._allocData = AllocData{ FORWARD(AllocContext, context) };
-        box._allocData.Allocate(sizeof(T));
-        new(box.Get()) T(FORWARD(Args, args)...);
+        box._allocData.Allocate(sizeof(Element));
+        new(box.Get()) Element(FORWARD(Args, args)...);
 
         return box;
     }
@@ -243,14 +255,12 @@ public:
 
     // Constraints
 
-    static_assert(Alloc::IsNullable                           , "Allocator must be nullable.");
+    static_assert(A::IsNullable, "Allocator must be nullable.");
 
     static_assert(!std::is_reference<T>                ::value, "Type must not be a reference.");
     static_assert(!std::is_const<T>                    ::value, "Type must not be a const-qualified type.");
-
     static_assert(std::is_move_constructible<T>        ::value, "Type must be move-constructible.");
     static_assert(std::is_destructible<T>              ::value, "Type must be destructible.");
     static_assert(std::is_nothrow_move_constructible<T>::value, "Type must be nothrow move-constructible.");
     static_assert(std::is_nothrow_destructible<T>      ::value, "Type must be nothrow destructible.");
 };
-
