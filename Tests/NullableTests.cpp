@@ -11,7 +11,7 @@
 
 TEST(NullableByFlagTests, EmptyCtor)
 {
-    const Nullable<int32> nullable{};
+    const Nullable<int32> nullable;
     GTEST_ASSERT_FALSE(nullable.HasValue());
 }
 
@@ -81,7 +81,6 @@ TEST(NullableByFlagTests, ValueAsgn)
     LIFECYCLE_TEST_OUT
 }
 
-
 TEST(NullableByTombstoneTests, RefExample)
 {
     LIFECYCLE_TEST_INTO
@@ -97,4 +96,40 @@ TEST(NullableByTombstoneTests, RefExample)
         // Unfortunately, for now testing the lifecycle of tombstone is impossible.
     }
     LIFECYCLE_TEST_OUT
+}
+
+
+TEST(NullableNested, NestedCtor)
+{
+    using Nullable0 = Nullable<int>;
+    using Nullable1 = Nullable<Nullable0>;
+    using Nullable2 = Nullable<Nullable1>;
+
+    static_assert(GetMaxTombstoneDepth<int>::Value == 0, "");
+    static_assert(GetMaxTombstoneDepth<Nullable0>::Value == 64, "");
+    static_assert(GetMaxTombstoneDepth<Nullable1>::Value == 63, "");
+    static_assert(GetMaxTombstoneDepth<Nullable2>::Value == 62, "");
+
+    static_assert(sizeof(Nullable1) == sizeof(Nullable0), "");
+    static_assert(sizeof(Nullable2) == sizeof(Nullable0), "");
+
+    const Nullable2 nullableA{ Nullable1{ Nullable0{ 69 } } };
+    const Nullable2 nullableB{ Nullable1{ Nullable0{} } };
+    const Nullable2 nullableC{ Nullable1{} };
+    const Nullable2 nullableD{};
+
+    //
+    GTEST_ASSERT_EQ(nullableD.HasValue(), false);
+    //
+    GTEST_ASSERT_EQ(nullableC.HasValue(), true);
+    GTEST_ASSERT_EQ(nullableC.Value().HasValue(), false);
+    //
+    GTEST_ASSERT_EQ(nullableB.HasValue(), true);
+    GTEST_ASSERT_EQ(nullableB.Value().HasValue(), true);
+    GTEST_ASSERT_EQ(nullableB.Value().Value().HasValue(), false);
+    //
+    GTEST_ASSERT_EQ(nullableA.HasValue(), true);
+    GTEST_ASSERT_EQ(nullableA.Value().HasValue(), true);
+    GTEST_ASSERT_EQ(nullableA.Value().Value().HasValue(), true);
+    GTEST_ASSERT_EQ(nullableA.Value().Value().Value(), { 69 });
 }
