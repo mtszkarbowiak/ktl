@@ -86,3 +86,22 @@ using GetCopyableTag = typename std::conditional<
     IsCopyableTag,
     NonCopyableTag
 >::type;
+
+
+// Null Semantics
+
+/// <summary>
+/// Special tag used to request the creation of a tombstone object.
+/// Tombstone objects are used to represent null values in nullable types.
+/// This allows for the optimization by avoiding the usage of additional flags.
+/// </summary>
+struct TombstoneTag {};
+
+/// <summary>
+/// Flag indicating whether the type supports tombstone objects.
+/// </summary>
+template<typename T>
+struct IsTombstoneSupported{ static constexpr bool Value = false; };
+
+#define DECLARE_TOMBSTONE_SUPPORTED(Type) \
+    template<> struct IsTombstoneSupported<Type> { static constexpr bool Value = true; };
