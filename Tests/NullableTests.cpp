@@ -103,7 +103,7 @@ TEST(NullableByTombstoneTests, ValueCtor_ValueAsgn)
 //}
 
 
-TEST(NullableNested, NestedCtor)
+namespace SentinelNullables
 {
     using Nullable0 = Nullable<int>;
     using Nullable1 = Nullable<Nullable0>;
@@ -116,47 +116,80 @@ TEST(NullableNested, NestedCtor)
 
     static_assert(sizeof(Nullable1) == sizeof(Nullable0), "");
     static_assert(sizeof(Nullable2) == sizeof(Nullable0), "");
-
-    // Double nested
-    {
-        Nullable1 nullableC{};
-        Nullable1 nullableB{ Nullable0{} };
-        Nullable1 nullableA{ Nullable0{ 69 } };
-
-        //
-        GTEST_ASSERT_EQ(nullableC.HasValue(), false);
-        //
-        GTEST_ASSERT_EQ(nullableB.HasValue(), true);
-        GTEST_ASSERT_EQ(nullableB.Value().HasValue(), false);
-        //
-        GTEST_ASSERT_EQ(nullableA.HasValue(), true);
-        GTEST_ASSERT_EQ(nullableA.Value().HasValue(), true);
-        // GTEST_ASSERT_EQ(nullableA.Value().Value().HasValue(), false);
-
-    }
+}
 
 
+TEST(NullableNested, NestedSentinel_Double)
+{
+    using namespace SentinelNullables;
 
-    // Triple nested
-    {
-        Nullable2 nullableA{ Nullable1{ Nullable0{ 69 } } };
-        Nullable2 nullableB{ Nullable1{ Nullable0{} } };
-        Nullable2 nullableC{ Nullable1{} };
-        Nullable2 nullableD{};
+    const Nullable1 nullableC{};
+    const Nullable1 nullableB{ Nullable0{} };
+    const Nullable1 nullableA{ Nullable0{ 69 } };
 
-        //
-        GTEST_ASSERT_EQ(nullableD.HasValue(), false);
-        //
-        GTEST_ASSERT_EQ(nullableC.HasValue(), true);
-        GTEST_ASSERT_EQ(nullableC.Value().HasValue(), false);
-        //
-        GTEST_ASSERT_EQ(nullableB.HasValue(), true);
-        GTEST_ASSERT_EQ(nullableB.Value().HasValue(), true);
-        GTEST_ASSERT_EQ(nullableB.Value().Value().HasValue(), false);
-        //
-        GTEST_ASSERT_EQ(nullableA.HasValue(), true);
-        GTEST_ASSERT_EQ(nullableA.Value().HasValue(), true);
-        GTEST_ASSERT_EQ(nullableA.Value().Value().HasValue(), true);
-        GTEST_ASSERT_EQ(nullableA.Value().Value().Value(), { 69 });
-    }
+    //
+    GTEST_ASSERT_EQ(nullableC.HasValue(), false);
+    //
+    GTEST_ASSERT_EQ(nullableB.HasValue(), true);
+    GTEST_ASSERT_EQ(nullableB.Value().HasValue(), false);
+    //
+    GTEST_ASSERT_EQ(nullableA.HasValue(), true);
+    GTEST_ASSERT_EQ(nullableA.Value().HasValue(), true);
+    GTEST_ASSERT_EQ(nullableA.Value().Value(), 69);
+}
+
+
+TEST(NullableNested, NestedSentinel_Triple)
+{
+    using namespace SentinelNullables;
+
+    const Nullable2 nullableA{ Nullable1{ Nullable0{ 69 } } };
+    const Nullable2 nullableB{ Nullable1{ Nullable0{} } };
+    const Nullable2 nullableC{ Nullable1{} };
+    const Nullable2 nullableD{};
+
+    //
+    GTEST_ASSERT_EQ(nullableD.HasValue(), false);
+    //
+    GTEST_ASSERT_EQ(nullableC.HasValue(), true);
+    GTEST_ASSERT_EQ(nullableC.Value().HasValue(), false);
+    //
+    GTEST_ASSERT_EQ(nullableB.HasValue(), true);
+    GTEST_ASSERT_EQ(nullableB.Value().HasValue(), true);
+    GTEST_ASSERT_EQ(nullableB.Value().Value().HasValue(), false);
+    //
+    GTEST_ASSERT_EQ(nullableA.HasValue(), true);
+    GTEST_ASSERT_EQ(nullableA.Value().HasValue(), true);
+    GTEST_ASSERT_EQ(nullableA.Value().Value().HasValue(), true);
+    GTEST_ASSERT_EQ(nullableA.Value().Value().Value(), 69);
+}
+
+namespace TombstoneNullables
+{
+    // using Nullable0 = Index; // Index has a tombstone.
+    using Nullable1 = Nullable<Index>;
+    using Nullable2 = Nullable<Nullable1>;
+
+    static_assert(sizeof(Nullable1) == sizeof(Index), "");
+    static_assert(sizeof(Nullable2) == sizeof(Index), "");
+}
+
+
+TEST(NullableNested, NestedTombstone_Double)
+{
+    using namespace TombstoneNullables;
+
+    const Nullable2 nullableC{};
+    const Nullable2 nullableB{ Nullable1{} };
+    const Nullable2 nullableA{ Nullable1{ Index{ 69 } } };
+
+    //
+    GTEST_ASSERT_EQ(nullableC.HasValue(), false);
+    //
+    GTEST_ASSERT_EQ(nullableB.HasValue(), true);
+    GTEST_ASSERT_EQ(nullableB.Value().HasValue(), false);
+    //
+    GTEST_ASSERT_EQ(nullableA.HasValue(), true);
+    GTEST_ASSERT_EQ(nullableA.Value().HasValue(), true);
+    GTEST_ASSERT_EQ(nullableA.Value().Value(), Index{ 69 });
 }

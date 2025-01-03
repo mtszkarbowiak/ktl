@@ -25,40 +25,34 @@ private:
     Element _value;
     int8 _nullLevel{ 1 };
 
+
+    // Element Access
+
 public:
+    NO_DISCARD FORCE_INLINE
     bool HasValue() const
     {
         return _nullLevel == 0;
     }
 
-    bool IsTombstone() const
+    NO_DISCARD FORCE_INLINE
+    Element& Value()
     {
-        return _nullLevel > 1;
+        ASSERT(HasValue());
+        return _value;
     }
 
-    int8 GetTombstoneLevel() const
+    NO_DISCARD FORCE_INLINE
+    const Element& Value() const
     {
-        return _nullLevel - 1; // Go out
+        ASSERT(HasValue());
+        return _value;
     }
-
-    explicit Nullable(const TombstoneDepth tombstoneTag)
-        : _nullLevel{ static_cast<int8>(tombstoneTag.Value + 1) } // Go in
-    {
-        ASSERT(tombstoneTag.Value >= 0);
-    }
-
-    Nullable() = default;
 
     void Set(Element&& value)
     {
         _value = MOVE(value);
         _nullLevel = 0;
-    }
-
-    explicit Nullable(Element&& value)
-        : _value{ MOVE(value) }
-        , _nullLevel{ 0 }
-    {
     }
 
     void Reset()
@@ -70,15 +64,41 @@ public:
         }
     }
 
+
+    // Tombstone (Nested Nullable)
+
+    NO_DISCARD FORCE_INLINE
+    bool IsTombstone() const
+    {
+        return _nullLevel > 1;
+    }
+
+    NO_DISCARD FORCE_INLINE
+    int8 GetTombstoneLevel() const
+    {
+        return _nullLevel - 1; // Go out
+    }
+
+    explicit Nullable(const TombstoneDepth tombstoneTag)
+        : _nullLevel{ static_cast<int8>(tombstoneTag.Value + 1) } // Go in
+    {
+        ASSERT(tombstoneTag.Value >= 0);
+    }
+
+
+    // Lifecycle
+
+    Nullable() = default;
+
+    explicit Nullable(Element&& value)
+        : _value{ MOVE(value) }
+        , _nullLevel{ 0 }
+    {
+    }
+
     ~Nullable()
     {
         Reset();
-    }
-
-    Element& Value()
-    {
-        ASSERT(HasValue());
-        return _value;
     }
 };
 
@@ -102,54 +122,73 @@ private:
     Element _value{ TombstoneDepth{ 1 } };
 
 
+    // Element Access
+
 public:
+    NO_DISCARD FORCE_INLINE
     bool HasValue() const
     {
         return !_value.IsTombstone(); // Use the underlying type's tombstone.
     }
 
-    bool IsTombstone() const
+    NO_DISCARD FORCE_INLINE
+    Element& Value()
     {
-        return GetTombstoneLevel() > 0;
+        ASSERT(HasValue());
+        return _value;
     }
 
-    int8 GetTombstoneLevel() const
+    NO_DISCARD FORCE_INLINE
+    const Element& Value() const
     {
-        return _value.GetTombstoneLevel() - 1; // Go out
+        ASSERT(HasValue());
+        return _value;
     }
-
-    explicit Nullable(const TombstoneDepth tombstoneTag)
-        : _value{ TombstoneDepth{ tombstoneTag.Value + 1 } } // Go in
-    {
-        ASSERT(tombstoneTag.Value > 0);
-    }
-
-    Nullable() = default;
 
     void Set(Element&& value)
     {
         _value = MOVE(value); // Should overwrite the tombstone. (or should it?)
     }
 
+    void Reset()
+    {
+        _value = Element{ TombstoneDepth{ 1 } };
+    }
+
+
+    // Tombstone (Nested Nullable)
+
+    NO_DISCARD FORCE_INLINE
+    bool IsTombstone() const
+    {
+        return GetTombstoneLevel() > 0;
+    }
+
+    NO_DISCARD FORCE_INLINE
+    int8 GetTombstoneLevel() const
+    {
+        return _value.GetTombstoneLevel() - 1; // Go out
+    }
+
+    explicit Nullable(const TombstoneDepth tombstoneTag)
+        : _value{ TombstoneDepth{static_cast<int8>(tombstoneTag.Value + 1) } } // Go in
+    {
+        ASSERT(tombstoneTag.Value > 0);
+    }
+
+
+    // Lifecycle
+
+    Nullable() = default;
+
     explicit Nullable(Element&& value)
         : _value{ MOVE(value) }
     {
     }
 
-    void Reset()
-    {
-        _value = Element{TombstoneDepth{ 1 }};
-    }
-
     ~Nullable()
     {
         Reset();
-    }
-
-    Element& Value()
-    {
-        ASSERT(HasValue());
-        return _value;
     }
 };
 
