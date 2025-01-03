@@ -5,7 +5,17 @@
 #include "Language/Keywords.h"
 #include "Language/Templates.h"
 
-template<typename T, bool UseTombstone = (GetMaxTombstoneDepth<T>::Value > 0)>
+/// <summary>
+/// Wrapper over a value type that can be assigned an additional null value.
+/// </summary>
+///
+/// <typeparam name="T">
+/// Type of the stored value.
+/// </typeparam>
+/// <typeparam name="UseTombstone">
+/// Flag indicating whether to use tombstone value.
+/// </typeparam>
+template<typename T, bool M = (GetMaxTombstoneDepth<T>::Value > 0)>
 class Nullable;
 
 /// <summary>
@@ -101,14 +111,69 @@ public:
 
     // Lifecycle
 
+    FORCE_INLINE
     Nullable() = default;
 
-    explicit Nullable(Element&& value)
+    FORCE_INLINE explicit
+    Nullable(Element&& value)
         : _value{ MOVE(value) }
         , _nullLevel{ 0 }
     {
     }
 
+    FORCE_INLINE
+    Nullable(const Nullable& other)
+        : _nullLevel{ other._nullLevel }
+    {
+        if (HasValue())
+        {
+            new (&_value) Element{ other._value };
+        }
+    }
+
+    FORCE_INLINE
+    Nullable(Nullable&& other) noexcept
+        : _nullLevel{ other._nullLevel }
+    {
+        if (HasValue())
+        {
+            new (&_value) Element{ MOVE(other._value) };
+            other.Reset();
+        }
+    }
+
+    MAY_DISCARD FORCE_INLINE
+    Nullable& operator=(const Nullable& other)
+    {
+        if (this != &other)
+        {
+            Reset();
+            _nullLevel = other._nullLevel;
+            if (HasValue())
+            {
+                new (&_value) Element{ other._value };
+            }
+        }
+        return *this;
+    }
+
+    MAY_DISCARD FORCE_INLINE
+    Nullable& operator=(Nullable&& other) noexcept
+    {
+        if (this != &other)
+        {
+            Reset();
+            _nullLevel = other._nullLevel;
+            if (HasValue())
+            {
+                new (&_value) Element{ MOVE(other._value) };
+                other.Reset();
+            }
+        }
+        return *this;
+    }
+
+    FORCE_INLINE
     ~Nullable()
     {
         Reset();
@@ -126,6 +191,7 @@ struct GetMaxTombstoneDepth<Nullable<T, false>>
 /// Wrapper over a value type that can be assigned an additional null value.
 /// This implementation cedes tracking of null value to the underlying type via tombstone values.
 /// Therefore, it does not require any additional memory to store the null value.
+/// Additionally, the underlying type may skip the null value check.
 /// </summary>
 /// 
 /// <typeparam name="T">
@@ -209,13 +275,50 @@ public:
 
     // Lifecycle
 
+    FORCE_INLINE
     Nullable() = default;
 
-    explicit Nullable(Element&& value)
+    FORCE_INLINE explicit
+    Nullable(Element&& value)
         : _value{ MOVE(value) }
     {
     }
 
+    FORCE_INLINE
+    Nullable(const Nullable& other)
+        : _value{ other._value }
+    {
+    }
+
+    FORCE_INLINE
+    Nullable(Nullable&& other) noexcept
+        : _value{ MOVE(other._value) }
+    {
+        other.Reset();
+    }
+
+    MAY_DISCARD FORCE_INLINE
+    Nullable& operator=(const Nullable& other)
+    {
+        if (this != &other)
+        {
+            _value = other._value;
+        }
+        return *this;
+    }
+
+    MAY_DISCARD FORCE_INLINE
+    Nullable& operator=(Nullable&& other) noexcept
+    {
+        if (this != &other)
+        {
+            _value = MOVE(other._value);
+            other.Reset();
+        }
+        return *this;
+    }
+
+    FORCE_INLINE
     ~Nullable()
     {
         Reset();
