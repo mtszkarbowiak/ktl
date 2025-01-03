@@ -102,7 +102,12 @@ public:
         return _nullLevel - 1; // Go out
     }
 
-    explicit Nullable(const TombstoneDepth tombstoneTag)
+    /// <summary>
+    /// Creates a tombstone of a nullable.
+    /// You better know what you are doing, if you want to use it!
+    /// </summary>
+    FORCE_INLINE explicit
+    Nullable(const TombstoneDepth tombstoneTag)
         : _nullLevel{ static_cast<int8>(tombstoneTag.Value + 1) } // Go in
     {
         ASSERT(tombstoneTag.Value >= 0);
@@ -111,9 +116,11 @@ public:
 
     // Lifecycle
 
+    /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE
     Nullable() = default;
 
+    /// <summary> Initializes nullable with the specified value. </summary>
     FORCE_INLINE explicit
     Nullable(Element&& value)
         : _value{ MOVE(value) }
@@ -121,6 +128,7 @@ public:
     {
     }
 
+    /// <summary> Initializes nullable with a copy of the specified value. </summary>
     FORCE_INLINE
     Nullable(const Nullable& other)
         : _nullLevel{ other._nullLevel }
@@ -131,6 +139,7 @@ public:
         }
     }
 
+    /// <summary> Initializes nullable by moving the value from other nullable. </summary>
     FORCE_INLINE
     Nullable(Nullable&& other) noexcept
         : _nullLevel{ other._nullLevel }
@@ -142,6 +151,7 @@ public:
         }
     }
 
+    /// <summary> Assigns the value from the specified nullable. </summary>
     MAY_DISCARD FORCE_INLINE
     Nullable& operator=(const Nullable& other)
     {
@@ -157,6 +167,7 @@ public:
         return *this;
     }
 
+    /// <summary> Assigns the value by moving it from the specified nullable. </summary>
     MAY_DISCARD FORCE_INLINE
     Nullable& operator=(Nullable&& other) noexcept
     {
@@ -240,12 +251,14 @@ public:
     }
 
     /// <summary> Overwrites the value with the specified one. </summary>
+    FORCE_INLINE
     void Set(Element&& value)
     {
         _value = MOVE(value); // Should overwrite the tombstone. (or should it?)
     }
 
     /// <summary> Resets the value to null. </summary>
+    FORCE_INLINE
     void Reset()
     {
         _value = Element{ TombstoneDepth{ 1 } };
@@ -266,7 +279,12 @@ public:
         return _value.GetTombstoneLevel() - 1; // Go out
     }
 
-    explicit Nullable(const TombstoneDepth tombstoneTag)
+    /// <summary>
+    /// Creates a tombstone of a nullable.
+    /// You better know what you are doing, if you want to use it!
+    /// </summary>
+    FORCE_INLINE explicit
+    Nullable(const TombstoneDepth tombstoneTag)
         : _value{ TombstoneDepth{static_cast<int8>(tombstoneTag.Value + 1) } } // Go in
     {
         ASSERT(tombstoneTag.Value > 0);
@@ -275,21 +293,25 @@ public:
 
     // Lifecycle
 
+    /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE
     Nullable() = default;
 
+    /// <summary> Initializes nullable with the specified value. </summary>
     FORCE_INLINE explicit
     Nullable(Element&& value)
         : _value{ MOVE(value) }
     {
     }
 
+    /// <summary> Initializes nullable with a copy of the specified value. </summary>
     FORCE_INLINE
     Nullable(const Nullable& other)
         : _value{ other._value }
     {
     }
 
+    /// <summary> Initializes nullable by moving the value from other nullable. </summary>
     FORCE_INLINE
     Nullable(Nullable&& other) noexcept
         : _value{ MOVE(other._value) }
@@ -297,6 +319,7 @@ public:
         other.Reset();
     }
 
+    /// <summary> Assigns the value from the specified nullable. </summary>
     MAY_DISCARD FORCE_INLINE
     Nullable& operator=(const Nullable& other)
     {
@@ -307,6 +330,7 @@ public:
         return *this;
     }
 
+    /// <summary> Assigns the value by moving it from the specified nullable. </summary>
     MAY_DISCARD FORCE_INLINE
     Nullable& operator=(Nullable&& other) noexcept
     {
