@@ -8,7 +8,7 @@
 #include "Language/TypeInfo.h"
 #include "Math/Arithmetic.h"
 #include "Math/Growing.h"
-#include "Math/HashingFunctions.h"
+#include "Math/Hashing.h"
 #include "Math/Probing.h"
 #include "Types/IterHint.h"
 #include "Types/Span.h"
