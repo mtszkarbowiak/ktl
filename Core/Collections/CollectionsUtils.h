@@ -25,14 +25,14 @@ using DefaultAlloc = HeapAlloc;
     #define ARRAY_DEFAULT_CAPACITY 4
 #endif
 
-#ifndef HASH_MAPS_DEFAULT_CAPACITY
+#ifndef HASH_SETS_DEFAULT_CAPACITY
     /// <summary> Default capacity for any hash-based collection. </summary>
-    #define HASH_MAPS_DEFAULT_CAPACITY 64
+    #define HASH_SETS_DEFAULT_CAPACITY 64
 #endif
 
-#ifndef HASH_MAPS_DEFAULT_SLACK_RATIO
+#ifndef HASH_SETS_DEFAULT_SLACK_RATIO
     /// <summary> Default capacity for any hash-based collection. </summary>
-#define HASH_MAPS_DEFAULT_SLACK_RATIO 3
+    #define HASH_SETS_DEFAULT_SLACK_RATIO 3
 #endif
 
 #ifndef RING_DEFAULT_CAPACITY

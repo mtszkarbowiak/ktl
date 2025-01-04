@@ -295,7 +295,7 @@ public:
         }
 
         // Rebuild the dictionary
-        Rebuild(_elementsCount * HASH_MAPS_DEFAULT_SLACK_RATIO);
+        Rebuild(_elementsCount * HASH_SETS_DEFAULT_SLACK_RATIO);
     }
 
     /// <summary> Potentially rebuilds the dictionary to achieve the specified minimal capacity. </summary>
@@ -420,10 +420,10 @@ public:
     Bucket* Add(K_&& key, V_&& value)
     {
         // 1. Ensure correct capacity
-        if (_deletedCount > (_capacity / HASH_MAPS_DEFAULT_SLACK_RATIO))
+        if (_deletedCount > (_capacity / HASH_SETS_DEFAULT_SLACK_RATIO))
             Compact(); // If the number of deleted elements is too high, shrink the table
 
-        const int32 ensuredCapacity = (_elementsCount + 1) * HASH_MAPS_DEFAULT_SLACK_RATIO + _deletedCount;
+        const int32 ensuredCapacity = (_elementsCount + 1) * HASH_SETS_DEFAULT_SLACK_RATIO + _deletedCount;
         Reserve(ensuredCapacity);
 
         //TODO Prevent double rebuilding
