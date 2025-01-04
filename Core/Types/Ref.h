@@ -67,6 +67,9 @@ public:
     
     // Tombstone
 
+    friend TombstoneNullable<Ref>;
+
+private:
     FORCE_INLINE
     explicit Ref(MAYBE_UNUSED TombstoneDepth tombstoneTag) noexcept
         : _value{ nullptr }
@@ -90,6 +93,7 @@ public:
 
     // Element Access
 
+public:
     NO_DISCARD FORCE_INLINE
     Element& Value() const
     {

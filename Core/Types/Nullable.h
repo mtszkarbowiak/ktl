@@ -90,6 +90,9 @@ public:
 
     // Tombstone (Nested Nullable)
 
+    friend Nullable<Nullable, true>;
+
+private:
     NO_DISCARD FORCE_INLINE
     bool IsTombstone() const
     {
@@ -116,6 +119,7 @@ public:
 
     // Lifecycle
 
+public:
     /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE
     Nullable() = default;
@@ -267,6 +271,9 @@ public:
 
     // Tombstone (Nested Nullable)
 
+    friend Nullable<Nullable, true>;
+
+private:
     NO_DISCARD FORCE_INLINE
     bool IsTombstone() const
     {
@@ -293,6 +300,7 @@ public:
 
     // Lifecycle
 
+public:
     /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE
     Nullable() = default;

@@ -5,6 +5,7 @@
 #include "Debugging/Assertions.h"
 #include "Language/Keywords.h"
 #include "Language/Templates.h"
+#include "Types/Nullable.h"
 #include "Types/Numbers.h"
 
 /// <summary>
@@ -51,6 +52,9 @@ public:
 
     // Tombstone
 
+    friend TombstoneNullable<Index>;
+
+private:
     /// <summary>
     /// Creates a tombstone of an index.
     /// Do not use this constructor directly, use <c>Nullable</c> instead.
