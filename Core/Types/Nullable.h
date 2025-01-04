@@ -92,7 +92,7 @@ public:
     }
 
     /// <summary> Resets the value to null. </summary>
-    void Reset()
+    void Clear()
     {
         if (HasValue())
         {
@@ -165,7 +165,7 @@ public:
         if (HasValue())
         {
             new (&_value) Element{ MOVE(other._value) };
-            other.Reset();
+            other.Clear();
         }
     }
 
@@ -175,7 +175,7 @@ public:
     {
         if (this != &other)
         {
-            Reset();
+            Clear();
             _nullLevel = other._nullLevel;
             if (HasValue())
             {
@@ -191,12 +191,12 @@ public:
     {
         if (this != &other)
         {
-            Reset();
+            Clear();
             _nullLevel = other._nullLevel;
             if (HasValue())
             {
                 new (&_value) Element{ MOVE(other._value) };
-                other.Reset();
+                other.Clear();
             }
         }
         return *this;
@@ -205,7 +205,7 @@ public:
     FORCE_INLINE
     ~Nullable()
     {
-        Reset();
+        Clear();
     }
 
 
@@ -310,7 +310,7 @@ public:
 
     /// <summary> Resets the value to null. </summary>
     FORCE_INLINE
-    void Reset()
+    void Clear()
     {
         _value = Element{ TombstoneDepth{ 1 } };
     }
@@ -371,7 +371,7 @@ public:
     Nullable(Nullable&& other) noexcept
         : _value{ MOVE(other._value) }
     {
-        other.Reset();
+        other.Clear();
     }
 
     /// <summary> Assigns the value from the specified nullable. </summary>
@@ -392,7 +392,7 @@ public:
         if (this != &other)
         {
             _value = MOVE(other._value);
-            other.Reset();
+            other.Clear();
         }
         return *this;
     }
@@ -400,7 +400,7 @@ public:
     FORCE_INLINE
     ~Nullable()
     {
-        Reset();
+        Clear();
     }
 
 
