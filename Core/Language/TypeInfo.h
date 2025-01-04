@@ -7,6 +7,8 @@
 /// Type trait indicating whether a type is a C-style type.
 /// C-Style means that the type is fundamental, pointer, array or struct of C-Style types.
 /// This constraint is used to allow for heavy optimization in certain contexts.
+/// Be careful about user defined types, which do not have non-trivial constructors or destructors,
+/// but compiler generates them implicitly for C++ style fields.
 /// </summary>
 /// <remarks>
 /// An equivalent of this trait is not available in the standard library before C++20,
@@ -40,8 +42,20 @@ struct TIsCStyle<Ret(*)(Args...)>
     static constexpr bool Value = true;
 };
 
+
+template<typename T>
+struct CanBeCStyle
+{
+    static constexpr bool Value =
+        std::is_trivially_constructible<T>::value &&
+        std::is_trivially_copyable<T>::value &&
+        std::is_nothrow_move_constructible<T>::value &&
+        std::is_trivially_destructible<T>::value;
+};
+
 /// <summary>
-/// Macro to declare a type as a C-style type.
+/// Macro to declare a type as a C-style type. Be very careful with this macro as it may lead to difficult to debug issues.
 /// </summary>
 #define DECLARE_C_STYLE_TYPE(Type) \
-    template<> struct TIsCStyle<Type> { static constexpr bool Value = true; };
+    template<> struct TIsCStyle<Type> { static constexpr bool Value = true; };  \
+    static_assert(CanBeCStyle<Type>::Value, "Type does not meet the requirements of a C-style type.");
