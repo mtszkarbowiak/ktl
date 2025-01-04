@@ -47,7 +47,12 @@
 
 // C++ Versions
 
-#if __cplusplus >= 201703L // C++17 and above
+#define CXX17_SUPPORT           __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#define CXX20_SUPPORT           __cplusplus >= 202002L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
+#define CXX23_SUPPORT           __cplusplus >= 202300L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202300L)
+
+
+#if CXX17_SUPPORT
     #define NO_DISCARD          [[nodiscard]]
     #define MAY_DISCARD         [[maybe_unused]]
     #define FALLTHROUGH         [[fallthrough]]
@@ -62,7 +67,9 @@
 #endif
 
 
-#if __cplusplus >= 202002L // C++20 and above
+#if CXX20_SUPPORT
+    #define CONCEPTS_ENABLED   1
+
     #define IF_CONSTEXPR        constexpr
     #define CONSTINIT           constinit
     #define CONSTEXPR_LAMBDA    constexpr
@@ -71,6 +78,8 @@
     #define UNLIKELY_HINT(x)    [[unlikely]] x
 
 #else // C++17 and below
+    #define CONCEPTS_ENABLED   0
+
     #define IF_CONSTEXPR
     #define CONSTINIT           constexpr
     #define CONSTEXPR_LAMBDA    constexpr
