@@ -63,7 +63,7 @@ public:
         return _value;
     }
 
-    /// <summary> Overwrites the value with the specified one. </summary>
+    /// <summary> Overwrites the value with the specified one by move. </summary>
     void Set(Element&& value)
     {
         if (HasValue())
@@ -73,6 +73,20 @@ public:
         else 
         {
             new (&_value) Element{ MOVE(value) };
+            _nullLevel = 0;
+        }
+    }
+
+    /// <summary> Overwrites the value with the specified one by copy. </summary>
+    void Set(const Element& value)
+    {
+        if (HasValue())
+        {
+            _value = value;
+        }
+        else
+        {
+            new (&_value) Element{ value };
             _nullLevel = 0;
         }
     }
@@ -121,7 +135,7 @@ private:
 
 public:
     /// <summary> Initializes empty nullable. </summary>
-    FORCE_INLINE
+    FORCE_INLINE constexpr
     Nullable() = default;
 
     /// <summary> Initializes nullable with the specified value. </summary>
@@ -193,6 +207,32 @@ public:
     {
         Reset();
     }
+
+
+    // Utility
+
+    bool IsEmpty() const
+    {
+        return !HasValue();
+    }
+
+    /// <summary> Overwrites the value with the specified one by move, if it is null. </summary>
+    void SetIfNull(Element&& value)
+    {
+        if (!HasValue())
+        {
+            Set(MOVE(value));
+        }
+    }
+
+    /// <summary> Overwrites the value with the specified one by copy, if it is null. </summary>
+    void SetIfNull(const Element& value)
+    {
+        if (!HasValue())
+        {
+            Set(value);
+        }
+    }
 };
 
 template<typename T>
@@ -254,11 +294,18 @@ public:
         return _value;
     }
 
-    /// <summary> Overwrites the value with the specified one. </summary>
+    /// <summary> Overwrites the value with the specified one by move. </summary>
     FORCE_INLINE
     void Set(Element&& value)
     {
         _value = MOVE(value); // Should overwrite the tombstone. (or should it?)
+    }
+
+    /// <summary> Overwrites the value with the specified one by copy. </summary>
+    FORCE_INLINE
+    void Set(const Element& value)
+    {
+        _value = value; // Should overwrite the tombstone. (or should it?)
     }
 
     /// <summary> Resets the value to null. </summary>
@@ -302,7 +349,7 @@ private:
 
 public:
     /// <summary> Initializes empty nullable. </summary>
-    FORCE_INLINE
+    FORCE_INLINE constexpr
     Nullable() = default;
 
     /// <summary> Initializes nullable with the specified value. </summary>
@@ -354,6 +401,32 @@ public:
     ~Nullable()
     {
         Reset();
+    }
+
+
+    // Utility
+
+    bool IsEmpty() const
+    {
+        return !HasValue();
+    }
+
+    /// <summary> Overwrites the value with the specified one by move, if it is null. </summary>
+    void SetIfNull(Element&& value)
+    {
+        if (!HasValue())
+        {
+            Set(MOVE(value));
+        }
+    }
+
+    /// <summary> Overwrites the value with the specified one by copy, if it is null. </summary>
+    void SetIfNull(const Element& value)
+    {
+        if (!HasValue())
+        {
+            Set(value);
+        }
     }
 };
 
