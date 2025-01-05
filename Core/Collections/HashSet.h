@@ -92,6 +92,33 @@ public:
         return _elementCountCached;
     }
 
+    /// <summary>
+    /// Number of elements that could be added without invoking the allocator,
+    /// assuming that the collection would never be rebuilt.
+    /// </summary>
+    /// <remarks>
+    /// This is not the same as the slack in the allocation.
+    /// Some slots may not become occupied unless the collection is rebuilt.
+    /// </remarks>
+    NO_DISCARD FORCE_INLINE constexpr
+    int32 Slack() const
+    {
+        return _capacity - _cellsCountCached;
+    }
+
+    /// <summary> Number of cells - slots that store an element or a marker. </summary>
+    NO_DISCARD FORCE_INLINE constexpr
+    int32 CellCount() const
+    {
+        return _cellsCountCached;
+    }
+
+    /// <summary> Number of cells (not slots) that are empty. </summary>
+    int32 CellSlack() const
+    {
+        return _cellsCountCached - _elementCountCached;
+    }
+
 
     // Hashing
 
@@ -121,6 +148,15 @@ private:
         return
             actualElements == _elementCountCached && 
             actualCells    == _cellsCountCached;
+    }
+
+    /// <summary>
+    /// Calculates how many slots are required to store the specified number of elements.
+    /// </summary>
+    static FORCE_INLINE constexpr
+    int32 GetDesiredCapacity(const int32 elementCount)
+    {
+        return elementCount + (elementCount) / HASH_SETS_DEFAULT_SLACK_RATIO;
     }
 
     /// <summary> Searches for a place for existing or incoming elements. </summary>
@@ -179,15 +215,20 @@ private:
         firstFreeSlot.Clear();
     }
 
-    void Rebuild(const int32 minCapacity)
+    void RebuildImpl(const int32 minCapacity)
     {
         ASSERT_COLLECTION_INTEGRITY(IsValid()); // Ensure the integrity of the collection
         ASSERT_COLLECTION_SAFE_MOD(!IsEmpty()); // Rebuilding an empty collection is not allowed.
 
-        // 1. Set up the new allocation.
+        // 1. Set up the new content.
         AllocData newData{ _allocData };
         const int32 requestedCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
         const int32 allocatedCapacity = AllocHelper::Allocate(newData, requestedCapacity);
+
+        BulkOperations::DefaultLinearContent<Slot>(
+            DATA_OF(Slot, newData),
+            allocatedCapacity
+        );
 
         // 2. Rebuild the set into the new allocation.
 
@@ -263,6 +304,14 @@ private:
         _cellsCountCached = _elementCountCached;
     }
 
+public:
+    /// <summary> Forces the set to rebuild itself. </summary>
+    void Rebuild()
+    {
+        const int32 desiredCapacity = GetDesiredCapacity(_elementCountCached);
+        RebuildImpl(desiredCapacity);
+    }
+
 
     // Allocation Manipulation
 
@@ -299,16 +348,14 @@ public:
     /// </summary>
     void Compact()
     {
-        if (_elementCountCached == 0)
+        if (_elementCountCached == 0 && _capacity > 0)
         {
-            if (_capacity > 0)
-            {
-                _allocData.Free();
-                _capacity = 0;
-            }
+            _allocData.Free();
+            _capacity = 0;
             return;
         }
-        Rebuild(_elementCountCached * HASH_SETS_DEFAULT_SLACK_RATIO);
+
+        Rebuild();
     }
 
     void Reset()
@@ -382,7 +429,7 @@ public:
         // If there is no free slot, rebuild the set
         if (firstFreeSlot.IsEmpty())
         {
-            Rebuild(_elementCountCached + 1);
+            RebuildImpl(_elementCountCached + 1);
             FindSlot(
                 DATA_OF(const Slot, _allocData),
                 _capacity, 
