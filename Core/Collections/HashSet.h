@@ -455,6 +455,13 @@ public:
         return true;
     }
 
+    MAY_DISCARD FORCE_INLINE
+    bool Add(const Element& element)
+    {
+        return Add(Element{ element });
+    }
+
+
     MAY_DISCARD
     bool Remove(const Element& key)
     {

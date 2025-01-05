@@ -2,55 +2,102 @@
 
 #include <gtest/gtest.h>
 
+#include "Allocators/FixedAlloc.h"
+#include "Collections/CollectionsUtils.h"
 #include "Debugging/LifecycleTracker.h"
 #include "Collections/HashSet.h"
 
 
 // Fundamentals
 
-TEST(HashSet, BasicOperations)
+using AllocatorTypes = ::testing::Types<DefaultAlloc, FixedAlloc<256>>;
+using ElementType    = ::testing::Types<int32, Index>;
+
+template<typename Element, typename Allocator>
+struct HashSetTestParam
 {
-	HashSet<int32> set;
-    GTEST_ASSERT_FALSE(set.IsAllocated());
+    using ElementType   = Element;
+    using AllocatorType = Allocator;
+};
 
-	const bool added1 = set.Add(1);
-	const bool added2 = set.Add(2);
-	const bool added3 = set.Add(3);
+using HashSetTestParams = ::testing::Types<
+    HashSetTestParam<int32, DefaultAlloc>,
+    HashSetTestParam<int32, FixedAlloc<512>>,
+    HashSetTestParam<Index, DefaultAlloc>,
+    HashSetTestParam<Index, FixedAlloc<256>>
+>;
 
-    GTEST_ASSERT_TRUE(set.IsAllocated());
-    GTEST_ASSERT_TRUE(added1 && added2 && added3);
-    GTEST_ASSERT_EQ(set.Count(), 3);
-    GTEST_ASSERT_EQ(set.CellCount(), 3);
+template<typename Param>
+struct HashSetFixture : public ::testing::Test
+{
+protected:
+    using ElementType   = typename Param::ElementType;
+    using AllocatorType = typename Param::AllocatorType;
+    using HashSetType   = HashSet<ElementType, AllocatorType>;
 
-    GTEST_ASSERT_TRUE(set.Contains(1));
-    GTEST_ASSERT_TRUE(set.Contains(2));
-    GTEST_ASSERT_TRUE(set.Contains(3));
+    HashSetType set;
+    const ElementType element1 = ElementType{ 1 };
+    const ElementType element2 = ElementType{ 2 };
+    const ElementType element3 = ElementType{ 3 };
+};
 
-    const bool readded2 = set.Add(2);
-    GTEST_ASSERT_FALSE(readded2);
-    GTEST_ASSERT_TRUE(set.Contains(2));
-    GTEST_ASSERT_EQ(set.Count(), 3);
-    GTEST_ASSERT_EQ(set.CellCount(), 3);
+TYPED_TEST_SUITE(HashSetFixture, HashSetTestParams);
 
-    const bool removed2 = set.Remove(2);
-    GTEST_ASSERT_TRUE(removed2);
-    GTEST_ASSERT_FALSE(set.Contains(2));
-    GTEST_ASSERT_EQ(set.Count(), 2);
-    GTEST_ASSERT_EQ(set.CellCount(), 3);
+TYPED_TEST(HashSetFixture, EmptyAfterCtor)
+{
+    EXPECT_TRUE(this->set.IsEmpty());
+    EXPECT_EQ  (this->set.Count(), 0);
+    EXPECT_EQ  (this->set.CellCount(), 0);
 
-    const bool readded2AfterRemoval = set.Add(2);
-    GTEST_ASSERT_TRUE(readded2AfterRemoval);
-    GTEST_ASSERT_TRUE(set.Contains(2));
-    GTEST_ASSERT_EQ(set.Count(), 3);
-    GTEST_ASSERT_EQ(set.CellCount(), 4);
-    GTEST_ASSERT_EQ(set.CellSlack(), 1);
+    EXPECT_FALSE(this->set.Contains(this->element1));
+    EXPECT_FALSE(this->set.Contains(this->element2));
+    EXPECT_FALSE(this->set.Contains(this->element3));
+}
 
-    set.Compact(); // Force a rebuild
+TYPED_TEST(HashSetFixture, ElementsManipulation)
+{
+    // Add elements
 
-    GTEST_ASSERT_TRUE(set.Contains(1));
-    GTEST_ASSERT_TRUE(set.Contains(2));
-    GTEST_ASSERT_TRUE(set.Contains(3));
-    GTEST_ASSERT_EQ(set.Count(), 3);
-    GTEST_ASSERT_EQ(set.CellCount(), 3);
-    GTEST_ASSERT_EQ(set.CellSlack(), 0);
+    GTEST_ASSERT_TRUE(this->set.Add(this->element1));
+    GTEST_ASSERT_TRUE(this->set.Add(this->element2));
+    GTEST_ASSERT_TRUE(this->set.Add(this->element3));
+
+    EXPECT_FALSE(this->set.Add(this->element1));
+    EXPECT_FALSE(this->set.Add(this->element2));
+    EXPECT_FALSE(this->set.Add(this->element3));
+
+    EXPECT_EQ(this->set.Count(), 3);
+    EXPECT_EQ(this->set.CellCount(), 3);
+
+
+    // Remove elements
+
+    EXPECT_TRUE(this->set.Remove(this->element1));
+    EXPECT_TRUE(this->set.Remove(this->element2));
+    EXPECT_TRUE(this->set.Remove(this->element3));
+
+    EXPECT_FALSE(this->set.Remove(this->element1));
+    EXPECT_FALSE(this->set.Remove(this->element2));
+    EXPECT_FALSE(this->set.Remove(this->element3));
+
+    EXPECT_EQ(this->set.Count(), 0);
+    EXPECT_EQ(this->set.CellCount(), 3);
+
+
+    // Add elements again
+
+    EXPECT_FALSE(this->set.Contains(this->element2));
+    EXPECT_TRUE (this->set.Add(this->element2));
+    EXPECT_FALSE(this->set.Add(this->element2));
+    EXPECT_TRUE (this->set.Contains(this->element2));
+
+    GTEST_ASSERT_EQ(this->set.Count(), 1);
+    GTEST_ASSERT_EQ(this->set.CellCount(), 4);
+
+
+    // Compact
+
+    this->set.Compact();
+    GTEST_ASSERT_EQ(this->set.Count(), 1);
+    GTEST_ASSERT_EQ(this->set.CellCount(), 1);
 }
