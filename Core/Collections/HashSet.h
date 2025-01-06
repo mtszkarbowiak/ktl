@@ -8,7 +8,7 @@
 #include "Types/Nullable.h"
 
 /// <summary>
-/// Open-addressing hash set with specified probing and growing strategy.
+/// Open-addressing hash set with power-of-two capacity and specified probing strategy.
 /// It uses nested <c>Nullable</c> to track empty and deleted slots.
 /// </summary>
 /// 
@@ -156,6 +156,8 @@ private:
     }
 
     /// <summary> Searches for a place for existing or incoming elements. </summary>
+    /// <param name="data"> The data array to search. </param>
+    /// <param name="capacity"> The capacity of the data array. </param>
     /// <param name="key"> The key of the element to find. </param>
     /// <param name="keyCell"> The index of the cell that contains the key. </param>
     /// <param name="firstFreeSlot"> The index of the first empty slot. </param>
@@ -167,7 +169,7 @@ private:
         Nullable<Index>& firstFreeSlot
     )
     {
-        const Index initIndex = HashOf<Element>::GetHash(key) % capacity;
+        const Index initIndex = HashOf<Element>::GetHash(key) % capacity; //TODO Binary masking
 
         keyCell.Set(initIndex);
         firstFreeSlot.Clear();
@@ -202,7 +204,7 @@ private:
             }
 
             // Move to the next slot using the probing strategy
-            keyCell.Set((initIndex + P::Next(capacity, checkCount)) % capacity);
+            keyCell.Set((initIndex + P::Next(capacity, checkCount)) % capacity); //TODO Binary masking
             ++checkCount;
         }
 
@@ -360,6 +362,7 @@ public:
         Rebuild();
     }
 
+    /// <summary> Removes all elements from the set and frees the allocation. </summary>
     void Reset()
     {
         if (_capacity == 0)
@@ -634,5 +637,11 @@ public:
 
     static_assert(AllocHelper::HasBinaryMaskingSupport(), "The allocator must support binary masking.");
 
-    //TODO Add constraints
+    static_assert(!std::is_reference<Element>                ::value, "Type must not be a reference type.");
+    static_assert(!std::is_const<Element>                    ::value, "Type must not be a const-qualified type.");
+
+    static_assert(std::is_move_constructible<Element>        ::value, "Type must be move-constructible.");
+    static_assert(std::is_destructible<Element>              ::value, "Type must be destructible.");
+    static_assert(std::is_nothrow_move_constructible<Element>::value, "Type must be nothrow move-constructible.");
+    static_assert(std::is_nothrow_destructible<Element>      ::value, "Type must be nothrow destructible.");
 };
