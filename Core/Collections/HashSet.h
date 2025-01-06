@@ -201,7 +201,7 @@ private:
             }
 
             // Move to the next slot using the probing strategy
-            keyCell.Set(P(keyCell.Value() + 1, capacity) % capacity);
+            keyCell.Set((initIndex + P(capacity, checkCount)) % capacity);
             ++checkCount;
         }
 
