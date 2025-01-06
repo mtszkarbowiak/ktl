@@ -22,21 +22,17 @@
 /// (Optional) The type of the allocator to use.
 /// Can be either a dragging or non-dragging allocator.
 /// </typeparam>
-/// <typeparam name="P">
-/// (Optional) A reference to a function that calculates the next probing index.
-/// </typeparam>
-/// <typeparam name="G">
-/// (Optional) A reference to a function that calculates the next capacity.
-/// </typeparam>
 /// <typeparam name="H">
 /// (Optional) Class that provides hashing function for the stored elements.
+/// </typeparam>
+/// <typeparam name="P">
+/// (Optional) A reference to a function that calculates the next probing index.
 /// </typeparam>
 template<
     typename T,
     typename A = DefaultAlloc,
-    int32(&P)(int32, int32) = Probing::Linear,
-    int32(&G)(int32) = Growing::Default,
-    typename H = HashOf<T>
+    typename H = HashOf<T>,
+    int32(&P)(int32, int32) = Probing::Linear
 >
 class HashSet
 {
@@ -50,7 +46,7 @@ public:
 
     using HashWrapper = H;
     using AllocData   = typename A::Data;
-    using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, G>;
+    using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, Growing::Double>;
     using LoadFHelper = LoadFHelperOf<HASH_SETS_DEFAULT_SLACK_RATIO>;
 
 private:
@@ -622,4 +618,9 @@ public:
     {
         Reset();
     }
+
+
+    // Constraints
+
+    //TODO Add constraints
 };
