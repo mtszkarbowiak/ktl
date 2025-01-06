@@ -23,10 +23,10 @@
 /// Can be either a dragging or non-dragging allocator.
 /// </typeparam>
 /// <typeparam name="H">
-/// (Optional) Class that provides hashing function for the stored elements.
+/// (Optional) Class providing hashing function for the stored elements.
 /// </typeparam>
 /// <typeparam name="P">
-/// (Optional) A reference to a function that calculates the next probing index.
+/// (Optional) Class providing provides a function that calculates the next probing index.
 /// </typeparam>
 template<
     typename T,
