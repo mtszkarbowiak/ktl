@@ -47,9 +47,16 @@
 
 // C++ Versions
 
-#define CXX17_SUPPORT           __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
-#define CXX20_SUPPORT           __cplusplus >= 202002L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
-#define CXX23_SUPPORT           __cplusplus >= 202300L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202300L)
+#ifndef _MSVC_LANG
+    #define CXX17_SUPPORT       (__cplusplus >= 201703L)
+    #define CXX20_SUPPORT       (__cplusplus >= 202002L)
+    #define CXX23_SUPPORT       (__cplusplus >= 202300L)
+#else
+    #define CXX17_SUPPORT       (_MSVC_LANG >= 201703L)
+    #define CXX20_SUPPORT       (_MSVC_LANG >= 202002L)
+    #define CXX23_SUPPORT       (_MSVC_LANG >= 202300L)
+#endif
+
 
 
 #if CXX17_SUPPORT
