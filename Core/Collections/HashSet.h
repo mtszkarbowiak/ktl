@@ -330,7 +330,7 @@ public:
         else
         {
             // Rebuild the dictionary
-            Rebuild(minCapacitySlots);
+            RebuildImpl(minCapacitySlots);
         }
     }
 

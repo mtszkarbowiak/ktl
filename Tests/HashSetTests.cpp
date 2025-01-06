@@ -7,8 +7,105 @@
 #include "Debugging/LifecycleTracker.h"
 #include "Collections/HashSet.h"
 
+// Capacity Management
 
-// Fundamentals
+//TEST(HashSet_Capacity, Reserve_Call)
+//{
+//    constexpr int32 MinReservedCapacity = 128;
+//    GTEST_ASSERT_GE(MinReservedCapacity, HASH_SETS_DEFAULT_CAPACITY);
+//
+//    HashSet<int32> set;
+//    set.ReserveSlots(MinReservedCapacity);
+//
+//    GTEST_ASSERT_TRUE(set.IsAllocated());
+//    GTEST_ASSERT_GE  (set.Capacity(), MinReservedCapacity);
+//    GTEST_ASSERT_LE  (set.Capacity(), MinReservedCapacity * 2);
+//
+//    set.Reset();
+//    GTEST_ASSERT_FALSE(set.IsAllocated());
+//}
+
+TEST(HashSet_Capacity, Reserve_Ctor)
+{
+    constexpr int32 MinReservedCapacity = 128;
+    GTEST_ASSERT_GE(MinReservedCapacity, HASH_SETS_DEFAULT_CAPACITY);
+
+    HashSet<int32> set{ MinReservedCapacity };
+
+    GTEST_ASSERT_TRUE(set.IsAllocated());
+    GTEST_ASSERT_GE  (set.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE  (set.Capacity(), MinReservedCapacity * 2);
+
+    set.Reset();
+    GTEST_ASSERT_FALSE(set.IsAllocated());
+}
+
+TEST(HashSet_Capacity, Reserve_Add)
+{
+    constexpr int32 MinReservedCapacity = 128;
+    GTEST_ASSERT_GE(MinReservedCapacity, HASH_SETS_DEFAULT_CAPACITY);
+
+    HashSet<int32> set;
+    for (int32 i = 0; i < MinReservedCapacity; ++i)
+        set.Add(i);
+
+    GTEST_ASSERT_TRUE(set.IsAllocated());
+    GTEST_ASSERT_GE  (set.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE  (set.Capacity(), MinReservedCapacity * 2);
+
+    set.Reset();
+
+    GTEST_ASSERT_FALSE(set.IsAllocated());
+}
+
+TEST(HashSet_Capacity, Compact_Free)
+{
+    HashSet<int32> set;
+    set.Add(69);
+
+    GTEST_ASSERT_TRUE (set.IsAllocated());
+    GTEST_ASSERT_FALSE(set.IsEmpty());
+    GTEST_ASSERT_EQ   (set.Capacity(), HASH_SETS_DEFAULT_CAPACITY);
+    GTEST_ASSERT_EQ   (set.Count(), 1);
+
+    set.Remove(69);
+
+    GTEST_ASSERT_EQ  (set.Count(), 0);
+    GTEST_ASSERT_TRUE(set.IsEmpty());
+    GTEST_ASSERT_TRUE(set.IsAllocated());
+    set.Compact();
+
+    GTEST_ASSERT_TRUE (set.IsEmpty());
+    GTEST_ASSERT_FALSE(set.IsAllocated());
+}
+
+//TEST(HashSet_Capacity, Compact_Reloc)
+//{
+//    constexpr int32 TestCapacity1 = 256;
+//    constexpr int32 TestCapacity2 = 3;
+//
+//    HashSet<int32> set;
+//    for (int32 i = 0; i < TestCapacity1; ++i)
+//        set.Add(i);
+//
+//    GTEST_ASSERT_TRUE(set.IsAllocated());
+//    GTEST_ASSERT_EQ  (set.Count(), TestCapacity1);
+//    GTEST_ASSERT_GE  (set.Capacity(), TestCapacity1);
+//
+//    while (set.Count() > TestCapacity2)
+//        set.Remove(0);
+//
+//    set.Compact();
+//
+//    GTEST_ASSERT_TRUE(set.IsAllocated());
+//    GTEST_ASSERT_EQ  (set.Count(),    TestCapacity2);
+//    GTEST_ASSERT_GE  (set.Capacity(), TestCapacity2);
+//    GTEST_ASSERT_LE  (set.Capacity(), TestCapacity1 / 2);
+//}
+
+
+
+// Elements Manipulation
 
 using AllocatorTypes = ::testing::Types<DefaultAlloc, FixedAlloc<256>>;
 using ElementTypes   = ::testing::Types<int32, Index>;
