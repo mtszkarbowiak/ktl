@@ -99,7 +99,7 @@ public:
     // Allocation Manipulation
 
     /// <summary> Ensures that adding items up to the requested capacity will not invoke the allocator. </summary>
-    FORCE_INLINE
+    FORCE_INLINE //TODO You sure?
     void Reserve(const int32 minCapacity)
     {
         if (minCapacity < 1)
@@ -149,7 +149,7 @@ public:
     /// Attempts to reduce the capacity to the number of stored elements, without losing any elements.
     /// If the array is empty, the allocation will be freed.
     /// </summary>
-    FORCE_INLINE
+    FORCE_INLINE //TODO You sure?
     void Compact()
     {
         // Check if there is possibility of relocation.
