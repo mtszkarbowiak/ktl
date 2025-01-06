@@ -4,6 +4,7 @@
 
 #include "Index.h"
 #include "Collections/CollectionsUtils.h"
+#include "Collections/LoadFHelper.h"
 #include "Types/Nullable.h"
 
 /// <summary>
@@ -43,19 +44,20 @@ public:
     // Cell is a slot which had an element at some point.
     // Slot without a cell means that it was never occupied.
 
-    using Element     = T;
-    using Cell        = Nullable<Element>;
-    using Slot        = Nullable<Cell>;
+    using Element = T;
+    using Cell    = Nullable<Element>;
+    using Slot    = Nullable<Cell>;
 
+    using HashWrapper = H;
     using AllocData   = typename A::Data;
     using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, G>;
-    using HashHelper  = H;
+    using LoadFHelper = LoadFHelperOf<HASH_SETS_DEFAULT_SLACK_RATIO>;
 
 private:
     AllocData _allocData{};
-    int32     _capacity{};
-    int32     _elementCountCached{};
-    int32     _cellsCountCached{};
+    int32     _capacity{};           // Number of slots
+    int32     _elementCountCached{}; // Number of elements
+    int32     _cellsCountCached{};   // Number of cells
 
 
     // Capacity Access
@@ -119,6 +121,8 @@ public:
         return _cellsCountCached - _elementCountCached;
     }
 
+    //TODO Explicit load factor
+
 
     // Hashing
 
@@ -148,15 +152,6 @@ private:
         return
             actualElements == _elementCountCached && 
             actualCells    == _cellsCountCached;
-    }
-
-    /// <summary>
-    /// Calculates how many slots are required to store the specified number of elements.
-    /// </summary>
-    static FORCE_INLINE constexpr
-    int32 GetDesiredCapacity(const int32 elementCount)
-    {
-        return elementCount + (elementCount) / HASH_SETS_DEFAULT_SLACK_RATIO;
     }
 
     /// <summary> Searches for a place for existing or incoming elements. </summary>
@@ -308,7 +303,7 @@ public:
     /// <summary> Forces the set to rebuild itself. </summary>
     void Rebuild()
     {
-        const int32 desiredCapacity = GetDesiredCapacity(_elementCountCached);
+        const int32 desiredCapacity = LoadFHelper::SlotsForElements(_elementCountCached);
         RebuildImpl(desiredCapacity);
     }
 
@@ -320,25 +315,26 @@ public:
     /// Ensures that the set can store at least the specified number of slots (not elements).
     /// May require rebuilding (rehashing) the set.
     /// </summary>
-    void Reserve(const int32 minCapacity)
+    /// <param name="minCapacitySlots"> The minimal number of <b>slots</b> that the set should be able to store. </param>
+    void ReserveSlots(const int32 minCapacitySlots)
     {
-        if (minCapacity < 1)
+        if (minCapacitySlots < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
 
-        if (minCapacity <= _capacity)
+        if (minCapacitySlots <= _capacity)
             return; // Reserving the same capacity would not increase the capacity.
 
         if (_capacity == 0)
         {
             // Allocate the initial capacity and initialize the slots
-            const int32 requestedCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
+            const int32 requestedCapacity = AllocHelper::NextCapacity(_capacity, minCapacitySlots);
             _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
             BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
         }
         else
         {
             // Rebuild the dictionary
-            Rebuild(minCapacity);
+            Rebuild(minCapacitySlots);
         }
     }
 
@@ -455,13 +451,17 @@ public:
         return true;
     }
 
+    /// <summary> Adds the specified element to the set. </summary>
+    /// <returns> True if the element was added, false if the element was already in the set. </returns>
     MAY_DISCARD FORCE_INLINE
     bool Add(const Element& element)
     {
-        return Add(Element{ element });
+        return Add(MOVE(Element{ element })); //TODO Consider using forwarding reference.
+        // Why do I need to explicitly select the move?
     }
 
-
+    /// <summary> Removes the specified element from the set. </summary>
+    /// <returns> True if the element was removed, false if the element was not in the set. </returns>
     MAY_DISCARD
     bool Remove(const Element& key)
     {
@@ -495,10 +495,129 @@ public:
     }
 
 
+    // Utility
+
+    /// <summary>
+    /// Adds one-by-one copies of the specified elements to the end of the array.
+    /// Max one allocation is performed.
+    /// </summary>
+    void AddElements(const Element* source, const int32 count)
+    {
+        const int32 totalElements = _elementCountCached + count;
+        const int32 requiredSlotsCount = LoadFHelper::SlotsForElements(totalElements);
+
+        ReserveSlots(requiredSlotsCount);
+
+        for (int32 i = 0; i < count; ++i)
+            Add(source[i]);
+    }
+
+
+protected:
+    void MoteToEmpty(HashSet&& other) noexcept
+    {
+        ASSERT_COLLECTION_SAFE_MOD(_capacity == 0 && _elementCountCached == 0); // The set must be empty, but the collection must be initialized!
+        ASSERT_COLLECTION_INTEGRITY(other.IsValid()); // Ensure the integrity of the collection
+
+
+        if (other._capacity == 0 || other._elementCountCached == 0)
+            return;
+
+        //TODO
+    }
+
+    void CopyToEmpty(const Slot* source, const int32 count)
+    {
+        ASSERT_COLLECTION_SAFE_MOD(_capacity == 0 && _elementCountCached == 0); // The set must be empty, but the collection must be initialized!
+
+        if (count == 0)
+            return;
+
+        // Allocate the initial capacity and initialize the slots
+        _capacity = AllocHelper::Allocate(_allocData, HASH_SETS_DEFAULT_CAPACITY);
+        BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
+
+        // Add the elements to the set
+        for (int32 i = 0; i < count; ++i)
+        {
+            const Slot& slot = source[i];
+            if (slot.IsEmpty())
+                continue;
+            const Cell& cell = slot.Value();
+            if (cell.HasValue())
+                Add(cell.Value());
+        }
+    }
+
+
+
     // Lifecycle
 
-    //TODO
+public:
+    /// <summary> Initializes an empty set with no active allocation. </summary>
+    HashSet() = default;
 
+    /// <summary> Initializes a set by moving the allocation from another set. </summary>
+    FORCE_INLINE
+    HashSet(HashSet&& other) noexcept
+    {
+        MoveFrom(MOVE(other));
+    }
+
+    /// <summary> Initializes a set by copying another set. </summary>
+    FORCE_INLINE
+    HashSet(const HashSet& other)
+    {
+        if (other._capacity == 0)
+            return;
+
+        CopyToEmpty(DATA_OF(const Slot, other._allocData), other._capacity);
+    }
+
+
+    /// <summary> Initializes an empty hash set with an active context-less allocation of the specified capacity. </summary>
+    FORCE_INLINE explicit
+    HashSet(const int32 capacity)
+    {
+        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
+        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
+    }
+
+    /// <summary> Initializes an empty hash set with an active allocation of the specified capacity and context. </summary>
+    template<typename AllocContext>
+    FORCE_INLINE explicit
+    HashSet(const int32 capacity, AllocContext&& context)
+        : _allocData{ FORWARD(AllocContext, context) }
+    {
+        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
+        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
+    }
+
+
+    MAY_DISCARD FORCE_INLINE
+    HashSet& operator=(HashSet&& other) noexcept
+    {
+        if (this != &other)
+        {
+            Reset();
+            MoveFrom(MOVE(other));
+        }
+        return *this;
+    }
+
+    MAY_DISCARD FORCE_INLINE
+    HashSet& operator=(const HashSet& other)
+    {
+        if (this != &other)
+        {
+            Reset();
+            CopyToEmpty(DATA_OF(const Slot, other._allocData), other._capacity);
+        }
+        return *this;
+    }
+
+
+    /// <summary> Destructor. </summary>
     ~HashSet()
     {
         Reset();
