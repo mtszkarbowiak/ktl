@@ -32,7 +32,7 @@ template<
     typename T,
     typename A = DefaultAlloc,
     typename H = HashOf<T>,
-    int32(&P)(int32, int32) = Probing::Linear
+    typename P =  LinearProbing
 >
 class HashSet
 {
@@ -197,7 +197,7 @@ private:
             }
 
             // Move to the next slot using the probing strategy
-            keyCell.Set((initIndex + P(capacity, checkCount)) % capacity);
+            keyCell.Set((initIndex + P::Next(capacity, checkCount)) % capacity);
             ++checkCount;
         }
 
