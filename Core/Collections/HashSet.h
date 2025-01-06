@@ -126,8 +126,13 @@ private:
     NO_DISCARD FORCE_INLINE
     bool IsValid() const
     {
+        // Nothing to check if the set is empty
         if (_capacity == 0)
             return true;
+
+        // Ensure that the capacity is a power of 2
+        if (!Math::IsPow2(_capacity))
+            return false;
 
         // Iterate over all slots and count cached elements
         int32 actualElements = 0, actualCells = 0;
@@ -212,9 +217,13 @@ private:
         ASSERT_COLLECTION_SAFE_MOD(!IsEmpty()); // Rebuilding an empty collection is not allowed.
 
         // 1. Set up the new content.
+
         AllocData newData{ _allocData };
-        const int32 requestedCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
+        const int32 requiredCapacity  = Math::NextPow2(minCapacity);
+        const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
         const int32 allocatedCapacity = AllocHelper::Allocate(newData, requestedCapacity);
+
+        ASSERT_COLLECTION_INTEGRITY(Math::IsPow2(allocatedCapacity)); // Better safe than sorry
 
         BulkOperations::DefaultLinearContent<Slot>(
             DATA_OF(Slot, newData),
@@ -323,7 +332,8 @@ public:
         if (_capacity == 0)
         {
             // Allocate the initial capacity and initialize the slots
-            const int32 requestedCapacity = AllocHelper::NextCapacity(_capacity, minCapacitySlots);
+            const int32 requiredCapacity  = Math::NextPow2(minCapacitySlots);
+            const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
             _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
             BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
         }
@@ -621,6 +631,8 @@ public:
 
 
     // Constraints
+
+    static_assert(AllocHelper::HasBinaryMaskingSupport(), "The allocator must support binary masking.");
 
     //TODO Add constraints
 };

@@ -116,7 +116,6 @@ public:
     /// The number of elements that can be stored in the allocated memory.
     /// It is guaranteed that the allocated capacity is at least as big as the requested capacity.
     /// </returns>
-   
     static int32 Allocate(AllocData& alloc, const int32 capacity)
     {
         // Calculate the required memory size.
@@ -142,6 +141,24 @@ public:
         ASSERT_CORRECT_ALIGNMENT(Element, elements);
 
         return allocatedCapacity;
+    }
+
+
+    /// <summary>
+    /// Some collections have very strict requirement of the capacity being always a power of 2.
+    /// To keep the functions above valid, the allocator must use only powers of 2, including the limits.
+    /// This ensures that capacities undergoing the clamp operation will not violate the collection's constraints.
+    /// </summary>
+    static constexpr bool HasBinaryMaskingSupport()
+    {
+        constexpr bool correctMinimum = Math::IsPow2(MinElements) || (Alloc::MinCapacity < 2);
+        constexpr bool correctMaximum = Math::IsPow2(MaxElements) || (Alloc::MaxCapacity == INT32_MAX);
+        return correctMinimum && correctMaximum;
+
+        // The underlying problem is that after applying the growth function, we should ceil the result
+        // to the power of two. This is to keep the constraint of pow-2 capacity. Unfortunately,
+        // the capacity may be capped by the allocator. Therefore, we must guarantee that the limits
+        // of the allocator do also comply with the pow-2 constraint.
     }
 };
 
