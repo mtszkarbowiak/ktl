@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Types/Numbers.h"
+
 #include <algorithm>
 
 
@@ -86,3 +88,33 @@ using GetCopyableTag = typename std::conditional<
     IsCopyableTag,
     NonCopyableTag
 >::type;
+
+
+// Null Semantics
+
+/// <summary>
+/// Special tag used to request the creation of a tombstone object.
+/// Tombstone objects are used to represent null values in nullable types.
+/// This allows for the optimization by avoiding the usage of additional flags.
+/// </summary>
+struct TombstoneDepth
+{
+    /// <summary>
+    /// Depth of the requested tombstone. It must always be greater than zero.
+    /// Zero depth means that the type does not support tombstone values.
+    /// </summary>
+    int8 Value{};
+};
+
+/// <summary>
+/// Number of tombstone values supported by the type.
+/// </summary>
+/// <remarks>
+/// Tombstone depth is a de facto maximal level of nesting Nullable types, without additional memory:
+/// <c> Nullable<Nullable<Nullable<...>>> </c>
+/// </remarks>
+template<typename T>
+struct GetMaxTombstoneDepth
+{
+    enum { Value = 0 };
+};

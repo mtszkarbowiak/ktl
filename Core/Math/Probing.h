@@ -6,48 +6,61 @@
 #include "Language/Keywords.h"
 
 /// <summary>
-/// Set of functions used in hashing algorithms to resolve collisions.
+/// General-purpose strategy of resolving hash collisions in open-addressing hash collections.
+/// It moves through elements one-by-one. Can be used with arbitrary collection sizes.
+/// Its downside is it increases chances of clustering in case of ineffective hash functions.
+/// Produced sequence: 0, 1, 2, 3, ...
 /// </summary>
-class Probing
+class LinearProbing
 {
+    // Linear probing works for every load factor.
+
 public:
-    FORCE_INLINE
-    static int32 Linear(const int32 size, const int32 numChecks)
+    NO_DISCARD static FORCE_INLINE
+    int32 Next(const int32 size, const int32 numChecks)
     {
         return numChecks;
     }
+};
 
-    FORCE_INLINE
-    static int32 Quadratic(const int32 size, const int32 numChecks)
+/// <summary>
+/// Specialized strategy of resolving hash collisions in open-addressing hash collections.
+/// It moves through elements by squares. Use with extreme caution, as it has very high chance
+/// of not covering all elements. Produced sequence: 0, 1, 4, 9, 16, ...
+/// </summary>
+class QuadraticProbing
+{
+public:
+    NO_DISCARD static FORCE_INLINE
+    int32 Next(const int32 size, const int32 numChecks)
     {
         return numChecks * numChecks;
     }
+};
 
-    FORCE_INLINE
-    static int32 DoubleHashing(const int32 size, const int32 numChecks)
-    {
-        const int32 secondHash = 1 + (size % (size - 1));
-        return secondHash * numChecks;
-    }
+/// <summary>
+/// Specialized strategy of resolving hash collisions in open-addressing hash collections.
+/// It moves through first n elements linearly and then starts jumping by n. Use with caution,
+/// as it has some chance of not covering all elements, especially with high load factors.
+/// Produced sequence: 0, 1, 2, ..., n, 2n, 3n, ...
+/// </summary>
+///
+/// <typeparam name="N">
+/// The number of elements to jump after the initial linear search.
+/// Always should be a prime number, higher than 2.
+/// </typeparam>
+template<int32 N = 7>
+class JumpProbing
+{
+    // Check if higher than 2
+    static_assert(N > 2, "The jump must be higher than 2.");
 
-    FORCE_INLINE
-    static int32 Fibonacci(const int32 size, const int32 numChecks)
+public:
+    NO_DISCARD static FORCE_INLINE
+    int32 Next(const int32 size, const int32 numChecks)
     {
-        int32 fib1 = 1, fib2 = 1;
-        for (int i = 2; i <= numChecks; ++i) 
-        {
-            int32 nextFib = fib1 + fib2;
-            fib1 = fib2;
-            fib2 = nextFib;
-        }
-        return fib2;
-    }
-
-    FORCE_INLINE
-    static int32 Prime(const int32 size, const int32 numChecks)
-    {
-        // Example: Use prime numbers to reduce clustering
-        const int32 primes[] = { 3, 7, 11, 17, 19, 23, 29, 31 };
-        return primes[numChecks % (sizeof(primes) / sizeof(primes[0]))];
+        return numChecks < N
+            ? numChecks
+            : (numChecks - N) * N;
     }
 };

@@ -5,46 +5,59 @@
 #include "Collections/CollectionsUtils.h"
 
 /// <summary>
-/// Specialized container for storing dynamically resizable arrays of logic values.
-/// It stores the elements in a contiguous memory block and uses doubling growth strategy.
+/// A specialized container for storing dynamically
+/// resizable arrays of logical values (bits).
 /// </summary>
+///
+/// <typeparam name="A">
+/// (Optional) The type of the allocator to use.
+/// Can be either a dragging or non-dragging allocator.
+/// </typeparam>
+/// <typeparam name="G">
+/// (Optional) A reference to a function that calculates the next capacity
+/// before applying allocator limits.
+/// </typeparam>
+///
 /// <remarks>
-/// The container is designed to invoke the allocator as little as possible.
-/// Thus it will keep the allocation active even when the array is empty,
-/// unless explicitly freed by calling <c>Reset</c>.
+/// 1. The <c>BitArray</c> class STL equivalent is the specialization of <c>std::vector<bool></c>.
+/// 2. It operates effectively as a stack, with the array's end representing the top of the stack.
+/// 3. The amortized time complexity of adding elements is constant.
+/// 4. The default capacity is defined by <c>ARRAY_DEFAULT_CAPACITY</c>.
+/// 5. The container minimizes allocator invocations, keeping the allocation active even when the
+/// array is empty, unless explicitly freed by calling <c>Reset</c> (or destructor).
+/// 6. <c>BitArray</c> is not thread-safe.
+/// External synchronization is required if used in a multi-threaded environment.
 /// </remarks>
-/// <typeparam name="Alloc"> Type of the allocator to use. </typeparam>
 template<
-    typename Alloc = DefaultAlloc,
-    int32(&Grow)(int32) = Growing::Default
+    typename A = DefaultAlloc,
+    int32(&G)(int32) = Growing::Default
 >
 class BitArray
 {
 public:
     /// <summary> Underlying data type used to store the bits. </summary>
-    using Block     = uint64;
+    using Block       = uint64;
+    using AllocData   = typename A::Data;
+    using AllocHelper = AllocHelperOf<Block, A, ARRAY_DEFAULT_CAPACITY, G>;
 
 private:
-    using AllocData   = typename Alloc::Data;
-    using AllocHelper = AllocHelperOf<Block, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
-
     AllocData _allocData{};
     int32     _blockCapacity{};
     int32     _bitCount{};
 
-    constexpr static int32 BytesPerBlock = sizeof(Block); //TODO <Style> Place linkage keywords first.
-    constexpr static int32  BitsPerBlock = BytesPerBlock * 8;
+    static constexpr int32 BytesPerBlock = sizeof(Block);
+    static constexpr int32 BitsPerBlock  = BytesPerBlock * 8;
 
 
 protected:
     FORCE_INLINE
-    auto Data()  -> Block*  //TODO <Style> Unify return types.
+    Block* Data()
     {
         return DATA_OF(Block, _allocData);
     }
 
     FORCE_INLINE
-    auto Data() const  -> const Block*
+    const Block* Data() const
     {
         return DATA_OF(const Block, _allocData);
     }
@@ -52,7 +65,7 @@ protected:
 
     /// <summary> Calculates the number of blocks required to store the given number of bits. </summary>
     FORCE_INLINE
-    static constexpr auto BlocksForBits(const int32 bitCount)  -> int32
+    static constexpr int32 BlocksForBits(const int32 bitCount)
     {
         return (bitCount + BitsPerBlock - 1) / BitsPerBlock;
     }
@@ -62,14 +75,14 @@ public:
 
     /// <summary> Checks if the bit-array has an active allocation. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    auto IsAllocated() const  -> bool
+    bool IsAllocated() const
     {
         return _blockCapacity > 0;
     }
 
     /// <summary> Number of bits that can be stored without invoking the allocator. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    auto Capacity() const  -> int32
+    int32 Capacity() const
     {
         return _blockCapacity * BitsPerBlock;
     }
@@ -79,21 +92,21 @@ public:
 
     /// <summary> Checks if the bit-array has any bits. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    auto IsEmpty() const  -> bool
+    bool IsEmpty() const
     {
         return _bitCount == 0;
     }
 
     /// <summary> Number of currently stored bits. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    auto Count() const  -> int32
+    int32 Count() const 
     {
         return _bitCount;
     }
 
     /// <summary> Number of bits that can be added without invoking the allocator. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    auto Slack() const  -> int32
+    int32 Slack() const
     {
         return Capacity() - _bitCount;
     }
@@ -102,7 +115,7 @@ public:
     // Allocation Manipulation
 
     /// <summary> Ensures that adding bits up to the requested capacity will not invoke the allocator. </summary>
-    void Reserve(const int32 minBitsCapacity) //TODO Unify naming with EnsureCapacity.
+    void Reserve(const int32 minBitsCapacity)
     {
         if (minBitsCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
@@ -124,7 +137,7 @@ public:
             const AllocData& oldData = _allocData;
             AllocData newData{ oldData }; // Copy the binding
 
-            const int32 requiredBlocksCapacity = AllocHelper::NextCapacity(_blockCapacity, minBlocksCapacity);
+            const int32  requiredBlocksCapacity = AllocHelper::NextCapacity(_blockCapacity, minBlocksCapacity);
             const int32 allocatedBlocksCapacity = AllocHelper::Allocate(newData, requiredBlocksCapacity);
 
             if (_blockCapacity > 0)
@@ -205,7 +218,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator=(const bool value) -> MutBitRef&
+        MutBitRef& operator=(const bool value)
         {
             _array->SetBit(_index, value);
             return *this;
@@ -232,7 +245,7 @@ public:
         {
         }
 
-        auto operator=(bool value)->ConstBitRef & = delete;
+        ConstBitRef& operator=(bool value) = delete;
 
         NO_DISCARD FORCE_INLINE
         operator bool() const
@@ -259,7 +272,7 @@ public:
     /// To modify bit without overhead use <c>SetBit</c> method.
     /// </remarks>
     NO_DISCARD FORCE_INLINE
-    auto operator[](const int32 index) -> MutBitRef
+    MutBitRef operator[](const int32 index)
     {
         return MutBitRef{ this, index };
     }
@@ -271,12 +284,12 @@ public:
     /// <param name="index"> Index of the bit to access. Must be in the range [0, Count). </param>
     /// <returns> Value of the bit at the specified index. </returns>
     NO_DISCARD FORCE_INLINE
-    auto GetBit(const int32 index) const -> bool
+    bool GetBit(const int32 index) const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _bitCount);
 
         const int32 blockIndex = index / BitsPerBlock;
-        const int32 bitIndex = index % BitsPerBlock;
+        const int32 bitIndex   = index % BitsPerBlock;
 
         const Block* srcBlock = DATA_OF(const Block, _allocData) + blockIndex;
         const Block  mask     = Block{ 1 } << bitIndex;
@@ -323,7 +336,7 @@ public:
 
     /// <summary> Accesses the block of bits bit at the specified index. </summary>
     NO_DISCARD FORCE_INLINE
-    auto GetBlock(const int32 blockIndex) const -> Block
+    Block GetBlock(const int32 blockIndex) const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(blockIndex >= 0 && blockIndex < _blockCapacity);
         const Block* srcBlock = DATA_OF(Block, _allocData) + blockIndex;
@@ -539,8 +552,6 @@ public:
     /// <summary> Initializing an empty bit-array with an active context-less allocation of the specified capacity. </summary>
     FORCE_INLINE explicit
     BitArray(const int32 bitCapacity)
-        : _allocData{} //TODO Remove unnecessary initialization.
-        , _bitCount{}
     {
         const int32 requiredBlocks  = BlocksForBits(bitCapacity);
         const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
@@ -552,7 +563,6 @@ public:
     FORCE_INLINE explicit
     BitArray(const int32 bitCapacity, AllocContext&& context)
         : _allocData{ FORWARD(AllocContext, context) }
-        , _bitCount{}
     {
         const int32 requiredBlocks  = BlocksForBits(bitCapacity);
         const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
@@ -619,21 +629,21 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const MutEnumerator& other) const -> bool
+        bool operator==(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const MutEnumerator& other) const -> bool
+        bool operator!=(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const MutEnumerator& other) const -> bool
+        bool operator<(const MutEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
@@ -651,13 +661,13 @@ public:
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator*() -> MutBitRef
+        MutBitRef operator*()
         {
             return MutBitRef{ _array, _index };
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator*() const -> ConstBitRef
+        ConstBitRef operator*() const
         {
             return ConstBitRef{ _array, _index };
         }
@@ -675,7 +685,7 @@ public:
 
         /// <summary> Returns the index of the current element. </summary>
         NO_DISCARD FORCE_INLINE
-        auto Index() const  -> int32
+        int32 Index() const
         {
             return _index;
         }
@@ -685,7 +695,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> MutEnumerator&
+        MutEnumerator& operator++()
         {
             ++_index;
             return *this;
@@ -693,7 +703,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> MutEnumerator
+        MutEnumerator operator++(int)
         {
             MutEnumerator copy{ *this };
             ++_index;
@@ -724,21 +734,21 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const ConstEnumerator& other) const -> bool
+        bool operator==(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const ConstEnumerator& other) const -> bool
+        bool operator!=(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const ConstEnumerator& other) const -> bool
+        bool operator<(const ConstEnumerator& other) const
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
@@ -756,7 +766,7 @@ public:
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator*() const -> ConstBitRef
+        ConstBitRef operator*() const
         {
             return ConstBitRef{ _array, _index };
         }
@@ -772,23 +782,29 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> ConstEnumerator&
+        ConstEnumerator& operator++()
         {
             ++_index;
             return *this;
         }
 
-        //TODO Implement postfix increment operators.
+        MAY_DISCARD FORCE_INLINE
+        ConstEnumerator operator++(int)
+        {
+            ConstEnumerator copy{ *this };
+            ++_index;
+            return copy;
+        }
     };
 
     NO_DISCARD FORCE_INLINE
-    auto Values() -> MutEnumerator
+    MutEnumerator Values()
     {
         return MutEnumerator{ *this };
     }
 
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstEnumerator
+    ConstEnumerator Values() const
     {
         return ConstEnumerator{ *this };
     }

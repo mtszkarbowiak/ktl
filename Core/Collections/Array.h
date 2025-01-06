@@ -6,30 +6,50 @@
 
 
 /// <summary>
-/// Basic container for storing dynamically resizable arrays of elements in one contiguous memory block.
+/// A container for dynamically resizable arrays of elements,
+/// stored in a single contiguous block of memory.
 /// </summary>
 ///
-/// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, and not a reference. </typeparam>
-/// <typeparam name="Alloc"> Type of the allocator to use. Can be either dragging or non-dragging.</typeparam>
-/// <typeparam name="Grow"> Function to calculate the next capacity (before capping by allocator). </typeparam>
+/// <typeparam name="T">
+/// The type of elements stored in the array.
+/// Must be movable (both constructor and assignment), non-const, and non-reference.
+/// </typeparam>
+/// <typeparam name="A">
+/// (Optional) The type of the allocator to use.
+/// Can be either a dragging or non-dragging allocator.
+/// </typeparam>
+/// <typeparam name="G">
+/// (Optional) A reference to a function that calculates the next capacity
+/// before applying allocator limits.
+/// </typeparam>
 ///
 /// <remarks>
-/// 1. <c>Array</c> works effectively as a stack. If you need a queue, consider using <c>Ring</c> instead.
-/// 2. The container is designed to invoke the allocator as little as possible.
-/// Thus it will keep the allocation active even when the array is empty,
-/// unless explicitly freed by calling <c>Reset</c>.
-/// 3. <c>Array</c> STL inspiration is <c>std::vector</c>.
+/// 1. The <c>Array</c> class is inspired by STL's <c>std::vector</c> and Unreal Engine's
+/// <c>TArray</c>, with a difference that it does not have a specialization for <c>bool</c>.
+/// 2. It operates effectively as a stack, with the array's end representing the top of the stack.
+/// 3. The amortized time complexity of adding elements is constant.
+/// 4. The default capacity is defined by <c>ARRAY_DEFAULT_CAPACITY</c>.
+/// 5. The container minimizes allocator invocations, keeping the allocation active even when the
+/// array is empty, unless explicitly freed by calling <c>Reset</c> (or destructor).
+/// 6. <c>Array</c> is not thread-safe.
+/// External synchronization is required if used in a multi-threaded environment.
 /// </remarks>
 template<
     typename T,
-    typename Alloc = HeapAlloc,
-    int32(&Grow)(int32) = Growing::Default
+    typename A = HeapAlloc,
+    int32(&G)(int32) = Growing::Default
 >
 class Array
 {
-    using AllocData   = typename Alloc::Data;
-    using AllocHelper = AllocHelperOf<T, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
+public:
+    using Element     = T;
+    using AllocData   = typename A::Data;
+    using AllocHelper = AllocHelperOf<Element, A, ARRAY_DEFAULT_CAPACITY, G>;
 
+    using MutEnumerator   = typename Span<Element>::MutEnumerator;
+    using ConstEnumerator = typename Span<Element>::ConstEnumerator;
+
+private:
     AllocData _allocData{};
     int32     _capacity{};
     int32     _count{};
@@ -79,7 +99,7 @@ public:
     // Allocation Manipulation
 
     /// <summary> Ensures that adding items up to the requested capacity will not invoke the allocator. </summary>
-    FORCE_INLINE
+    FORCE_INLINE //TODO You sure?
     void Reserve(const int32 minCapacity)
     {
         if (minCapacity < 1)
@@ -107,13 +127,13 @@ public:
             // Move the content before reassigning the capacity
             if (_capacity > 0)
             {
-                BulkOperations::MoveLinearContent<T>(
-                    DATA_OF(T, _allocData),
-                    DATA_OF(T, newData),
+                BulkOperations::MoveLinearContent<Element>(
+                    DATA_OF(Element, _allocData),
+                    DATA_OF(Element, newData),
                     _count
                 );
-                BulkOperations::DestroyLinearContent<T>(
-                    DATA_OF(T, _allocData),
+                BulkOperations::DestroyLinearContent<Element>(
+                    DATA_OF(Element, _allocData),
                     _count
                 );
 
@@ -129,7 +149,7 @@ public:
     /// Attempts to reduce the capacity to the number of stored elements, without losing any elements.
     /// If the array is empty, the allocation will be freed.
     /// </summary>
-    FORCE_INLINE
+    FORCE_INLINE //TODO You sure?
     void Compact()
     {
         // Check if there is possibility of relocation.
@@ -156,13 +176,13 @@ public:
 
         const int32 allocatedCapacity = AllocHelper::Allocate(newData, requiredCapacity);
 
-        BulkOperations::MoveLinearContent<T>(
-            DATA_OF(T, _allocData), 
-            DATA_OF(T, newData), 
+        BulkOperations::MoveLinearContent<Element>(
+            DATA_OF(Element, _allocData), 
+            DATA_OF(Element, newData), 
             _count
         );
-        BulkOperations::DestroyLinearContent<T>(
-            DATA_OF(T, _allocData),
+        BulkOperations::DestroyLinearContent<Element>(
+            DATA_OF(Element, _allocData),
             _count
         );
 
@@ -180,9 +200,9 @@ public:
     /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
     /// </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    T* Data()
+    Element* Data()
     {
-        return DATA_OF(T, _allocData);
+        return DATA_OF(Element, _allocData);
     }
 
     /// <summary>
@@ -190,26 +210,26 @@ public:
     /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
     /// </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    const T* Data() const
+    const Element* Data() const
     {
-        return DATA_OF(const T, _allocData);
+        return DATA_OF(const Element, _allocData);
     }
 
 
     /// <summary> Accesses the element at the given index. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    T& operator[](const int32 index)
+    Element& operator[](const int32 index)
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _count);
-        return DATA_OF(T, _allocData)[index];
+        return DATA_OF(Element, _allocData)[index];
     }
 
     /// <summary> Accesses the element at the given index. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    const T& operator[](const int32 index) const
+    const Element& operator[](const int32 index) const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _count);
-        return DATA_OF(const T, _allocData)[index];
+        return DATA_OF(const Element, _allocData)[index];
     }
 
 
@@ -221,20 +241,20 @@ public:
     /// <param name="element"> Element to add. </param>
     template<typename U> // Universal reference
     MAY_DISCARD FORCE_INLINE
-    T& Add(U&& element)
+    Element& Add(U&& element)
     {
         static_assert(
-            std::is_same<typename std::decay<U>::type, T>::value,
+            std::is_same<typename std::decay<U>::type, Element>::value,
             "Add requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
         if (_count == _capacity)
             Reserve(_capacity + 1);
 
-        T* target = DATA_OF(T, _allocData) + _count;
+        Element* target = DATA_OF(Element, _allocData) + _count;
 
         // Placement new
-        new (target) T(FORWARD(U, element));
+        new (target) Element(FORWARD(U, element));
         _count += 1;
 
         return *target;
@@ -244,15 +264,15 @@ public:
     /// <param name="args"> Arguments to forward to the constructor. </param>
     template<typename... Args> // Parameter pack
     MAY_DISCARD FORCE_INLINE
-    T& Emplace(Args&&... args)
+    Element& Emplace(Args&&... args)
     {
         if (_count == _capacity)
             Reserve(_capacity + 1);
 
-        T* target = DATA_OF(T, _allocData) + _count;
+        Element* target = DATA_OF(Element, _allocData) + _count;
 
         // Placement new
-        new (target) T(FORWARD(Args, args)...);
+        new (target) Element(FORWARD(Args, args)...);
         _count += 1;
 
         return *target;
@@ -267,7 +287,7 @@ public:
     /// <returns> Reference to the added element. </returns>
     template<typename U> // Universal reference
     MAY_DISCARD FORCE_INLINE
-    T& InsertAt(const int32 index, U&& element)
+    Element& InsertAt(const int32 index, U&& element)
     {
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _count);  // Allow index == _count for appending
 
@@ -275,23 +295,23 @@ public:
             Reserve(_capacity + 1);
 
         // Pointer to the slot at the insertion point.
-        T* insertPtr = DATA_OF(T, _allocData) + index;
+        Element* insertPtr = DATA_OF(Element, _allocData) + index;
 
         if (index < _count)
         {
             // Pointer to the newly occupied slot.
-            T* endPtr = DATA_OF(T, _allocData) + _count;
+            Element* endPtr = DATA_OF(Element, _allocData) + _count;
 
             // Move-construct of the last element to the end.
-            new (endPtr) T(MOVE(*insertPtr));
+            new (endPtr) Element(MOVE(*insertPtr));
 
             // Move-assignment of the inserted element.
-            *insertPtr = T(FORWARD(U, element));
+            *insertPtr = Element(FORWARD(U, element));
         }
         else
         {
             // Move-construct the element at the end.
-            new (insertPtr) T(FORWARD(U, element));
+            new (insertPtr) Element(FORWARD(U, element));
         }
 
         _count += 1;
@@ -309,7 +329,7 @@ public:
     /// </remarks>
     template<typename U> // Universal reference
     MAY_DISCARD
-    T& InsertAtStable(const int32 index, U&& element)
+    Element& InsertAtStable(const int32 index, U&& element)
     {
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _count);  // Allow index == _count for appending
 
@@ -319,18 +339,18 @@ public:
             Reserve(_capacity + 1);
 
         // Pointer to the first slot.
-        T* dataPtr = DATA_OF(T, _allocData);
+        Element* dataPtr = DATA_OF(Element, _allocData);
 
         // Pointer to the slot at the insertion point.
-        T* insertPtr = dataPtr + index;
+        Element* insertPtr = dataPtr + index;
 
         if (index < _count)
         {
             // Pointer to the newly occupied slot.
-            T* endPtr = dataPtr + _count;
+            Element* endPtr = dataPtr + _count;
 
             // Move-construct of the last element to the end.
-            new (endPtr) T(MOVE(*(endPtr - 1)));
+            new (endPtr) Element(MOVE(*(endPtr - 1)));
 
             // Move the elements to make space for the new element.
             for (int i = _count - 1; i > index; --i)
@@ -339,12 +359,12 @@ public:
             }
 
             // Move-assignment of the inserted element.
-            dataPtr[index] = T(FORWARD(U, element));
+            dataPtr[index] = Element(FORWARD(U, element));
         }
         else
         {
             // Move-construct the element at the end.
-            new (insertPtr) T(FORWARD(U, element));
+            new (insertPtr) Element(FORWARD(U, element));
         }
 
         _count += 1;
@@ -361,8 +381,8 @@ public:
     {
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index < _count); // Ensure index is valid
 
-        T* basePtr    = DATA_OF(T, _allocData);
-        T* removedPtr = basePtr + index;
+        Element* basePtr    = DATA_OF(Element, _allocData);
+        Element* removedPtr = basePtr + index;
 
         if (index != _count - 1)  // If not removing the last element
         {
@@ -384,7 +404,7 @@ public:
     {
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index < _count); // Ensure index is valid
 
-        T* basePtr    = DATA_OF(T, _allocData);
+        Element* basePtr    = DATA_OF(Element, _allocData);
 
         // Shift all subsequent elements left to fill the gap
         for (int32 i = index; i < _count - 1; ++i)
@@ -404,7 +424,7 @@ public:
         if (_count == 0)
             return;
 
-        BulkOperations::DestroyLinearContent<T>(DATA_OF(T, _allocData), _count);
+        BulkOperations::DestroyLinearContent<Element>(DATA_OF(Element, _allocData), _count);
         _count = 0;
     }
 
@@ -424,9 +444,9 @@ public:
 
     /// <summary> Creates a span of the stored elements. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    Span<T> AsSpan() noexcept
+    Span<Element> AsSpan() noexcept
     {
-        return Span<T>{ DATA_OF(T, _allocData), _count };
+        return Span<Element>{ DATA_OF(Element, _allocData), _count };
     }
 
     /// <summary>
@@ -438,16 +458,16 @@ public:
     /// because they may be returned from a function as a span.
     /// </remarks>
     MAY_DISCARD
-    Span<T> AddElements(const T* source, const int32 count)
+    Span<Element> AddElements(const Element* source, const int32 count)
     {
         const int32 newCount = _count + count;
         Reserve(newCount);
 
-        T* target = DATA_OF(T, _allocData) + _count;
-        BulkOperations::CopyLinearContent<T>(source, target, count);
+        Element* target = DATA_OF(Element, _allocData) + _count;
+        BulkOperations::CopyLinearContent<Element>(source, target, count);
 
         _count = newCount;
-        return Span<T>{ target, count };
+        return Span<Element>{ target, count };
     }
 
     /// <summary>
@@ -459,7 +479,7 @@ public:
     /// because they may be returned from a function as a span.
     /// </remarks>
     MAY_DISCARD
-    Span<T> AddElements(const Span<T> source)
+    Span<Element> AddElements(const Span<Element> source)
     {
         return AddElements(source.Data(), source.Count());
     }
@@ -472,7 +492,7 @@ public:
     /// because they may be returned from a function as a span.
     /// </remarks>
     MAY_DISCARD
-    Span<T> AddRepetitions(const T& source, const int32 count)
+    Span<Element> AddRepetitions(const Element& source, const int32 count)
     {
         const int32 newCount = _count + count;
         Reserve(newCount);
@@ -482,9 +502,9 @@ public:
         }
 
         const int32 startIndex = _count - count;
-        const T* startPtr = DATA_OF(T, _allocData) + startIndex;
+        const Element* startPtr = DATA_OF(Element, _allocData) + startIndex;
 
-        return Span<T>{ startPtr, count };
+        return Span<Element>{ startPtr, count };
     }
 
 
@@ -514,9 +534,9 @@ protected:
             _capacity  = AllocHelper::Allocate(_allocData, requestedCapacity);
             _count     = other._count;
 
-            BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, other._allocData),
-                DATA_OF(T, this->_allocData),
+            BulkOperations::MoveLinearContent<Element>(
+                DATA_OF(Element, other._allocData),
+                DATA_OF(Element, this->_allocData),
                 _count
             );
 
@@ -612,10 +632,10 @@ public:
     /// <summary> Creates an array with the specified elements. </summary>
     template<typename U>
     NO_DISCARD static constexpr
-    Array<T> Of(std::initializer_list<U> list)
+    Array<Element> Of(std::initializer_list<U> list)
     {
         const int32 capacity = static_cast<int32>(list.size());
-        Array<T> result{ capacity };
+        Array<Element> result{ capacity };
 
         for (const auto& element : list)
             result.Add(element);
@@ -626,291 +646,74 @@ public:
 
     // Iterators
 
-    /// <summary>
-    /// Iterator for the array which provides end condition and allows to iterate over the elements in a range-based for loop.
-    /// </summary>
-    class MutEnumerator
-    {
-        Array* _array;
-        int32  _index;
-
-    public:
-        FORCE_INLINE explicit
-        MutEnumerator(Array& array)
-            : _array{ &array }
-            , _index{ 0 }
-        {
-        }
-
-
-        // Access
-
-        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        NO_DISCARD FORCE_INLINE
-        IterHint Hint() const
-        {
-            const int32 remaining = _array->_count - _index;
-            return { remaining, remaining };
-        }
-
-        NO_DISCARD FORCE_INLINE
-        T& operator*()
-        {
-            return (*_array)[_index];
-        }
-
-        NO_DISCARD FORCE_INLINE
-        T* operator->()
-        {
-            return &(*_array)[_index];
-        }
-
-        NO_DISCARD FORCE_INLINE
-        const T& operator*() const
-        {
-            return (*_array)[_index];
-        }
-
-        NO_DISCARD FORCE_INLINE
-        const T* operator->() const
-        {
-            return &(*_array)[_index];
-        }
-
-        /// <summary> Returns the index of the current element. </summary>
-        NO_DISCARD FORCE_INLINE
-        int32 Index() const
-        {
-            return _index;
-        }
-
-
-        // Iteration
-
-        /// <summary> Check if the enumerator points to a valid element. </summary>
-        NO_DISCARD FORCE_INLINE explicit
-        operator bool() const 
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
-            return _index < _array->_count;
-        }
-
-        /// <summary> Moves the enumerator to the next element. </summary>
-        MAY_DISCARD FORCE_INLINE
-        MutEnumerator& operator++()
-        {
-            _index += 1;
-            return *this;
-        }
-
-        /// <summary> Moves the enumerator to the next element. </summary>
-        /// <remarks> Prefixed increment operator is faster. </remarks>
-        MAY_DISCARD FORCE_INLINE
-        MutEnumerator operator++(int)
-        {
-            MutEnumerator copy{ *this };
-            _index += 1;
-            return copy;
-        }
-
-
-        // Identity
-
-        NO_DISCARD FORCE_INLINE
-        bool operator==(const MutEnumerator& other) const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index == other._index;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        bool operator!=(const MutEnumerator& other) const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index != other._index;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        bool operator<(const MutEnumerator& other) const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index < other._index;
-        }
-    };
-
-    /// <summary>
-    /// Iterator for the array which provides end condition and allows to iterate over the elements in a range-based for loop.
-    /// </summary>
-    class ConstEnumerator
-    {
-        const Array* _array;
-        int32        _index;
-
-    public:
-        FORCE_INLINE explicit
-        ConstEnumerator(const Array& array)
-            : _array{ &array }
-            , _index{ 0 }
-        {
-        }
-
-        FORCE_INLINE explicit
-        ConstEnumerator(const MutEnumerator& enumerator)
-            : _array{ enumerator._array }
-            , _index{ enumerator._index }
-        {
-        }
-
-
-        // Access
-
-        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        NO_DISCARD FORCE_INLINE
-        IterHint Hint() const
-        {
-            const int32 remaining = _array->_count - _index;
-            return { remaining, remaining };
-        }
-
-        NO_DISCARD FORCE_INLINE
-        const T& operator*() const
-        {
-            return (*_array)[_index];
-        }
-
-        NO_DISCARD FORCE_INLINE
-        const T* operator->() const
-        {
-            return &(*_array)[_index];
-        }
-
-        /// <summary> Returns the index of the current element. </summary>
-        NO_DISCARD FORCE_INLINE
-        int32 Index() const
-        {
-            return _index;
-        }
-
-
-        // Iteration
-
-        /// <summary> Check if the enumerator points to a valid element. </summary>
-        NO_DISCARD FORCE_INLINE explicit
-        operator bool() const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
-            return _index < _array->_count;
-        }
-
-        /// <summary> Moves the enumerator to the next element. </summary>
-        MAY_DISCARD FORCE_INLINE
-        ConstEnumerator& operator++()
-        {
-            _index += 1;
-            return *this;
-        }
-
-        /// <summary> Moves the enumerator to the next element. </summary>
-        /// <remarks> Prefixed increment operator is faster. </remarks>
-        MAY_DISCARD FORCE_INLINE
-        ConstEnumerator operator++(int)
-        {
-            ConstEnumerator copy{ *this };
-            _index += 1;
-            return copy;
-        }
-
-
-        // Identity
-
-        NO_DISCARD FORCE_INLINE
-        bool operator==(const ConstEnumerator& other) const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index == other._index;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        bool operator!=(const ConstEnumerator& other) const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index != other._index;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        bool operator<(const ConstEnumerator& other) const
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index < other._index;
-        }
-    };
-
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
     MutEnumerator Values()
     {
-        return MutEnumerator{ *this };
+        Element* data = DATA_OF(Element, _allocData);
+        return MutEnumerator{ data, data + _count };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
     ConstEnumerator Values() const
     {
-        return ConstEnumerator{ *this };
+        const Element* data = DATA_OF(const Element, _allocData);
+        return ConstEnumerator{ data, data + _count };
     }
-
 
 
     /// <summary> STL-style begin iterator. </summary>
     NO_DISCARD FORCE_INLINE
-    T* begin()
+    Element* begin()
     {
-        return DATA_OF(T, _allocData);
+        return DATA_OF(Element, _allocData);
     }
 
     /// <summary> STL-style begin iterator. </summary>
     NO_DISCARD FORCE_INLINE
-    const T* begin() const
+    const Element* begin() const
     {
-        return DATA_OF(const T, _allocData);
+        return DATA_OF(const Element, _allocData);
     }
 
     /// <summary> STL-style const begin iterator. </summary>
     NO_DISCARD FORCE_INLINE
-    const T* cbegin() const
+    const Element* cbegin() const
     {
-        return DATA_OF(const T, _allocData);
+        return DATA_OF(const Element, _allocData);
     }
 
 
     /// <summary> STL-style end iterator. </summary>
     NO_DISCARD FORCE_INLINE
-    T* end()
+    Element* end()
     {
-        return DATA_OF(T, _allocData) + _count;
+        return DATA_OF(Element, _allocData) + _count;
     }
 
     /// <summary> STL-style end iterator. </summary>
     NO_DISCARD FORCE_INLINE
-    const T* end() const
+    const Element* end() const
     {
-        return DATA_OF(const T, _allocData) + _count;
+        return DATA_OF(const Element, _allocData) + _count;
     }
 
     /// <summary> STL-style const end iterator. </summary>
     NO_DISCARD FORCE_INLINE
-    const T* cend() const
+    const Element* cend() const
     {
-        return DATA_OF(const T, _allocData) + _count;
+        return DATA_OF(const Element, _allocData) + _count;
     }
 
 
     // Constraints
-    static_assert(!std::is_reference<T>                ::value, "Type must not be a reference type.");
-    static_assert(!std::is_const<T>                    ::value, "Type must not be a const-qualified type.");
 
-    static_assert(std::is_move_constructible<T>        ::value, "Type must be move-constructible.");
-    static_assert(std::is_destructible<T>              ::value, "Type must be destructible.");
-    static_assert(std::is_nothrow_move_constructible<T>::value, "Type must be nothrow move-constructible.");
-    static_assert(std::is_nothrow_destructible<T>      ::value, "Type must be nothrow destructible.");
+    static_assert(!std::is_reference<Element>                ::value, "Type must not be a reference type.");
+    static_assert(!std::is_const<Element>                    ::value, "Type must not be a const-qualified type.");
+
+    static_assert(std::is_move_constructible<Element>        ::value, "Type must be move-constructible.");
+    static_assert(std::is_destructible<Element>              ::value, "Type must be destructible.");
+    static_assert(std::is_nothrow_move_constructible<Element>::value, "Type must be nothrow move-constructible.");
+    static_assert(std::is_nothrow_destructible<Element>      ::value, "Type must be nothrow destructible.");
 };

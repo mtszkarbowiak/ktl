@@ -5,31 +5,46 @@
 #include "Collections/CollectionsUtils.h"
 
 /// <summary>
-/// Double-ended container for storing dynamically resizable queues of elements.
-/// The items are stored in one or two segments, depending on the head-tail relationship.
-/// Both segments share one and the same memory block.
+/// A double-ended container for storing dynamically resizable queues of elements.
+/// The elements are stored in one or two segments, depending on the head-tail relationship.
+/// Both segments share a single contiguous memory block.
 /// </summary>
 ///
-/// <typeparam name="T"> Type of elements stored in the array. Must be move-able, not CV-qualified, and not a reference. </typeparam>
-/// <typeparam name="Alloc"> Type of the allocator to use. Can be either dragging or non-dragging.</typeparam>
-/// <typeparam name="Grow"> Function to calculate the next capacity (before capping by allocator). </typeparam>
+/// <typeparam name="T">
+/// The type of elements stored in the array.
+/// Must be movable (both constructor and assignment), non-const, and non-reference.
+/// </typeparam>
+/// <typeparam name="A">
+/// (Optional) The type of the allocator to use.
+/// Can be either a dragging or non-dragging allocator.
+/// </typeparam>
+/// <typeparam name="G">
+/// (Optional) A reference to a function that calculates the next capacity
+/// before applying allocator limits.
+/// </typeparam>
 ///
 /// <remarks>
-/// 1. <c>Ring</c> works effectively as a queue. If you need a stack, consider using <c>Array</c> instead.
-/// 2. The container is designed to invoke the allocator as little as possible.
-/// Thus it will keep the allocation active even when the array is empty,
-/// unless explicitly freed by calling <c>Reset</c>.
-/// 3. <c>Ring</c> STL inspiration is <c>std::deque</c>.
+/// 1. The <c>Ring</c> class has similar API to STL's <c>std::deque</c>,
+/// but uses a single memory block instead of multiple blocks.
+/// 2. It operates effectively as a queue, with two ends representing the front and back of the
+/// queue. It is recommended to use the <c>PushBack</c> as the primary method for adding elements.
+/// 3. The amortized time complexity of adding elements is constant.
+/// 4. The default capacity is defined by <c>RING_DEFAULT_CAPACITY</c>.
+/// 5. The container minimizes allocator invocations, keeping the allocation active even when the
+/// array is empty, unless explicitly freed by calling <c>Reset</c> (or destructor).
+/// 6. <c>Ring</c> is not thread-safe.
+/// External synchronization is required if used in a multi-threaded environment.
 /// </remarks>
 template<
     typename T,
-    typename Alloc = DefaultAlloc,
-    int32(&Grow)(int32) = Growing::Default
+    typename A = DefaultAlloc,
+    int32(&G)(int32) = Growing::Default
 >
 class Ring
 {
-    using AllocData   = typename Alloc::Data;
-    using AllocHelper = AllocHelperOf<T, Alloc, RING_DEFAULT_CAPACITY, Grow>;
+    using Element     = T;
+    using AllocData   = typename A::Data;
+    using AllocHelper = AllocHelperOf<Element, A, RING_DEFAULT_CAPACITY, G>;
 
     AllocData _allocData{};
     int32     _capacity{};
@@ -158,13 +173,13 @@ public:
         if (!isWrapped)
         {
             // Straightforward case: continuous data
-            BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, _allocData) + _head,
-                DATA_OF(T, newData),
+            BulkOperations::MoveLinearContent<Element>(
+                DATA_OF(Element, _allocData) + _head,
+                DATA_OF(Element, newData),
                 _countCached
             );
-            BulkOperations::DestroyLinearContent<T>(
-                DATA_OF(T, _allocData) + _head,
+            BulkOperations::DestroyLinearContent<Element>(
+                DATA_OF(Element, _allocData) + _head,
                 _countCached
             );
         }
@@ -173,24 +188,24 @@ public:
             const int32 wrapIndex = _capacity - _head;
 
             // Move and destroy the first wrapped segment
-            BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, _allocData) + _head,
-                DATA_OF(T, newData),
+            BulkOperations::MoveLinearContent<Element>(
+                DATA_OF(Element, _allocData) + _head,
+                DATA_OF(Element, newData),
                 wrapIndex
             );
-            BulkOperations::DestroyLinearContent<T>(
-                DATA_OF(T, _allocData) + _head,
+            BulkOperations::DestroyLinearContent<Element>(
+                DATA_OF(Element, _allocData) + _head,
                 wrapIndex
             );
 
             // Move and destroy the second segment
-            BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, _allocData),
-                DATA_OF(T, newData) + wrapIndex,
+            BulkOperations::MoveLinearContent<Element>(
+                DATA_OF(Element, _allocData),
+                DATA_OF(Element, newData) + wrapIndex,
                 _tail
             );
-            BulkOperations::DestroyLinearContent<T>(
-                DATA_OF(T, _allocData),
+            BulkOperations::DestroyLinearContent<Element>(
+                DATA_OF(Element, _allocData),
                 _tail
             );
         }
@@ -239,13 +254,13 @@ public:
         if (!isWrapped)
         {
             // Straightforward case: continuous data
-            BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, _allocData) + _head,
-                DATA_OF(T, newData),
+            BulkOperations::MoveLinearContent<Element>(
+                DATA_OF(Element, _allocData) + _head,
+                DATA_OF(Element, newData),
                 _countCached
             );
-            BulkOperations::DestroyLinearContent<T>(
-                DATA_OF(T, _allocData) + _head,
+            BulkOperations::DestroyLinearContent<Element>(
+                DATA_OF(Element, _allocData) + _head,
                 _countCached
             );
         }
@@ -254,24 +269,24 @@ public:
             const int32 wrapIndex = _capacity - _head;
 
             // Move and destroy the first wrapped segment
-            BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, _allocData) + _head,
-                DATA_OF(T, newData),
+            BulkOperations::MoveLinearContent<Element>(
+                DATA_OF(Element, _allocData) + _head,
+                DATA_OF(Element, newData),
                 wrapIndex
             );
-            BulkOperations::DestroyLinearContent<T>(
-                DATA_OF(T, _allocData) + _head,
+            BulkOperations::DestroyLinearContent<Element>(
+                DATA_OF(Element, _allocData) + _head,
                 wrapIndex
             );
 
             // Move and destroy the second segment
-            BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, _allocData),
-                DATA_OF(T, newData) + wrapIndex,
+            BulkOperations::MoveLinearContent<Element>(
+                DATA_OF(Element, _allocData),
+                DATA_OF(Element, newData) + wrapIndex,
                 _tail
             );
-            BulkOperations::DestroyLinearContent<T>(
-                DATA_OF(T, _allocData),
+            BulkOperations::DestroyLinearContent<Element>(
+                DATA_OF(Element, _allocData),
                 _tail
             );
         }
@@ -290,55 +305,55 @@ public:
 
     /// <summary> Accesses the element at the given index. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    T& operator[](const int32 index)
+    Element& operator[](const int32 index)
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _countCached);
         const int32 realIndex = (_head + index) % _capacity;
-        return DATA_OF(T, _allocData)[realIndex];
+        return DATA_OF(Element, _allocData)[realIndex];
     }
 
     /// <summary> Accesses the element at the given index. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    const T& operator[](const int32 index) const
+    const Element& operator[](const int32 index) const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _countCached);
         const int32 realIndex = (_head + index) % _capacity;
-        return DATA_OF(const T, _allocData)[realIndex];
+        return DATA_OF(const Element, _allocData)[realIndex];
     }
 
 
     /// <summary> Accesses the first element in the ring. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    T& PeekFront()
+    Element& PeekFront()
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
-        return DATA_OF(T, _allocData)[_head];
+        return DATA_OF(Element, _allocData)[_head];
     }
 
     /// <summary> Accesses the first element in the ring. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    const T& PeekFront() const
+    const Element& PeekFront() const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
-        return DATA_OF(const T, _allocData)[_head];
+        return DATA_OF(const Element, _allocData)[_head];
     }
 
     /// <summary> Accesses the last element in the ring. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    T& PeekBack()
+    Element& PeekBack()
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         const int32 index = (_capacity + _tail - 1) % _capacity;
-        return DATA_OF(T, _allocData)[index];
+        return DATA_OF(Element, _allocData)[index];
     }
 
     /// <summary> Accesses the last element in the ring. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    const T& PeekBack() const
+    const Element& PeekBack() const
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_countCached > 0); // Ring must not be empty!
         const int32 index = (_capacity + _tail - 1) % _capacity;
-        return DATA_OF(const T, _allocData)[index];
+        return DATA_OF(const Element, _allocData)[index];
     }
 
 
@@ -347,18 +362,18 @@ public:
     /// <summary> Adds an element to the end of the ring. </summary>
     template<typename U> // Universal reference
     MAY_DISCARD
-    T& PushBack(U&& element)
+    Element& PushBack(U&& element)
     {
         static_assert(
-            std::is_same<typename std::decay<U>::type, T>::value,
+            std::is_same<typename std::decay<U>::type, Element>::value,
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
         Reserve(_countCached + 1);
 
-        T* target = DATA_OF(T, _allocData) + _tail;
+        Element* target = DATA_OF(Element, _allocData) + _tail;
 
-        new (target) T(FORWARD(U, element));
+        new (target) Element(FORWARD(U, element));
         _tail = (_tail + 1) % _capacity;
         _countCached += 1;
 
@@ -370,13 +385,13 @@ public:
     /// <summary> Adds an element to the end of the ring. </summary>
     template<typename... Args> // Parameter pack
     MAY_DISCARD
-    T& EmplaceBack(Args&&... args)
+    Element& EmplaceBack(Args&&... args)
     {
         Reserve(_countCached + 1);
 
-        T* target = DATA_OF(T, _allocData) + _tail;
+        Element* target = DATA_OF(Element, _allocData) + _tail;
 
-        new (target) T(FORWARD(Args, args)...);
+        new (target) Element(FORWARD(Args, args)...);
         _tail = (_tail + 1) % _capacity;
         _countCached += 1;
 
@@ -389,18 +404,18 @@ public:
     /// <summary> Adds an element to the beginning of the ring. </summary>
     template<typename U> // Universal reference
     MAY_DISCARD
-    T& PushFront(U&& element)
+    Element& PushFront(U&& element)
     {
         static_assert(
-            std::is_same<typename std::decay<U>::type, T>::value,
+            std::is_same<typename std::decay<U>::type, Element>::value,
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
         Reserve(_countCached + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
-        T* target = DATA_OF(T, _allocData) + _head;
-        new (target) T(FORWARD(U, element));
+        Element* target = DATA_OF(Element, _allocData) + _head;
+        new (target) Element(FORWARD(U, element));
         _countCached += 1;
 
         ASSERT_COLLECTION_INTEGRITY(IsValid());
@@ -411,13 +426,13 @@ public:
     /// <summary> Adds an element to the beginning of the ring. </summary>
     template<typename... Args> // Parameter pack
     MAY_DISCARD
-    T& EmplaceFront(Args&&... args)
+    Element& EmplaceFront(Args&&... args)
     {
         Reserve(_countCached + 1);
 
         _head = (_head - 1 + _capacity) % _capacity;
-        T* target = DATA_OF(T, _allocData) + _head;
-        new (target) T(FORWARD(Args, args)...);
+        Element* target = DATA_OF(Element, _allocData) + _head;
+        new (target) Element(FORWARD(Args, args)...);
         _countCached += 1;
 
         ASSERT_COLLECTION_INTEGRITY(IsValid());
@@ -436,7 +451,7 @@ public:
     {
         ASSERT_COLLECTION_SAFE_MOD(_countCached > 0); // Ring must not be empty!
         _tail = (_tail - 1 + _capacity) % _capacity;
-        T* target = DATA_OF(T, _allocData) + _tail;
+        Element* target = DATA_OF(Element, _allocData) + _tail;
         target->~T();
         _countCached -= 1;
 
@@ -448,7 +463,7 @@ public:
     void PopFront()
     {
         ASSERT_COLLECTION_SAFE_MOD(_countCached > 0); // Ring must not be empty!
-        T* target = DATA_OF(T, _allocData) + _head;
+        Element* target = DATA_OF(Element, _allocData) + _head;
         target->~T();
         _head = (_head + 1) % _capacity;
         _countCached -= 1;
@@ -466,8 +481,8 @@ public:
         const bool isWrapped = _head > _tail;
         if (!isWrapped)
         {
-            BulkOperations::DestroyLinearContent<T>(
-                DATA_OF(T, _allocData) + _head,
+            BulkOperations::DestroyLinearContent<Element>(
+                DATA_OF(Element, _allocData) + _head,
                 _countCached
             );
         }
@@ -475,12 +490,12 @@ public:
         {
             const int32 wrapIndex = _capacity - _head;
 
-            BulkOperations::DestroyLinearContent<T>(
-                DATA_OF(T, _allocData) + _head,
+            BulkOperations::DestroyLinearContent<Element>(
+                DATA_OF(Element, _allocData) + _head,
                 wrapIndex
             );
-            BulkOperations::DestroyLinearContent<T>(
-                DATA_OF(T, _allocData),
+            BulkOperations::DestroyLinearContent<Element>(
+                DATA_OF(Element, _allocData),
                 _tail
             );
         }
@@ -540,9 +555,9 @@ protected:
             _head        = 0;
             _tail        = other._countCached;
 
-            BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, other._allocData) + other._head,
-                DATA_OF(T, _allocData),
+            BulkOperations::MoveLinearContent<Element>(
+                DATA_OF(Element, other._allocData) + other._head,
+                DATA_OF(Element, _allocData),
                 other._countCached
             );
 
@@ -560,15 +575,15 @@ protected:
 
             const int32 wrapIndex = other._capacity - other._head;
 
-            BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, other._allocData) + other._head,
-                DATA_OF(T, _allocData),
+            BulkOperations::MoveLinearContent<Element>(
+                DATA_OF(Element, other._allocData) + other._head,
+                DATA_OF(Element, _allocData),
                 wrapIndex
             );
 
-            BulkOperations::MoveLinearContent<T>(
-                DATA_OF(T, other._allocData),
-                DATA_OF(T, _allocData) + wrapIndex,
+            BulkOperations::MoveLinearContent<Element>(
+                DATA_OF(Element, other._allocData),
+                DATA_OF(Element, _allocData) + wrapIndex,
                 other._tail
             );
 
@@ -578,7 +593,7 @@ protected:
 
     void CopyToEmpty(const Ring& other)
     {
-        static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible.");
+        static_assert(std::is_copy_constructible<Element>::value, "Type must be copy-constructible.");
 
         ASSERT_COLLECTION_SAFE_MOD(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
         ASSERT_COLLECTION_INTEGRITY(other.IsValid()); // Make sure the other ring is valid.
@@ -596,9 +611,9 @@ protected:
             _tail        = other._countCached;
             _countCached = other._countCached;
 
-            BulkOperations::CopyLinearContent<T>(
-                DATA_OF(const T, other._allocData) + other._head,
-                DATA_OF(T, this->_allocData),
+            BulkOperations::CopyLinearContent<Element>(
+                DATA_OF(const Element, other._allocData) + other._head,
+                DATA_OF(Element, this->_allocData),
                 other._countCached
             );
         }
@@ -613,15 +628,15 @@ protected:
 
             const int32 wrapIndex = other._capacity - other._head;
 
-            BulkOperations::CopyLinearContent<T>(
-                DATA_OF(const T, other._allocData) + other._head,
-                DATA_OF(T, this->_allocData),
+            BulkOperations::CopyLinearContent<Element>(
+                DATA_OF(const Element, other._allocData) + other._head,
+                DATA_OF(Element, this->_allocData),
                 wrapIndex
             );
 
-            BulkOperations::CopyLinearContent<T>(
-                DATA_OF(const T, other._allocData),
-                DATA_OF(T, this->_allocData) + wrapIndex,
+            BulkOperations::CopyLinearContent<Element>(
+                DATA_OF(const Element, other._allocData),
+                DATA_OF(Element, this->_allocData) + wrapIndex,
                 other._tail
             );
         }
@@ -710,10 +725,10 @@ public:
     /// <summary> Creates an array with the specified elements. </summary>
     template<typename U>
     NO_DISCARD static constexpr
-    Ring<T> Of(std::initializer_list<U> list)
+    Ring<Element> Of(std::initializer_list<U> list)
     {
         const int32 capacity = static_cast<int32>(list.size());
-        Ring<T> result{ capacity };
+        Ring<Element> result{ capacity };
 
         for (const auto& element : list)
             result.PushBack(element);
@@ -752,27 +767,27 @@ public:
         }
 
         NO_DISCARD FORCE_INLINE
-        T& operator*()
+        Element& operator*()
         {
-            return DATA_OF(T, _ring->_allocData)[_indexOfSlot];
+            return DATA_OF(Element, _ring->_allocData)[_indexOfSlot];
         }
 
         NO_DISCARD FORCE_INLINE
-        T* operator->()
+        Element* operator->()
         {
-            return DATA_OF(T, _ring->_allocData) + _indexOfSlot;
+            return DATA_OF(Element, _ring->_allocData) + _indexOfSlot;
         }
 
         NO_DISCARD FORCE_INLINE
-        const T& operator*() const
+        const Element& operator*() const
         {
-            return DATA_OF(const T, _ring->_allocData)[_indexOfSlot];
+            return DATA_OF(const Element, _ring->_allocData)[_indexOfSlot];
         }
 
         NO_DISCARD FORCE_INLINE
-        const T* operator->() const
+        const Element* operator->() const
         {
-            return DATA_OF(const T, _ring->_allocData) + _indexOfSlot;
+            return DATA_OF(const Element, _ring->_allocData) + _indexOfSlot;
         }
 
         /// <summary> Returns the index of the current element. </summary>
@@ -873,15 +888,15 @@ public:
         }
 
         NO_DISCARD FORCE_INLINE
-        const T& operator*() const
+        const Element& operator*() const
         {
-            return DATA_OF(const T, _ring->_allocData)[_indexOfSlot];
+            return DATA_OF(const Element, _ring->_allocData)[_indexOfSlot];
         }
 
         NO_DISCARD FORCE_INLINE
-        const T* operator->() const
+        const Element* operator->() const
         {
-            return DATA_OF(const T, _ring->_allocData) + _indexOfSlot;
+            return DATA_OF(const Element, _ring->_allocData) + _indexOfSlot;
         }
 
         /// <summary> Returns the index of the current element. </summary>
@@ -964,13 +979,13 @@ public:
 
     // Constraints
 
-    static_assert(std::is_move_constructible<T>        ::value, "Type must be move-constructible.");
-    static_assert(std::is_move_assignable<T>           ::value, "Type must be move-assignable.");
-    static_assert(std::is_destructible<T>              ::value, "Type must be destructible.");
-    static_assert(std::is_nothrow_move_constructible<T>::value, "Type must be nothrow move-constructible.");
-    static_assert(std::is_nothrow_move_assignable<T>   ::value, "Type must be nothrow move-assignable.");
-    static_assert(std::is_nothrow_destructible<T>      ::value, "Type must be nothrow destructible.");
+    static_assert(std::is_move_constructible<Element>        ::value, "Type must be move-constructible.");
+    static_assert(std::is_move_assignable<Element>           ::value, "Type must be move-assignable.");
+    static_assert(std::is_destructible<Element>              ::value, "Type must be destructible.");
+    static_assert(std::is_nothrow_move_constructible<Element>::value, "Type must be nothrow move-constructible.");
+    static_assert(std::is_nothrow_move_assignable<Element>   ::value, "Type must be nothrow move-assignable.");
+    static_assert(std::is_nothrow_destructible<Element>      ::value, "Type must be nothrow destructible.");
 
-    static_assert(!std::is_reference<T>                ::value, "Type must not be a reference type.");
-    static_assert(!std::is_const<T>                    ::value, "Type must not be a const-qualified type.");
+    static_assert(!std::is_reference<Element>                ::value, "Type must not be a reference type.");
+    static_assert(!std::is_const<Element>                    ::value, "Type must not be a const-qualified type.");
 };
