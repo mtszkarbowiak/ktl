@@ -75,7 +75,7 @@
 
 
 #if CXX20_SUPPORT
-    #define CONCEPTS_ENABLED   1
+    #define CONCEPTS_ENABLED    1
 
     #define IF_CONSTEXPR        constexpr
     #define CONSTINIT           constinit

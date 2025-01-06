@@ -32,7 +32,7 @@ template<
     typename T,
     typename A = DefaultAlloc,
     typename H = HashOf<T>,
-    typename P =  LinearProbing
+    typename P = LinearProbing
 >
 class HashSet
 {
