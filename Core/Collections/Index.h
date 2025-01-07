@@ -59,8 +59,8 @@ private:
     /// Creates a tombstone of an index.
     /// Do not use this constructor directly, use <c>Nullable</c> instead.
     /// </summary>
-    FORCE_INLINE
-    explicit Index(TombstoneDepth tombstoneTag)
+    FORCE_INLINE explicit
+    Index(const TombstoneDepth tombstoneTag)
         : _value{ -tombstoneTag.Value }
     {
         ASSERT(tombstoneTag.Value > 0); // Tombstone depth must be greater than zero.
@@ -71,13 +71,13 @@ private:
     /// Do not use this method directly, use <c>Nullable</c> instead.
     /// </summary>
     NO_DISCARD FORCE_INLINE
-    bool IsTombstone() const
+    auto IsTombstone() const -> bool
     {
         return _value < 0;
     }
 
     NO_DISCARD FORCE_INLINE
-    int8 GetTombstoneLevel() const
+    auto GetTombstoneLevel() const -> int8
     {
         return static_cast<int8>(-_value);
     }

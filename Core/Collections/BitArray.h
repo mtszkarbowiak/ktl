@@ -51,21 +51,21 @@ private:
 
 protected:
     FORCE_INLINE
-    Block* Data()
+    auto Data() -> Block*
     {
         return DATA_OF(Block, _allocData);
     }
 
     FORCE_INLINE
-    const Block* Data() const
+    auto Data() const -> const Block*
     {
         return DATA_OF(const Block, _allocData);
     }
 
 
     /// <summary> Calculates the number of blocks required to store the given number of bits. </summary>
-    FORCE_INLINE
-    static constexpr int32 BlocksForBits(const int32 bitCount)
+    FORCE_INLINE static constexpr
+    auto BlocksForBits(const int32 bitCount) -> int32
     {
         return (bitCount + BitsPerBlock - 1) / BitsPerBlock;
     }
@@ -75,14 +75,14 @@ public:
 
     /// <summary> Checks if the bit-array has an active allocation. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    bool IsAllocated() const
+    auto IsAllocated() const -> bool
     {
         return _blockCapacity > 0;
     }
 
     /// <summary> Number of bits that can be stored without invoking the allocator. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 Capacity() const
+    auto Capacity() const -> int32
     {
         return _blockCapacity * BitsPerBlock;
     }
@@ -92,21 +92,21 @@ public:
 
     /// <summary> Checks if the bit-array has any bits. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    bool IsEmpty() const
+    auto IsEmpty() const -> bool
     {
         return _bitCount == 0;
     }
 
     /// <summary> Number of currently stored bits. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 Count() const 
+    auto Count() const -> int32
     {
         return _bitCount;
     }
 
     /// <summary> Number of bits that can be added without invoking the allocator. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 Slack() const
+    auto Slack() const -> int32
     {
         return Capacity() - _bitCount;
     }
@@ -211,14 +211,15 @@ public:
         int32     _index;
 
     public:
-        explicit MutBitRef(BitArray* array, const int32 index)
+        FORCE_INLINE explicit
+        MutBitRef(BitArray* array, const int32 index)
             : _array{ array }
             , _index{ index }
         {
         }
 
         MAY_DISCARD FORCE_INLINE
-        MutBitRef& operator=(const bool value)
+        auto operator=(const bool value) -> MutBitRef&
         {
             _array->SetBit(_index, value);
             return *this;
@@ -245,7 +246,7 @@ public:
         {
         }
 
-        ConstBitRef& operator=(bool value) = delete;
+        auto operator=(bool value) -> ConstBitRef& = delete;
 
         NO_DISCARD FORCE_INLINE
         operator bool() const
@@ -272,7 +273,7 @@ public:
     /// To modify bit without overhead use <c>SetBit</c> method.
     /// </remarks>
     NO_DISCARD FORCE_INLINE
-    MutBitRef operator[](const int32 index)
+    auto operator[](const int32 index) -> MutBitRef
     {
         return MutBitRef{ this, index };
     }
@@ -284,7 +285,7 @@ public:
     /// <param name="index"> Index of the bit to access. Must be in the range [0, Count). </param>
     /// <returns> Value of the bit at the specified index. </returns>
     NO_DISCARD FORCE_INLINE
-    bool GetBit(const int32 index) const
+    auto GetBit(const int32 index) const -> bool
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _bitCount);
 
@@ -336,7 +337,7 @@ public:
 
     /// <summary> Accesses the block of bits bit at the specified index. </summary>
     NO_DISCARD FORCE_INLINE
-    Block GetBlock(const int32 blockIndex) const
+    auto GetBlock(const int32 blockIndex) const -> Block
     {
         ASSERT_COLLECTION_SAFE_ACCESS(blockIndex >= 0 && blockIndex < _blockCapacity);
         const Block* srcBlock = DATA_OF(Block, _allocData) + blockIndex;
@@ -531,8 +532,8 @@ private:
 
 public:
     /// <summary> Initializes an empty bit-array with no active allocation. </summary>
-    FORCE_INLINE
-    constexpr BitArray() = default;
+    FORCE_INLINE constexpr
+    BitArray() = default;
 
     /// <summary> Initializes a bit-array by moving the allocation from another array. </summary>
     FORCE_INLINE
@@ -573,7 +574,7 @@ public:
     // Collection Lifecycle - Assignments
 
     FORCE_INLINE
-    BitArray& operator=(BitArray&& other) noexcept
+    auto operator=(BitArray&& other) noexcept -> BitArray&
     {
         if (this != &other)
         {
@@ -584,7 +585,7 @@ public:
     }
 
     FORCE_INLINE
-    BitArray& operator=(const BitArray& other)
+    auto operator=(const BitArray& other) -> BitArray&
     {
         if (this != &other)
         {
@@ -629,21 +630,21 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        bool operator==(const MutEnumerator& other) const
+        auto operator==(const MutEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        bool operator!=(const MutEnumerator& other) const
+        auto operator!=(const MutEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        bool operator<(const MutEnumerator& other) const
+        auto operator<(const MutEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
@@ -654,20 +655,20 @@ public:
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         NO_DISCARD FORCE_INLINE
-        IterHint Hint() const
+        auto Hint() const -> IterHint
         {
             const int32 remaining = _array->Count() - _index;
             return { remaining, remaining };
         }
 
         NO_DISCARD FORCE_INLINE
-        MutBitRef operator*()
+        auto operator*() -> MutBitRef
         {
             return MutBitRef{ _array, _index };
         }
 
         NO_DISCARD FORCE_INLINE
-        ConstBitRef operator*() const
+        auto operator*() const -> ConstBitRef
         {
             return ConstBitRef{ _array, _index };
         }
@@ -685,7 +686,7 @@ public:
 
         /// <summary> Returns the index of the current element. </summary>
         NO_DISCARD FORCE_INLINE
-        int32 Index() const
+        auto Index() const -> int32
         {
             return _index;
         }
@@ -695,7 +696,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        MutEnumerator& operator++()
+        auto operator++() -> MutEnumerator&
         {
             ++_index;
             return *this;
@@ -703,7 +704,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        MutEnumerator operator++(int)
+        auto operator++(int) -> MutEnumerator
         {
             MutEnumerator copy{ *this };
             ++_index;
@@ -734,21 +735,21 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        bool operator==(const ConstEnumerator& other) const
+        auto operator==(const ConstEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        bool operator!=(const ConstEnumerator& other) const
+        auto operator!=(const ConstEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        bool operator<(const ConstEnumerator& other) const
+        auto operator<(const ConstEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
@@ -759,14 +760,14 @@ public:
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         NO_DISCARD FORCE_INLINE
-        IterHint Hint() const
+        auto Hint() const -> IterHint
         {
             const int32 remaining = _array->Count() - _index;
             return { remaining, remaining };
         }
 
         NO_DISCARD FORCE_INLINE
-        ConstBitRef operator*() const
+        auto operator*() const -> ConstBitRef
         {
             return ConstBitRef{ _array, _index };
         }
@@ -782,14 +783,14 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        ConstEnumerator& operator++()
+        auto operator++() -> ConstEnumerator&
         {
             ++_index;
             return *this;
         }
 
         MAY_DISCARD FORCE_INLINE
-        ConstEnumerator operator++(int)
+        auto operator++(int) -> ConstEnumerator
         {
             ConstEnumerator copy{ *this };
             ++_index;
@@ -798,13 +799,13 @@ public:
     };
 
     NO_DISCARD FORCE_INLINE
-    MutEnumerator Values()
+    auto Values() -> MutEnumerator
     {
         return MutEnumerator{ *this };
     }
 
     NO_DISCARD FORCE_INLINE
-    ConstEnumerator Values() const
+    auto Values() const -> ConstEnumerator
     {
         return ConstEnumerator{ *this };
     }

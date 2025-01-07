@@ -42,14 +42,14 @@ private:
 public:
     /// <summary> Checks if the nullable has a value. </summary>
     NO_DISCARD FORCE_INLINE
-    bool HasValue() const
+    auto HasValue() const -> bool
     {
         return _nullLevel == 0;
     }
 
     /// <summary> Reference to the value. Nullable must not be empty. </summary>
     NO_DISCARD FORCE_INLINE
-    Element& Value()
+    auto Value() -> Element&
     {
         ASSERT(HasValue());
         return _value;
@@ -57,7 +57,7 @@ public:
 
     /// <summary> Reference to the value. Nullable must not be empty. </summary>
     NO_DISCARD FORCE_INLINE
-    const Element& Value() const
+    auto Value() const -> const Element&
     {
         ASSERT(HasValue());
         return _value;
@@ -108,13 +108,13 @@ public:
 
 private:
     NO_DISCARD FORCE_INLINE
-    bool IsTombstone() const
+    auto IsTombstone() const -> bool
     {
         return _nullLevel > 1;
     }
 
     NO_DISCARD FORCE_INLINE
-    int8 GetTombstoneLevel() const
+    auto GetTombstoneLevel() const -> int8
     {
         return _nullLevel - 1; // Go out
     }
@@ -171,7 +171,7 @@ public:
 
     /// <summary> Assigns the value from the specified nullable. </summary>
     MAY_DISCARD FORCE_INLINE
-    Nullable& operator=(const Nullable& other)
+    auto operator=(const Nullable& other) -> Nullable&
     {
         if (this != &other)
         {
@@ -187,7 +187,7 @@ public:
 
     /// <summary> Assigns the value by moving it from the specified nullable. </summary>
     MAY_DISCARD FORCE_INLINE
-    Nullable& operator=(Nullable&& other) noexcept
+    auto operator=(Nullable&& other) noexcept -> Nullable&
     {
         if (this != &other)
         {
@@ -211,12 +211,14 @@ public:
 
     // Utility
 
-    bool IsEmpty() const
+    NO_DISCARD FORCE_INLINE
+    auto IsEmpty() const -> bool
     {
         return !HasValue();
     }
 
     /// <summary> Overwrites the value with the specified one by move, if it is null. </summary>
+    FORCE_INLINE
     void SetIfNull(Element&& value)
     {
         if (!HasValue())
@@ -226,6 +228,7 @@ public:
     }
 
     /// <summary> Overwrites the value with the specified one by copy, if it is null. </summary>
+    FORCE_INLINE
     void SetIfNull(const Element& value)
     {
         if (!HasValue())
@@ -273,14 +276,14 @@ private:
 public:
     /// <summary> Checks if the nullable has a value. </summary>
     NO_DISCARD FORCE_INLINE
-    bool HasValue() const
+    auto HasValue() const -> bool
     {
         return !_value.IsTombstone(); // Use the underlying type's tombstone.
     }
 
     /// <summary> Reference to the value. Nullable must not be empty. </summary>
     NO_DISCARD FORCE_INLINE
-    Element& Value()
+    auto Value() -> Element&
     {
         ASSERT(HasValue());
         return _value;
@@ -288,7 +291,7 @@ public:
 
     /// <summary> Reference to the value. Nullable must not be empty. </summary>
     NO_DISCARD FORCE_INLINE
-    const Element& Value() const
+    auto Value() const -> const Element&
     {
         ASSERT(HasValue());
         return _value;
@@ -322,13 +325,13 @@ public:
 
 private:
     NO_DISCARD FORCE_INLINE
-    bool IsTombstone() const
+    auto IsTombstone() const -> bool
     {
         return GetTombstoneLevel() > 0;
     }
 
     NO_DISCARD FORCE_INLINE
-    int8 GetTombstoneLevel() const
+    auto GetTombstoneLevel() const -> int8
     {
         return _value.GetTombstoneLevel() - 1; // Go out
     }
@@ -376,7 +379,7 @@ public:
 
     /// <summary> Assigns the value from the specified nullable. </summary>
     MAY_DISCARD FORCE_INLINE
-    Nullable& operator=(const Nullable& other)
+    auto operator=(const Nullable& other) -> Nullable&
     {
         if (this != &other)
         {
@@ -387,7 +390,7 @@ public:
 
     /// <summary> Assigns the value by moving it from the specified nullable. </summary>
     MAY_DISCARD FORCE_INLINE
-    Nullable& operator=(Nullable&& other) noexcept
+    auto operator=(Nullable&& other) noexcept -> Nullable&
     {
         if (this != &other)
         {
@@ -406,12 +409,14 @@ public:
 
     // Utility
 
-    bool IsEmpty() const
+    NO_DISCARD FORCE_INLINE
+    auto IsEmpty() const -> bool
     {
         return !HasValue();
     }
 
     /// <summary> Overwrites the value with the specified one by move, if it is null. </summary>
+    FORCE_INLINE
     void SetIfNull(Element&& value)
     {
         if (!HasValue())
@@ -421,6 +426,7 @@ public:
     }
 
     /// <summary> Overwrites the value with the specified one by copy, if it is null. </summary>
+    FORCE_INLINE
     void SetIfNull(const Element& value)
     {
         if (!HasValue())

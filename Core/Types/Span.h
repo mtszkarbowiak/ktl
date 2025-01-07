@@ -56,7 +56,7 @@ public:
 
     /// <summary> Returns the number of elements in the span. </summary>
     NO_DISCARD FORCE_INLINE
-    int32 Count() const
+    auto Count() const -> int32
     {
         return _count;
     }
@@ -68,7 +68,7 @@ public:
     /// If the underlying data is <c>null</c>, the span length is also zero.
     /// </remarks>
     NO_DISCARD FORCE_INLINE
-    T* Data()
+    auto Data() -> T*
     {
         return _data;
     }
@@ -80,7 +80,7 @@ public:
     /// If the underlying data is <c>null</c>, the span length is also zero.
     /// </remarks>
     NO_DISCARD FORCE_INLINE
-    const T* Data() const
+    auto Data() const -> const T*
     {
         return _data;
     }
@@ -98,7 +98,7 @@ public:
     // Element Access
 
     NO_DISCARD FORCE_INLINE
-    bool IsValidIndex(const int32 index) const
+    auto IsValidIndex(const int32 index) const -> bool
     {
         const bool obeysRange = (index >= 0 && index < _count); // Index must be within the span range.
         const bool isNotNull = (_data != nullptr); // Span data must be valid if the size is non-zero, implying that the data is not null.
@@ -107,7 +107,7 @@ public:
 
     /// <summary> Accesses the element at the given index. </summary>
     NO_DISCARD FORCE_INLINE
-    T& operator[](const int32 index)
+    auto operator[](const int32 index) -> T&
     {
         ASSERT_COLLECTION_SAFE_ACCESS(IsValidIndex(index)); // Ensure span is not empty and index is valid
         return _data[index];
@@ -115,7 +115,7 @@ public:
 
     /// <summary> Accesses the element at the given index. </summary>
     NO_DISCARD FORCE_INLINE
-    const T& operator[](const int32 index) const
+    auto operator[](const int32 index) const -> const T&
     {
         ASSERT_COLLECTION_SAFE_ACCESS(IsValidIndex(index)); // Ensure span is not empty and index is valid
         return _data[index];
@@ -143,8 +143,8 @@ public:
             ASSERT_COLLECTION_SAFE_MOD(begin <= end); // Span begin must be before the end.
         }
 
-        FORCE_INLINE
-        explicit MutEnumerator(Span& span)
+        FORCE_INLINE explicit
+        MutEnumerator(Span& span)
             : _begin{ span.Data() }
             , _end{ span.Data() + span.Count() }
         {
@@ -155,7 +155,7 @@ public:
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         NO_DISCARD FORCE_INLINE
-        IterHint Hint() const
+        auto Hint() const -> IterHint
         {
             const int32 remaining = static_cast<int32>(_end - _begin);
             return { remaining, remaining };
@@ -163,25 +163,25 @@ public:
 
         
         NO_DISCARD FORCE_INLINE
-        T& operator*()
+        auto operator*() -> T&
         {
             return *_begin;
         }
 
         NO_DISCARD FORCE_INLINE
-        T* operator->()
+        auto operator->() -> T*
         {
             return _begin;
         }
 
         NO_DISCARD FORCE_INLINE
-        const T& operator*() const
+        auto operator*() const -> const T&
         {
             return *_begin;
         }
 
         NO_DISCARD FORCE_INLINE
-        const T* operator->() const
+        auto operator->() const -> const T*
         {
             return _begin;
         }
@@ -198,7 +198,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        MutEnumerator& operator++()
+        auto operator++() -> MutEnumerator&
         {
             ++_begin;
             return *this;
@@ -206,7 +206,8 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
-        MutEnumerator operator++(int)
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> MutEnumerator
         {
             MutEnumerator copy = *this;
             ++(*this);
@@ -217,19 +218,19 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        bool operator==(const MutEnumerator& other) const
+        auto operator==(const MutEnumerator& other) const -> bool
         {
             return _begin == other._begin && _end == other._end;
         }
 
         NO_DISCARD FORCE_INLINE
-        bool operator!=(const MutEnumerator& other) const
+        auto operator!=(const MutEnumerator& other) const -> bool
         {
             return _begin != other._begin || _end != other._end;
         }
 
         NO_DISCARD FORCE_INLINE
-        bool operator<(const MutEnumerator& other) const
+        auto operator<(const MutEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_end == other._end); // Enumerators must be of the same span to be compared.
             return _begin < other._begin;
@@ -274,13 +275,13 @@ public:
         // Access
 
         NO_DISCARD FORCE_INLINE
-        const T& operator*() const
+        auto operator*() const -> const T&
         {
             return *_begin;
         }
 
         NO_DISCARD FORCE_INLINE
-        const T* operator->() const
+        auto operator->() const -> const T*
         {
             return _begin;
         }
@@ -297,7 +298,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        ConstEnumerator& operator++()
+        auto operator++() -> ConstEnumerator&
         {
             ++_begin;
             return *this;
@@ -305,7 +306,8 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
-        ConstEnumerator operator++(int)
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> ConstEnumerator
         {
             ConstEnumerator copy = *this;
             ++(*this);
@@ -316,19 +318,19 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        bool operator==(const MutEnumerator& other) const
+        auto operator==(const MutEnumerator& other) const -> bool
         {
             return _begin == other._begin && _end == other._end;
         }
 
         NO_DISCARD FORCE_INLINE
-        bool operator!=(const MutEnumerator& other) const
+        auto operator!=(const MutEnumerator& other) const -> bool
         {
             return _begin != other._begin || _end != other._end;
         }
 
         NO_DISCARD FORCE_INLINE
-        bool operator<(const MutEnumerator& other) const
+        auto operator<(const MutEnumerator& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_end == other._end); // Enumerators must be of the same span to be compared.
             return _begin < other._begin;
@@ -338,14 +340,14 @@ public:
 
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    MutEnumerator Values()
+    auto Values() -> MutEnumerator
     {
         return MutEnumerator{ *this };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    ConstEnumerator Values() const
+    auto Values() const -> ConstEnumerator
     {
         return ConstEnumerator{ *this };
     }

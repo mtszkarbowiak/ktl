@@ -39,7 +39,7 @@ public:
         }
 
         FORCE_INLINE
-        bool MovesItems() const
+        auto MovesItems() const -> bool
         {
             return true;
         }
@@ -59,7 +59,7 @@ public:
 
 
         FORCE_INLINE
-        Data& operator=(const Data&)
+        auto operator=(const Data&) -> Data&
         {
             Free();
 
@@ -68,7 +68,7 @@ public:
         }
 
         FORCE_INLINE
-        Data& operator=(Data&& other) noexcept
+        auto operator=(Data&& other) noexcept -> Data&
         {
             if (this != &other)
             {
@@ -86,7 +86,7 @@ public:
 
 
         FORCE_INLINE
-        int32 Allocate(const int32 size)
+        auto Allocate(const int32 size) -> int32
         {
             ASSERT_ALLOCATOR_SAFETY(_ptr == nullptr);
 
@@ -105,13 +105,13 @@ public:
 
 
         FORCE_INLINE
-        const byte* Get() const
+        auto Get() const -> const byte*
         {
             return _ptr;
         }
 
         FORCE_INLINE
-        byte* Get()
+        auto Get() -> byte*
         {
             return _ptr;
         }

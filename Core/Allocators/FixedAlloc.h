@@ -29,60 +29,65 @@ public:
         alignas(Alignment) byte _data[Size];
 
     public:
-        constexpr Data() = default;
+        constexpr
+        Data() = default;
 
-        constexpr Data(const Data&)
+        constexpr
+        Data(const Data&)
         {
             // Pass
         }
 
-        constexpr Data(Data&&) noexcept
+        constexpr
+        Data(Data&&) noexcept
         {
             // Pass
         }
 
-        FORCE_INLINE
-        constexpr bool MovesItems() const
+        FORCE_INLINE constexpr
+        auto MovesItems() const -> bool
         {
             return false;
         }
 
 
-        constexpr Data& operator=(const Data&)
+        constexpr
+        auto operator=(const Data&) -> Data&
         {
             // Pass
             return *this;
         }
 
-        constexpr Data& operator=(Data&&) noexcept
+        constexpr
+        auto operator=(Data&&) noexcept -> Data&
         {
             // Pass
             return *this;
         }
 
 
-        FORCE_INLINE
-        constexpr int32 Allocate(const int32 size)
+        FORCE_INLINE constexpr
+        auto Allocate(const int32 size) -> int32
         {
             ASSERT_ALLOCATOR_SAFETY(size == Size || size == 0);
             return (size == Size) ? size : 0;
         }
 
-        FORCE_INLINE
-        constexpr void Free()
+        FORCE_INLINE constexpr
+        auto Free() -> void
         {
             // Pass
         }
 
 
-        FORCE_INLINE
-        constexpr const byte* Get() const
+        FORCE_INLINE constexpr
+        auto Get() const -> const byte*
         {
             return _data;
         }
 
-        FORCE_INLINE
-        constexpr byte* Get()
+        FORCE_INLINE constexpr
+        auto Get() -> byte*
         {
             return _data;
         }

@@ -27,7 +27,8 @@ public:
         int32 _alignment;
 
     public:
-        explicit Context(byte* data, const int32 size, const int32 alignment = sizeof(void*))
+        explicit
+        Context(byte* data, const int32 size, const int32 alignment = sizeof(void*))
             : _data{ data }
             , _size{ size }
             , _bump{ 0 }
@@ -36,7 +37,7 @@ public:
         }
 
         FORCE_INLINE
-        int32 Allocate(const int32 size, byte*& result)
+        auto Allocate(const int32 size, byte*& result) -> int32
         {
             const int32 newOffset = _bump + size;
 
@@ -60,7 +61,7 @@ public:
         }
 
         FORCE_INLINE
-        int32 FreeSpace() const
+        auto FreeSpace() const -> int32
         {
             return _size - _bump;
         }
@@ -74,7 +75,7 @@ public:
 
     public:
         FORCE_INLINE
-        bool MovesItems() const
+        auto MovesItems() const -> bool
         {
             return true;
         }
@@ -105,14 +106,14 @@ public:
         }
 
 
-        Data& operator=(const Data& other)
+        auto operator=(const Data& other) -> Data&
         {
             _context = other._context;
             _data    = other._data;
             return *this;
         }
 
-        Data& operator=(Data&& other) noexcept
+        auto operator=(Data&& other) noexcept -> Data&
         {
             if (this != &other)
             {
@@ -125,15 +126,15 @@ public:
         }
 
 
-        explicit Data(Context& context)
+        explicit
+        Data(Context& context)
             : _context{ &context }
             , _data{ nullptr }
         {
         }
 
 
-        FORCE_INLINE
-        int32 Allocate(const int32 size)
+        FORCE_INLINE auto Allocate(const int32 size) -> int32
         {
             ASSERT_ALLOCATOR_SAFETY(_data == nullptr);
             return _context->Allocate(size, _data);
@@ -147,13 +148,13 @@ public:
 
 
         FORCE_INLINE
-        const byte* Get() const
+        auto Get() const -> const byte*
         {
             return _data;
         }
 
         FORCE_INLINE
-        byte* Get()
+        auto Get() -> byte*
         {
             return _data;
         }

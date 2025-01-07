@@ -61,14 +61,14 @@ private:
 public:
     /// <summary> Checks if the array has an active allocation. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    bool IsAllocated() const
+    auto IsAllocated() const -> bool
     {
         return _capacity > 0;
     }
 
     /// <summary> Number of elements that can be stored without invoking the allocator. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 Capacity() const 
+    auto Capacity() const -> int32
     {
         return _capacity;
     }
@@ -78,14 +78,14 @@ public:
 
     /// <summary> Checks if the array has any elements. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    bool IsEmpty() const
+    auto IsEmpty() const -> bool
     {
         return _elementCountCached == 0;
     }
 
     /// <summary> Number of currently stored elements. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 Count() const
+    auto Count() const -> int32
     {
         return _elementCountCached;
     }
@@ -99,20 +99,20 @@ public:
     /// Some slots may not become occupied unless the collection is rebuilt.
     /// </remarks>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 Slack() const
+    auto Slack() const -> int32
     {
         return _capacity - _cellsCountCached;
     }
 
     /// <summary> Number of cells - slots that store an element or a marker. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 CellCount() const
+    auto CellCount() const -> int32
     {
         return _cellsCountCached;
     }
 
     /// <summary> Number of cells (not slots) that are empty. </summary>
-    int32 CellSlack() const
+    auto CellSlack() const -> int32
     {
         return _cellsCountCached - _elementCountCached;
     }
@@ -124,7 +124,7 @@ public:
 
 private:
     NO_DISCARD FORCE_INLINE
-    bool IsValid() const
+    auto IsValid() const -> bool
     {
         // Nothing to check if the set is empty
         if (_capacity == 0)
@@ -384,7 +384,7 @@ public:
 
     /// <summary> Checks if the set contains the specified key. </summary>
     NO_DISCARD
-    bool Contains(const Element& key) const
+    auto Contains(const Element& key) const -> bool
     {
         if (_capacity == 0)
             return false;
@@ -407,7 +407,7 @@ public:
     /// <summary> Adds the specified element to the set. </summary>
     /// <returns> True if the element was added, false if the element was already in the set. </returns>
     MAY_DISCARD
-    bool Add(Element&& element)
+    auto Add(Element&& element) -> bool
     {
         if (_capacity == 0)
         {
@@ -463,7 +463,7 @@ public:
     /// <summary> Adds the specified element to the set. </summary>
     /// <returns> True if the element was added, false if the element was already in the set. </returns>
     MAY_DISCARD FORCE_INLINE
-    bool Add(const Element& element)
+    auto Add(const Element& element) -> bool
     {
         return Add(MOVE(Element{ element })); //TODO Consider using forwarding reference.
         // Why do I need to explicitly select the move?
@@ -472,7 +472,7 @@ public:
     /// <summary> Removes the specified element from the set. </summary>
     /// <returns> True if the element was removed, false if the element was not in the set. </returns>
     MAY_DISCARD
-    bool Remove(const Element& key)
+    auto Remove(const Element& key) -> bool
     {
         if (_capacity == 0)
             return false;
@@ -604,7 +604,7 @@ public:
 
 
     MAY_DISCARD FORCE_INLINE
-    HashSet& operator=(HashSet&& other) noexcept
+    auto operator=(HashSet&& other) noexcept -> HashSet&
     {
         if (this != &other)
         {
@@ -615,7 +615,7 @@ public:
     }
 
     MAY_DISCARD FORCE_INLINE
-    HashSet& operator=(const HashSet& other)
+    auto operator=(const HashSet& other) -> HashSet&
     {
         if (this != &other)
         {

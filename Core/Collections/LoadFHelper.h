@@ -18,8 +18,8 @@ public:
     /// Calculates how many slots are required to store the specified number of elements,
     /// to preserve the load factor.
     /// </summary>
-    NO_DISCARD FORCE_INLINE
-    static constexpr int32 SlotsForElements(const int32 elementCount)
+    NO_DISCARD static FORCE_INLINE constexpr
+    auto SlotsForElements(const int32 elementCount) -> int32
     {
         return elementCount + (elementCount) / SlackRatio + 1;
     }
