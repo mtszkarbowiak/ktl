@@ -29,16 +29,16 @@ public:
         alignas(Alignment) byte _data[Size];
 
     public:
-        constexpr
+        FORCE_INLINE constexpr
         Data() = default;
 
-        constexpr
+        FORCE_INLINE constexpr
         Data(const Data&)
         {
             // Pass
         }
 
-        constexpr
+        FORCE_INLINE constexpr
         Data(Data&&) noexcept
         {
             // Pass
@@ -51,14 +51,14 @@ public:
         }
 
 
-        constexpr
+        MAY_DISCARD FORCE_INLINE constexpr
         auto operator=(const Data&) -> Data&
         {
             // Pass
             return *this;
         }
 
-        constexpr
+        MAY_DISCARD FORCE_INLINE constexpr
         auto operator=(Data&&) noexcept -> Data&
         {
             // Pass
@@ -66,7 +66,7 @@ public:
         }
 
 
-        FORCE_INLINE constexpr
+        NO_DISCARD FORCE_INLINE constexpr
         auto Allocate(const int32 size) -> int32
         {
             ASSERT_ALLOCATOR_SAFETY(size == Size || size == 0);
@@ -74,19 +74,19 @@ public:
         }
 
         FORCE_INLINE constexpr
-        auto Free() -> void
+        void Free()
         {
             // Pass
         }
 
 
-        FORCE_INLINE constexpr
+        NO_DISCARD FORCE_INLINE constexpr
         auto Get() const -> const byte*
         {
             return _data;
         }
 
-        FORCE_INLINE constexpr
+        NO_DISCARD FORCE_INLINE constexpr
         auto Get() -> byte*
         {
             return _data;

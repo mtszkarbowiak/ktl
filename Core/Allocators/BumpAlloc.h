@@ -27,7 +27,7 @@ public:
         int32 _alignment;
 
     public:
-        explicit
+        FORCE_INLINE explicit
         Context(byte* data, const int32 size, const int32 alignment = sizeof(void*))
             : _data{ data }
             , _size{ size }
@@ -36,7 +36,7 @@ public:
         {
         }
 
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         auto Allocate(const int32 size, byte*& result) -> int32
         {
             const int32 newOffset = _bump + size;
@@ -60,7 +60,7 @@ public:
             _bump = 0;
         }
 
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         auto FreeSpace() const -> int32
         {
             return _size - _bump;
@@ -85,18 +85,21 @@ public:
         /// This constructor is used only for temporary objects.
         /// Allocator must be properly initialized before use.
         /// </remarks>
+        FORCE_INLINE
         Data()
             : _context{ nullptr }
             , _data{ nullptr }
         {
         }
 
+        FORCE_INLINE
         Data(const Data& other)
         {
             _context = other._context;
             _data    = other._data;
         }
 
+        FORCE_INLINE
         Data(Data&& other) noexcept
             : _context{ other._context }
             , _data{ other._data }
@@ -106,6 +109,7 @@ public:
         }
 
 
+        MAY_DISCARD FORCE_INLINE
         auto operator=(const Data& other) -> Data&
         {
             _context = other._context;
@@ -113,6 +117,7 @@ public:
             return *this;
         }
 
+        MAY_DISCARD FORCE_INLINE
         auto operator=(Data&& other) noexcept -> Data&
         {
             if (this != &other)
@@ -126,7 +131,7 @@ public:
         }
 
 
-        explicit
+        FORCE_INLINE explicit
         Data(Context& context)
             : _context{ &context }
             , _data{ nullptr }
@@ -134,7 +139,8 @@ public:
         }
 
 
-        FORCE_INLINE auto Allocate(const int32 size) -> int32
+        NO_DISCARD FORCE_INLINE
+        auto Allocate(const int32 size) -> int32
         {
             ASSERT_ALLOCATOR_SAFETY(_data == nullptr);
             return _context->Allocate(size, _data);
@@ -147,13 +153,13 @@ public:
         }
 
 
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         auto Get() const -> const byte*
         {
             return _data;
         }
 
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         auto Get() -> byte*
         {
             return _data;

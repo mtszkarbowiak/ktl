@@ -52,13 +52,14 @@ public:
             other._ptr = nullptr;
         }
 
+        FORCE_INLINE
         ~Data()
         {
             ASSERT_ALLOCATOR_SAFETY(_ptr == nullptr);
         }
 
 
-        FORCE_INLINE
+        MAY_DISCARD FORCE_INLINE
         auto operator=(const Data&) -> Data&
         {
             Free();
@@ -67,7 +68,7 @@ public:
             return *this;
         }
 
-        FORCE_INLINE
+        MAY_DISCARD FORCE_INLINE
         auto operator=(Data&& other) noexcept -> Data&
         {
             if (this != &other)
@@ -85,7 +86,7 @@ public:
         }
 
 
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         auto Allocate(const int32 size) -> int32
         {
             ASSERT_ALLOCATOR_SAFETY(_ptr == nullptr);
@@ -104,13 +105,13 @@ public:
         }
 
 
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         auto Get() const -> const byte*
         {
             return _ptr;
         }
 
-        FORCE_INLINE
+        NO_DISCARD FORCE_INLINE
         auto Get() -> byte*
         {
             return _ptr;
