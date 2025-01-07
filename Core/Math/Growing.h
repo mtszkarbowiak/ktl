@@ -24,8 +24,8 @@ public:
     /// Multiplies the capacity by 1.5.
     /// Default growth strategy for MSVC.
     /// </summary>
-    FORCE_INLINE
-    static int32 Natural(const int32 capacity)
+    NO_DISCARD static FORCE_INLINE
+    int32 Natural(const int32 capacity)
     {
         ASSERT_COLLECTION_SAFE_MOD(capacity >= 2); // The collection must have at least 2 elements.
         return capacity + (capacity >> 1);
@@ -35,8 +35,8 @@ public:
     /// Multiplies the capacity by 2.
     /// Default growth strategy for Clang and GCC.
     /// </summary>
-    FORCE_INLINE
-    static int32 Double(const int32 capacity)
+    NO_DISCARD static FORCE_INLINE
+    int32 Double(const int32 capacity)
     {
         return capacity << 1;
     }
@@ -46,8 +46,8 @@ public:
     /// Then, it multiplies the capacity by 1.5.
     /// </summary>
     template<int32 Threshold = 64>
-    FORCE_INLINE
-    static int32 Balanced(const int32 capacity)
+    NO_DISCARD static FORCE_INLINE
+    int32 Balanced(const int32 capacity)
     {
         ASSERT_COLLECTION_SAFE_MOD(capacity >= 2); // The collection must have at least 2 elements.
         return capacity < Threshold
@@ -59,8 +59,8 @@ public:
     /// Multiplies the capacity by 1.25.
     /// To be used when the collection is expected to grow very slowly.
     /// </summary>
-    FORCE_INLINE
-    static int32 Relaxed(const int32 capacity)
+    NO_DISCARD static FORCE_INLINE
+    int32 Relaxed(const int32 capacity)
     {
         ASSERT_COLLECTION_SAFE_MOD(capacity >= 4); // The collection must have at least 4 elements.
         return capacity + (capacity >> 2);
@@ -70,8 +70,8 @@ public:
     /// <summary>
     /// Default growth strategy, to be used when the strategy is not important.
     /// </summary>
-    FORCE_INLINE
-    static int32 Default(const int32 capacity)
+    NO_DISCARD static FORCE_INLINE
+    int32 Default(const int32 capacity)
     {
         return Balanced(capacity);
     }
