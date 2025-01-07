@@ -20,9 +20,9 @@ template<int32 Size, int32 Alignment = sizeof(void*)>
 class FixedAlloc
 {
 public:
-    constexpr static bool  IsNullable  = false;
-    constexpr static int32 MinCapacity = Size;
-    constexpr static int32 MaxCapacity = Size;
+    static constexpr bool  IsNullable  = false;
+    static constexpr int32 MinCapacity = Size;
+    static constexpr int32 MaxCapacity = Size;
 
     class Data
     {

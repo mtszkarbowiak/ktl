@@ -64,7 +64,7 @@ protected:
 
 
     /// <summary> Calculates the number of blocks required to store the given number of bits. </summary>
-    FORCE_INLINE static constexpr
+    static FORCE_INLINE constexpr
     auto BlocksForBits(const int32 bitCount) -> int32
     {
         return (bitCount + BitsPerBlock - 1) / BitsPerBlock;

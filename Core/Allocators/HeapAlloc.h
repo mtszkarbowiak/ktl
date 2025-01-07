@@ -15,9 +15,9 @@
 class HeapAlloc
 {
 public:
-    constexpr static bool  IsNullable  = true;
-    constexpr static int32 MinCapacity = 1;
-    constexpr static int32 MaxCapacity = INT32_MAX;
+    static constexpr bool  IsNullable  = true;
+    static constexpr int32 MinCapacity = 1;
+    static constexpr int32 MaxCapacity = INT32_MAX;
 
     class Data
     {

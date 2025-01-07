@@ -42,20 +42,20 @@ public:
     /// (Zero is not a valid capacity, but can be used as a sentinel value 
     /// to indicate that no allocation is active.)
     /// </summary>
-    constexpr static int32 MinElements = Alloc::MinCapacity / sizeof(Element);
+    static constexpr int32 MinElements = Alloc::MinCapacity / sizeof(Element);
 
     /// <summary>
     /// Maximal capacity for the allocator. A collection can never have a higher capacity.
     /// Notably, collection may violate the growth policy if it exceeds this value.
     /// </summary>
-    constexpr static int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
+    static constexpr int32 MaxElements = Alloc::MaxCapacity / sizeof(Element);
 
     /// <summary>
     /// Maximal capacity for the collection. A collection may never have a lower capacity.
     /// (Zero is not a valid capacity, but can be used as a sentinel value
     /// to indicate that no allocation is active.)
     /// </summary>
-    constexpr static int32 DefaultElements = Math::Clamp(DefaultUncapped, MinElements, MaxElements);
+    static constexpr int32 DefaultElements = Math::Clamp(DefaultUncapped, MinElements, MaxElements);
 
 
     /// <summary>
