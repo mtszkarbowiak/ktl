@@ -83,6 +83,7 @@ TEST(NullableByFlagTests, ValueAsgn)
     LIFECYCLE_TEST_INTO
     {
         Nullable<TestTracker> nullable;
+        GTEST_ASSERT_EQ(LifecycleCountersInstance.Instances, 0); // The type should not have been initialized!
         GTEST_ASSERT_FALSE(nullable.HasValue());
         nullable.Set(TestTracker{ 69 });
         GTEST_ASSERT_TRUE(nullable.HasValue());

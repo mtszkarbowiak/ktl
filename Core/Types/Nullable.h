@@ -38,7 +38,10 @@ public:
     using Element = T;
 
 private:
-    Element _value; //TODO This should be a union to avoid default construction!
+    union
+    {
+        Element _value;
+    };
     int8 _nullLevel{ 1 };
 
 
@@ -141,7 +144,10 @@ private:
 public:
     /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE constexpr
-    Nullable() = default;
+    Nullable()
+    {
+        // Pass (`default` not supported)
+    }
 
     /// <summary> Initializes nullable with the specified value. </summary>
     FORCE_INLINE explicit
@@ -358,7 +364,10 @@ private:
 public:
     /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE constexpr
-    Nullable() = default;
+    Nullable()
+    {
+        // Pass (`default` not supported)
+    }
 
     /// <summary> Initializes nullable with the specified value. </summary>
     FORCE_INLINE explicit
