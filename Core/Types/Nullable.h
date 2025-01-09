@@ -38,7 +38,10 @@ public:
     using Element = T;
 
 private:
-    Element _value;
+    union
+    {
+        Element _value;
+    };
     int8 _nullLevel{ 1 };
 
 
@@ -141,7 +144,9 @@ private:
 public:
     /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE constexpr
-    Nullable() = default;
+    Nullable()
+    {
+    }
 
     /// <summary> Initializes nullable with the specified value. </summary>
     FORCE_INLINE explicit
@@ -358,7 +363,9 @@ private:
 public:
     /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE constexpr
-    Nullable() = default;
+    Nullable()
+    {
+    }
 
     /// <summary> Initializes nullable with the specified value. </summary>
     FORCE_INLINE explicit
