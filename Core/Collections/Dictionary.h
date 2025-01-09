@@ -57,7 +57,11 @@ public:
     /// </summary>
     class Slot
     {
-        Value                   _value;
+        union // Use union to avoid default construction of the value
+        {
+            Value                   _value;
+        };
+
         Nullable<Nullable<Key>> _key;
 
 
@@ -194,7 +198,61 @@ public:
         {
         }
 
-        //TODO Other lifecycle methods
+        /// <summary> Initializes a slot by moving other slot. </summary>
+        Slot(Slot&& other) noexcept
+            : _key{ MOVE(other._key) }
+        {
+            if (other.IsOccupied())
+                new (&_value) Value{ MOVE(other._value) };
+
+            other.Reset();
+        }
+
+        /// <summary> Initializes a slot by copying other slot. </summary>
+        Slot(const Slot& other)
+            : _key{ other._key }
+        {
+            if (other.IsOccupied())
+                new (&_value) Value{ other._value };
+        }
+
+        /// <summary> Assigns a slot by moving other slot. </summary>
+        auto operator=(Slot&& other) noexcept -> Slot&
+        {
+            if (this != &other)
+            {
+                if (IsOccupied())
+                    _value.~Value();
+                _key = MOVE(other._key);
+                if (other.IsOccupied())
+                    new (&_value) Value{ MOVE(other._value) };
+                other.Reset();
+            }
+            return *this;
+        }
+
+        /// <summary> Assigns a slot by copying other slot. </summary>
+        auto operator=(const Slot& other) -> Slot&
+        {
+            if (this != &other)
+            {
+                if (IsOccupied())
+                    _value.~Value();
+                _key = other._key;
+                if (other.IsOccupied())
+                    new (&_value) Value{ other._value };
+            }
+            return *this;
+        }
+
+        /// <summary> Destroys the slot. </summary>
+        ~Slot()
+        {
+            if (IsOccupied()) 
+            {
+                _value.~Value();
+            }
+        }
     };
 
     using Element     = Slot;

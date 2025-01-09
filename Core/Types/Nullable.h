@@ -38,7 +38,7 @@ public:
     using Element = T;
 
 private:
-    Element _value;
+    Element _value; //TODO This should be a union to avoid default construction!
     int8 _nullLevel{ 1 };
 
 

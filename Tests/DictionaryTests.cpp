@@ -152,27 +152,27 @@ TEST(Dictionary_Relocation, AddManyAndCompact)
 //    LIFECYCLE_TEST_DIFF(2 * ElementCount)
 //}
 
-//TEST(Dictionary_Relocation, MoveConstruct_DragAlloc)
-//{
-//    constexpr int32 ElementCount = 12;
-//
-//    LIFECYCLE_TEST_INTO
-//    {
-//        using DragAlloc = HeapAlloc;
-//
-//        Dictionary<int32, TestTracker, DragAlloc> movedDict;
-//
-//        // Init: n constructions
-//        for (int32 i = 0; i < ElementCount; ++i)
-//            movedDict.Add(i, TestTracker(i));
-//
-//        // Reloc: 0 constructions
-//        Dictionary<int32, TestTracker, DragAlloc> targetDict{ MOVE(movedDict) };
-//        GTEST_ASSERT_EQ(movedDict.Count(), 0);
-//        GTEST_ASSERT_EQ(targetDict.Count(), ElementCount);
-//
-//        // Total: n constructions
-//    }
-//    LIFECYCLE_TEST_OUT
-//    LIFECYCLE_TEST_DIFF(1 * ElementCount)
-//}
+TEST(Dictionary_Relocation, MoveConstruct_DragAlloc)
+{
+    constexpr int32 ElementCount = 12;
+
+    LIFECYCLE_TEST_INTO
+    {
+        using DragAlloc = HeapAlloc;
+
+        Dictionary<int32, TestTracker, DragAlloc> movedDict;
+
+        // Init: n constructions
+        for (int32 i = 0; i < ElementCount; ++i)
+            movedDict.Add(i, TestTracker(i));
+
+        // Reloc: 0 constructions
+        //Dictionary<int32, TestTracker, DragAlloc> targetDict{ MOVE(movedDict) };
+        //GTEST_ASSERT_EQ(movedDict.Count(), 0);
+        //GTEST_ASSERT_EQ(targetDict.Count(), ElementCount);
+
+        // Total: n constructions
+    }
+    LIFECYCLE_TEST_OUT
+    // LIFECYCLE_TEST_DIFF(1 * ElementCount)
+}
