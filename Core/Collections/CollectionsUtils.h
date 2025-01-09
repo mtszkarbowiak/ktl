@@ -9,6 +9,7 @@
 
 #include "Allocators/HeapAlloc.h"
 #include "Collections/AllocHelper.h"
+#include "Collections/Index.h"
 #include "Language/Templates.h"
 #include "Language/TypeInfo.h"
 #include "Math/Arithmetic.h"
@@ -16,6 +17,7 @@
 #include "Math/Hashing.h"
 #include "Math/Probing.h"
 #include "Types/IterHint.h"
+#include "Types/Nullable.h"
 #include "Types/Span.h"
 
 
@@ -58,12 +60,13 @@ namespace Bucketing
 {
     /// <summary>
     /// Helper object for searching for a bucket in a hash-based collection.
-    /// -1 means the object was not found.
     /// </summary>
-    struct BucketSearchResult final
+    struct SearchResult final
     {
-        int32 FoundObject;
-        int32 FreeBucket;
+        Nullable<Index> FoundObject;
+        Nullable<Index> FreeBucket;
+
+        //TODO Maybe instead of nullables, use factory methods and accessors.
     };
 
     /// <summary>

@@ -22,6 +22,7 @@
 /// Must be movable (both constructor and assignment), non-const, and non-reference.
 /// It must support hashing and equality comparison.
 /// If it supports tombstone semantics, it will be used by the collection.
+/// The hash of the element must never change to ensure the integrity of the set.
 /// </typeparam>
 /// <typeparam name="A">
 /// (Optional) The type of the allocator to use.
@@ -31,7 +32,7 @@
 /// (Optional) Class providing hashing function for the stored elements.
 /// </typeparam>
 /// <typeparam name="P">
-/// (Optional) Class providing provides a function that calculates the next probing index.
+/// (Optional) Class providing a function that calculates the next probing index.
 /// </typeparam>
 template<
     typename T,
@@ -45,7 +46,7 @@ public:
     // Cell is a slot which had an element at some point.
     // Slot without a cell means that it was never occupied.
 
-    using Element = T;
+    using Element = T; //TODO Naming ambiguity! Is an element referring to a slot or a stored value?
     using Cell    = Nullable<Element>;
     using Slot    = Nullable<Cell>;
 
@@ -117,6 +118,7 @@ public:
     }
 
     /// <summary> Number of cells (not slots) that are empty. </summary>
+    NO_DISCARD FORCE_INLINE constexpr
     auto CellSlack() const -> int32
     {
         return _cellsCountCached - _elementCountCached;
@@ -132,8 +134,12 @@ private:
     auto IsValid() const -> bool
     {
         // Nothing to check if the set is empty
-        if (_capacity == 0)
-            return true;
+        if (_capacity == 0) 
+        {
+            return
+                0 == _elementCountCached && 
+                0 == _cellsCountCached;
+        }
 
         // Ensure that the capacity is a power of 2
         if (!Math::IsPow2(_capacity))
@@ -175,6 +181,7 @@ private:
     )
     {
         const Index initIndex = HashOf<Element>::GetHash(key) % capacity; //TODO Binary masking
+        //TODO Use template argument for the hash function
 
         keyCell.Set(initIndex);
         firstFreeSlot.Clear();
@@ -216,6 +223,8 @@ private:
         // The set is full, or no suitable slot was found
         keyCell.Clear();
         firstFreeSlot.Clear();
+
+        //TODO Consider splitting the function into: FindSlot and LookupSlot
     }
 
     void RebuildImpl(const int32 minCapacity)
