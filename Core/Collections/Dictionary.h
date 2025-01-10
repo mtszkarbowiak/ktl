@@ -598,28 +598,44 @@ public:
         }
 
         const K& keyConstRef = key; // If your code fails here, check if `K_` is `const K&` or `K&&`.
-        const Bucketing::SearchResult result = FindSlot(
+        Bucketing::SearchResult searchResult = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             keyConstRef
         );
 
         // If the entry is present, then just update the value.
-        if (result.FoundObject.HasValue()) 
+        if (searchResult.FoundObject.HasValue()) 
         {
-            DATA_OF(Slot, _allocData)[result.FoundObject.Value()]
+            DATA_OF(Slot, _allocData)[searchResult.FoundObject.Value()]
                 .Set(FORWARD(K_, key), FORWARD(V_, value)); //TODO Leave the key, as it was?
             return false;
         }
-        else 
+
+        // If the entry is not present, then add a new one.
+
+        // If a new slot was not found, it means that the allocation is too small, or the probing strategy failed.
+        // Rebuild the dictionary to ensure that the new slot will be found.
+        if (searchResult.FreeBucket.IsEmpty())
         {
-            // If the entry is not present, then add a new one.
-            DATA_OF(Slot, _allocData)[result.FreeBucket.Value()]
-                .Set(FORWARD(K_, key), FORWARD(V_, value));
-            ++_elementCountCached;
-            ++_cellsCountCached;
-            return true;
+            RebuildImpl(_elementCountCached + 1);
+            searchResult = FindSlot(
+                DATA_OF(Slot, _allocData),
+                _capacity,
+                keyConstRef
+            );
         }
+
+        ASSERT_COLLECTION_INTEGRITY(searchResult.FreeBucket.HasValue()); // The new slot must be found.
+        ASSERT_COLLECTION_INTEGRITY(searchResult.FoundObject.IsEmpty()); // The searched object must not have appeared after rebuilding.
+
+        DATA_OF(Slot, _allocData)[searchResult.FreeBucket.Value()]
+            .Set(FORWARD(K_, key), FORWARD(V_, value));
+
+        ++_elementCountCached;
+        ++_cellsCountCached;
+
+        return true;
     }
 
     /// <summary> Removes the entry with the specified key from the dictionary. </summary>
