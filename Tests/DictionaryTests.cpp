@@ -11,27 +11,108 @@
 #include "Collections/Dictionary.h"
 #include "Debugging/LifecycleTracker.h"
 
-
 // Capacity Management
 
-TEST(Dictionary_Capacity, Reserve_OnInit)
+TEST(DictionaryCapacity, ReserveOnCall)
 {
-    constexpr int32 ExampleDefaultCapacity = 10;
-    Dictionary<int32, int32> dict{ ExampleDefaultCapacity };
-    GTEST_ASSERT_GE(HASH_SETS_DEFAULT_CAPACITY, ExampleDefaultCapacity);
-    GTEST_ASSERT_EQ(dict.Capacity(), HASH_SETS_DEFAULT_CAPACITY);
+    constexpr int32 MinReservedCapacity = 128;
+    GTEST_ASSERT_GE(MinReservedCapacity, HASH_SETS_DEFAULT_CAPACITY);
+
+    Dictionary<int32, int32> dict;
+    dict.ReserveSlots(MinReservedCapacity);
+
+    GTEST_ASSERT_TRUE(dict.IsAllocated());
+    GTEST_ASSERT_GE(dict.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE(dict.Capacity(), MinReservedCapacity * 2);
+
+    dict.Reset();
+    GTEST_ASSERT_FALSE(dict.IsAllocated());
 }
 
-TEST(Dictionary_Capacity, Reserve_Add)
+TEST(DictionaryCapacity, ReserveOnCtor)
+{
+    constexpr int32 MinReservedCapacity = 128;
+    GTEST_ASSERT_GE(MinReservedCapacity, HASH_SETS_DEFAULT_CAPACITY);
+
+    Dictionary<int32, int32> dict{ MinReservedCapacity };
+
+    GTEST_ASSERT_TRUE(dict.IsAllocated());
+    GTEST_ASSERT_GE(dict.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE(dict.Capacity(), MinReservedCapacity * 2);
+
+    dict.Reset();
+    GTEST_ASSERT_FALSE(dict.IsAllocated());
+
+}
+
+TEST(DictionaryCapacity, ReserveOnAdd)
+{
+    constexpr int32 MinReservedCapacity = 128;
+    GTEST_ASSERT_GE(MinReservedCapacity, HASH_SETS_DEFAULT_CAPACITY);
+
+    Dictionary<int32, int32> dict;
+    for (int32 i = 0; i < MinReservedCapacity; ++i)
+        dict.Add(i, i);
+    
+
+    GTEST_ASSERT_TRUE(dict.IsAllocated());
+    GTEST_ASSERT_GE  (dict.Capacity(), MinReservedCapacity);
+    GTEST_ASSERT_LE  (dict.Capacity(), MinReservedCapacity * 2);
+
+    dict.Reset();
+
+    GTEST_ASSERT_FALSE(dict.IsAllocated());
+}
+
+TEST(DictionaryCapacity, FreeOnCompact)
 {
     Dictionary<int32, int32> dict;
-    dict.Add(1, 2);
-    dict.Add(3, 4);
+    dict.Add(69, 69);
 
-    GTEST_ASSERT_EQ(dict.Count(), 2);
+    GTEST_ASSERT_TRUE (dict.IsAllocated());
+    GTEST_ASSERT_FALSE(dict.IsEmpty());
+    GTEST_ASSERT_EQ   (dict.Capacity(), HASH_SETS_DEFAULT_CAPACITY);
+    GTEST_ASSERT_EQ   (dict.Count(), 1);
+
+    dict.Remove(69);
+
+    GTEST_ASSERT_EQ(dict.Count(), 0);
+    GTEST_ASSERT_TRUE(dict.IsEmpty());
+    GTEST_ASSERT_TRUE(dict.IsAllocated());
+
+    dict.Compact();
+
+    GTEST_ASSERT_TRUE(dict.IsEmpty());
+    GTEST_ASSERT_FALSE(dict.IsAllocated());
 }
 
-TEST(Dictionary_Capacity, AddMany)
+TEST(DictionaryCapacity, CompactOnReloc)
+{
+    constexpr int32 TestCapacity1 = 256;
+    constexpr int32 TestCapacity2 = 3;
+
+    Dictionary<int32, int32> dict;
+    for (int32 i = 0; i < TestCapacity1; ++i)
+        dict.Add(i, i);
+    
+
+    GTEST_ASSERT_TRUE(dict.IsAllocated());
+    GTEST_ASSERT_EQ  (dict.Count(), TestCapacity1);
+    GTEST_ASSERT_GE  (dict.Capacity(), TestCapacity1);
+
+    for (int32 i = TestCapacity2; i < TestCapacity1; ++i)
+        dict.Remove(i);
+
+    dict.Compact();
+
+    GTEST_ASSERT_TRUE(dict.IsAllocated());
+    GTEST_ASSERT_EQ  (dict.Count(),    TestCapacity2);
+    GTEST_ASSERT_GE  (dict.Capacity(), TestCapacity2);
+    GTEST_ASSERT_LE  (dict.Capacity(), TestCapacity1 / 2);
+}
+
+
+TEST(DictionaryCapacity, AddMany)
 {
     Dictionary<int32, int32> dict;
 
@@ -49,7 +130,7 @@ TEST(Dictionary_Capacity, AddMany)
     }
 }
 
-TEST(Dictionary_Capacity, AddManyRemoveMany)
+TEST(DictionaryCapacity, AddManyRemoveMany)
 {
     Dictionary<int32, int32> dict;
 
@@ -77,7 +158,7 @@ TEST(Dictionary_Capacity, AddManyRemoveMany)
     }
 }
 
-TEST(Dictionary_Capacity, AddAndGet)
+TEST(DictionaryCapacity, AddAndGet)
 {
     Dictionary<int32, int32> dict;
     dict.Add(1, 2);
@@ -90,7 +171,7 @@ TEST(Dictionary_Capacity, AddAndGet)
     GTEST_ASSERT_EQ(value2, 4);
 }
 
-TEST(Dictionary_Relocation, AddManyAndCompact)
+TEST(DictionaryRelocation, AddManyAndCompact)
 {
     using Alloc = HeapAlloc; // Only dragging alloc makes sense here
     constexpr int32 ElementCount = 1000;
@@ -127,16 +208,15 @@ TEST(Dictionary_Relocation, AddManyAndCompact)
 
 // Element Relocation
 
-TEST(Dictionary_Relocation, MoveConstruct_NoDragAlloc)
+TEST(DictionaryRelocation, MoveConstructNoDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
     LIFECYCLE_TEST_INTO
     {
         using NoDragAlloc = FixedAlloc<256>;
-        
+
         Dictionary<Index, TestTracker, NoDragAlloc> movedDict;
-        // Note: Here use index, as index allows for predictable stack alloc, due to no sentinels.
 
         // Init: n constructions
         for (int32 i = 0; i < ElementCount; ++i)
@@ -147,13 +227,13 @@ TEST(Dictionary_Relocation, MoveConstruct_NoDragAlloc)
         GTEST_ASSERT_EQ(movedDict.Count(), 0);
         GTEST_ASSERT_EQ(targetDict.Count(), ElementCount);
 
-        // Total: 2n constructions
+        // Total: 3n constructions
     }
     LIFECYCLE_TEST_OUT
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Dictionary_Relocation, MoveConstruct_DragAlloc)
+TEST(DictionaryRelocation, MoveConstructDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -161,19 +241,22 @@ TEST(Dictionary_Relocation, MoveConstruct_DragAlloc)
     {
         using DragAlloc = HeapAlloc;
 
-        Dictionary<int32, TestTracker, DragAlloc> movedDict;
+        Dictionary<Index, TestTracker, DragAlloc> movedDict;
 
         // Init: n constructions
         for (int32 i = 0; i < ElementCount; ++i)
-            movedDict.Add(i, TestTracker(i));
+            movedDict.Add(i, TestTracker(i)); // 2n: 1 for temporary, 1 for slot
 
         // Reloc: 0 constructions
-        //Dictionary<int32, TestTracker, DragAlloc> targetDict{ MOVE(movedDict) };
-        //GTEST_ASSERT_EQ(movedDict.Count(), 0);
-        //GTEST_ASSERT_EQ(targetDict.Count(), ElementCount);
+        Dictionary<Index, TestTracker, DragAlloc> targetDict{ MOVE(movedDict) }; // 0 constructions
+        GTEST_ASSERT_EQ(movedDict.Count(), 0);
+        GTEST_ASSERT_EQ(targetDict.Count(), ElementCount);
 
         // Total: n constructions
     }
     LIFECYCLE_TEST_OUT
-    // LIFECYCLE_TEST_DIFF(1 * ElementCount)
+    LIFECYCLE_TEST_DIFF(2 * ElementCount)
 }
+
+
+// Element Manipulation
