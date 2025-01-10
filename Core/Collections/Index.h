@@ -86,6 +86,16 @@ private:
     {
         return static_cast<int8>(-_value);
     }
+
+
+    // Hashing
+
+public:
+    NO_DISCARD FORCE_INLINE
+    auto GetHash() const -> uint32
+    {
+        return static_cast<uint32>(_value);
+    }
 };
 
 template<>

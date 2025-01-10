@@ -33,7 +33,7 @@ class LifecycleTracker
 public:
     int32 Value;
 
-    explicit LifecycleTracker(const int32 value = 0) noexcept
+    explicit LifecycleTracker(const int32 value = 0)
     {
         Value = value;
 
@@ -42,7 +42,7 @@ public:
         counters.Constructions += 1;
     }
 
-    LifecycleTracker(const LifecycleTracker& other) noexcept
+    LifecycleTracker(const LifecycleTracker& other)
     {
         Value = other.Value;
 
@@ -70,7 +70,7 @@ public:
     }
 
 
-    auto operator=(const LifecycleTracker&) noexcept -> LifecycleTracker&
+    auto operator=(const LifecycleTracker&) -> LifecycleTracker&
     {
         auto& counters = LifecycleCountersHolder<TheTag>::Counters;
         counters.Copies += 1;
@@ -87,14 +87,20 @@ public:
     }
 
 
-    auto operator==(const LifecycleTracker& other) const noexcept -> bool
+    auto operator==(const LifecycleTracker& other) const -> bool
     {
         return Value == other.Value;
     }
 
-    auto operator!=(const LifecycleTracker& other) const noexcept -> bool
+    auto operator!=(const LifecycleTracker& other) const -> bool
     {
         return Value != other.Value;
+    }
+
+
+    auto GetHash() const -> uint32
+    {
+        return static_cast<uint32>(Value);
     }
 };
 
