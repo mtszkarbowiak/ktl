@@ -182,7 +182,7 @@ public:
         FORCE_INLINE
         void Set(K_&& key, V_&& value) // Universal references
         {
-            ASSERT_COLLECTION_SAFE_MOD(IsEmpty());
+            ASSERT_COLLECTION_SAFE_MOD(!IsOccupied());
 
             // Value is manipulated manually
             new (&_value) Value{ FORWARD(V_, value) };
@@ -401,7 +401,7 @@ private:
                 // Thus it will remember the last deleted slot, the one which can be re-used.
                 firstFree.Set(currentIndex);
             }
-            else if (slot.GetKey() == key)
+            else if (slot.IsOccupied() && slot.GetKey() == key)
             {
                 // If the current slot has the key, just return the index :)
                 return { Nullable<Index>{ currentIndex }, {} };
@@ -603,8 +603,8 @@ public:
         // If the entry is present, then just update the value.
         if (searchResult.FoundObject.HasValue()) 
         {
-            DATA_OF(Slot, _allocData)[searchResult.FoundObject.Value()]
-                .Set(FORWARD(K_, key), FORWARD(V_, value)); //TODO Leave the key, as it was?
+            auto& slot = DATA_OF(Slot, _allocData)[searchResult.FoundObject.Value()];
+            slot.GetValue() = FORWARD(V_, value);
             return false;
         }
 
@@ -625,8 +625,8 @@ public:
         ASSERT_COLLECTION_INTEGRITY(searchResult.FreeBucket.HasValue()); // The new slot must be found.
         ASSERT_COLLECTION_INTEGRITY(searchResult.FoundObject.IsEmpty()); // The searched object must not have appeared after rebuilding.
 
-        DATA_OF(Slot, _allocData)[searchResult.FreeBucket.Value()]
-            .Set(FORWARD(K_, key), FORWARD(V_, value));
+        Slot& newSlot = DATA_OF(Slot, _allocData)[searchResult.FreeBucket.Value()];
+        newSlot.Set(FORWARD(K_, key), FORWARD(V_, value));
 
         ++_elementCountCached;
         ++_cellsCountCached;
