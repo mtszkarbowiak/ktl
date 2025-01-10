@@ -127,30 +127,31 @@ TEST(Dictionary_Relocation, AddManyAndCompact)
 
 // Element Relocation
 
-//TEST(Dictionary_Relocation, MoveConstruct_NoDragAlloc)
-//{
-//    constexpr int32 ElementCount = 12;
-//
-//    LIFECYCLE_TEST_INTO
-//    {
-//        using NoDragAlloc = FixedAlloc<sizeof(TestTracker) * 32>;
-//
-//        Dictionary<int32, TestTracker, NoDragAlloc> movedDict;
-//
-//        // Init: n constructions
-//        for (int32 i = 0; i < ElementCount; ++i)
-//            movedDict.Add(i, TestTracker(i));
-//
-//        // Reloc: n constructions
-//        Dictionary<int32, TestTracker, NoDragAlloc> targetDict{ MOVE(movedDict) };
-//        GTEST_ASSERT_EQ(movedDict.Count(), 0);
-//        GTEST_ASSERT_EQ(targetDict.Count(), ElementCount);
-//
-//        // Total: 2n constructions
-//    }
-//    LIFECYCLE_TEST_OUT
-//    LIFECYCLE_TEST_DIFF(2 * ElementCount)
-//}
+TEST(Dictionary_Relocation, MoveConstruct_NoDragAlloc)
+{
+    constexpr int32 ElementCount = 12;
+
+    LIFECYCLE_TEST_INTO
+    {
+        using NoDragAlloc = FixedAlloc<256>;
+        
+        Dictionary<Index, TestTracker, NoDragAlloc> movedDict;
+        // Note: Here use index, as index allows for predictable stack alloc, due to no sentinels.
+
+        // Init: n constructions
+        for (int32 i = 0; i < ElementCount; ++i)
+            movedDict.Add(i, TestTracker(i)); // 2n: 1 for temporary, 1 for slot
+
+        // Reloc: n constructions
+        Dictionary<Index, TestTracker, NoDragAlloc> targetDict{ MOVE(movedDict) }; // 1n: 1 for move
+        GTEST_ASSERT_EQ(movedDict.Count(), 0);
+        GTEST_ASSERT_EQ(targetDict.Count(), ElementCount);
+
+        // Total: 2n constructions
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(3 * ElementCount)
+}
 
 TEST(Dictionary_Relocation, MoveConstruct_DragAlloc)
 {

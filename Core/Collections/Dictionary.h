@@ -153,10 +153,12 @@ public:
         /// This method can be called only when the slot is occupied.
         /// This is because it leave a mark that the slot was occupied prior to the removal.
         /// </summary>
-        void Delete()
+        void Remove()
         {
             ASSERT_COLLECTION_SAFE_MOD(IsOccupied());
+            _value.~Value();
             _key.Set(Nullable<Key>{});
+            ASSERT_COLLECTION_INTEGRITY(IsDeleted());
         }
 
         /// <summary>
@@ -166,7 +168,10 @@ public:
         /// </summary>
         void Reset()
         {
+            if (IsOccupied())
+                _value.~Value();
             _key.Clear();
+            ASSERT_COLLECTION_INTEGRITY(IsEmpty());
         }
 
         /// <summary>
@@ -196,62 +201,53 @@ public:
             // Do not initialize the key, it will be set by the user!
             : _key{}
         {
+            ASSERT_COLLECTION_INTEGRITY(IsEmpty());
         }
 
         /// <summary> Initializes a slot by moving other slot. </summary>
         Slot(Slot&& other) noexcept
             : _key{ MOVE(other._key) }
         {
-            if (other.IsOccupied())
+            if (IsOccupied()) // Test self for key presence indication, not other. Key has been moved.
+            {
                 new (&_value) Value{ MOVE(other._value) };
+                other._value.~Value();
+            }
 
-            other.Reset();
+            // No need to reset the other slot: 1. Members are already moved. 2. It will be destroyed.
         }
 
         /// <summary> Initializes a slot by copying other slot. </summary>
-        Slot(const Slot& other)
-            : _key{ other._key }
-        {
-            if (other.IsOccupied())
-                new (&_value) Value{ other._value };
-        }
+        Slot(const Slot& other) = delete;
 
         /// <summary> Assigns a slot by moving other slot. </summary>
         auto operator=(Slot&& other) noexcept -> Slot&
         {
             if (this != &other)
             {
-                if (IsOccupied())
-                    _value.~Value();
+                Reset();
+
                 _key = MOVE(other._key);
-                if (other.IsOccupied())
+
+                if (IsOccupied()) // Test self for key presence indication, not other. Key has been moved.
+                {
                     new (&_value) Value{ MOVE(other._value) };
-                other.Reset();
+                    other._value.~Value();
+                }
             }
             return *this;
         }
 
         /// <summary> Assigns a slot by copying other slot. </summary>
-        auto operator=(const Slot& other) -> Slot&
-        {
-            if (this != &other)
-            {
-                if (IsOccupied())
-                    _value.~Value();
-                _key = other._key;
-                if (other.IsOccupied())
-                    new (&_value) Value{ other._value };
-            }
-            return *this;
-        }
+        auto operator=(const Slot& other) -> Slot& = delete;
 
         /// <summary> Destroys the slot. </summary>
         ~Slot()
         {
             if (IsOccupied()) 
-            {
                 _value.~Value();
-            }
+            
+            _key.~Nullable();
         }
     };
 
@@ -441,7 +437,7 @@ private:
         // 2. Rebuild the set into the new allocation.
         for (int32 i = 0; i < _capacity; ++i) 
         {
-            const Slot& oldSlot = DATA_OF(Slot, _allocData)[i];
+            Slot& oldSlot = DATA_OF(Slot, _allocData)[i];
             if (!oldSlot.IsOccupied()) // If there's no element, skip the slot.
                 continue;
 
@@ -656,7 +652,7 @@ public:
             return false;
 
         // Use `Delete` specifically to mark the slot as deleted.
-        DATA_OF(Slot, _allocData)[result.FoundObject.Value()].Delete();
+        DATA_OF(Slot, _allocData)[result.FoundObject.Value()].Remove();
         --_elementCountCached;
 
         return true;
@@ -741,8 +737,8 @@ protected:
         else
         {
             BulkOperations::MoveLinearContent<Slot>(
-                DATA_OF(Slot, _allocData),
                 DATA_OF(Slot, other._allocData),
+                DATA_OF(Slot, _allocData),
                 other._capacity
             );
             BulkOperations::DestroyLinearContent<Slot>(
@@ -837,7 +833,10 @@ public:
 
     // Constraints
 
-    static_assert(AllocHelper::HasBinaryMaskingSupport(), "The allocator must support binary masking.");
+    static_assert(
+        AllocHelper::HasBinaryMaskingSupport() == AllocHelper::BinaryMaskingSupportStatus::Supported, 
+        "The allocator must support binary masking."
+    );
 
     static_assert(!std::is_reference<Key>                    ::value, "Type must not be a reference type.");
     static_assert(!std::is_reference<Value>                  ::value, "Type must not be a reference type.");
