@@ -9,13 +9,18 @@
 
 #include "Types/Numbers.h"
 
+/// <summary>
+/// Default hash acquisition for a type. It uses the <c>GetHash</c> method of the type.
+/// This solution keeps ability to use different hash functions while preserving
+/// the ability to just use a simple method operating on private members.
+/// </summary>
 template<typename T>
 struct HashOf
 {
     NO_DISCARD static FORCE_INLINE
-    uint32 GetHash(const T& key)
+    auto GetHash(const T& key)
     {
-        return key;
+        return key.GetHash();
     }
 };
 
@@ -23,7 +28,7 @@ template<>
 struct HashOf<int32>
 {
     NO_DISCARD static FORCE_INLINE
-    uint32 GetHash(const int32 key)
+    auto GetHash(const int32 key) -> uint32
     {
         return static_cast<uint32>(key);
     }
@@ -33,7 +38,7 @@ template<>
 struct HashOf<uint32>
 {
     NO_DISCARD static FORCE_INLINE
-    uint32 GetHash(const uint32 key)
+    auto GetHash(const uint32 key) -> uint32
     {
         return key;
     }
@@ -43,7 +48,7 @@ template<>
 struct HashOf<int16>
 {
     NO_DISCARD static FORCE_INLINE
-    uint32 GetHash(const int16 key)
+    auto GetHash(const int16 key) -> uint32
     {
         return static_cast<uint32>(key);
     }
@@ -53,7 +58,7 @@ template<>
 struct HashOf<uint16>
 {
     NO_DISCARD static FORCE_INLINE
-    uint32 GetHash(const uint16 key)
+    auto GetHash(const uint16 key) -> uint32
     {
         return static_cast<uint32>(key);
     }
@@ -63,7 +68,7 @@ template<>
 struct HashOf<int8>
 {
     NO_DISCARD static FORCE_INLINE
-    uint32 GetHash(const int8 key)
+    auto GetHash(const int8 key) -> uint32
     {
         return static_cast<uint32>(key);
     }
@@ -73,7 +78,7 @@ template<>
 struct HashOf<uint8>
 {
     NO_DISCARD static FORCE_INLINE
-    uint32 GetHash(const uint8 key)
+    auto GetHash(const uint8 key) -> uint32
     {
         return key;
     }
