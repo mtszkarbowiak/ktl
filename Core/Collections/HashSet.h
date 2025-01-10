@@ -649,7 +649,10 @@ public:
 
     // Constraints
 
-    static_assert(AllocHelper::HasBinaryMaskingSupport(), "The allocator must support binary masking.");
+    static_assert(
+        AllocHelper::HasBinaryMaskingSupport() == AllocHelper::BinaryMaskingSupportStatus::Supported,
+        "The allocator must support binary masking."
+    );
 
     static_assert(!std::is_reference<Element>                ::value, "Type must not be a reference type.");
     static_assert(!std::is_const<Element>                    ::value, "Type must not be a const-qualified type.");

@@ -151,17 +151,26 @@ public:
     }
 
 
+    enum class BinaryMaskingSupportStatus { Supported, InvalidMinimum, InvalidMaximum, };
+
     /// <summary>
     /// Some collections have very strict requirement of the capacity being always a power of 2.
     /// To keep the functions above valid, the allocator must use only powers of 2, including the limits.
     /// This ensures that capacities undergoing the clamp operation will not violate the collection's constraints.
     /// </summary>
-    NO_DISCARD static constexpr
-    auto HasBinaryMaskingSupport() -> bool
+    NO_DISCARD static CONSTEVAL
+    auto HasBinaryMaskingSupport() -> BinaryMaskingSupportStatus
     {
         constexpr bool correctMinimum = Math::IsPow2(MinElements) || (Alloc::MinCapacity < 2);
         constexpr bool correctMaximum = Math::IsPow2(MaxElements) || (Alloc::MaxCapacity == INT32_MAX);
-        return correctMinimum && correctMaximum;
+
+        if (!correctMinimum)
+            return BinaryMaskingSupportStatus::InvalidMinimum;
+
+        if (!correctMaximum)
+            return BinaryMaskingSupportStatus::InvalidMaximum;
+
+        return BinaryMaskingSupportStatus::Supported;
 
         // The underlying problem is that after applying the growth function, we should ceil the result
         // to the power of two. This is to keep the constraint of pow-2 capacity. Unfortunately,
