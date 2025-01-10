@@ -63,7 +63,7 @@ TEST(HashSetCapacity, ReserveOnAdd)
     GTEST_ASSERT_FALSE(set.IsAllocated());
 }
 
-TEST(HashSetCapacity, CompactOnFree)
+TEST(HashSetCapacity, FreeOnCompact)
 {
     HashSet<int32> set;
     set.Add(69);
@@ -78,6 +78,7 @@ TEST(HashSetCapacity, CompactOnFree)
     GTEST_ASSERT_EQ  (set.Count(), 0);
     GTEST_ASSERT_TRUE(set.IsEmpty());
     GTEST_ASSERT_TRUE(set.IsAllocated());
+
     set.Compact();
 
     GTEST_ASSERT_TRUE (set.IsEmpty());
@@ -111,9 +112,6 @@ TEST(HashSetCapacity, CompactOnReloc)
 
 
 // Elements Manipulation
-
-using AllocatorTypes = ::testing::Types<DefaultAlloc, FixedAlloc<256>>;
-using ElementTypes   = ::testing::Types<int32, Index>;
 
 template<typename Element, typename Allocator>
 struct HashSetTestParam
