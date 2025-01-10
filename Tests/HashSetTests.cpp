@@ -122,10 +122,10 @@ struct HashSetTestParam
 };
 
 using HashSetTestParams = ::testing::Types<
-    HashSetTestParam<int32, DefaultAlloc>,
-    HashSetTestParam<int32, FixedAlloc<512>>,
-    HashSetTestParam<Index, DefaultAlloc>,
-    HashSetTestParam<Index, FixedAlloc<256>>
+    HashSetTestParam<int32, DefaultAlloc>
+    , HashSetTestParam<int32, FixedAlloc<512>>
+    , HashSetTestParam<Index, DefaultAlloc>
+    , HashSetTestParam<Index, FixedAlloc<256>>
 >;
 
 template<typename Param>
@@ -140,22 +140,18 @@ protected:
 
 TYPED_TEST_SUITE(HashSetFixture, HashSetTestParams);
 
-TYPED_TEST(HashSetFixture, EmptyAfterCtor)
-{
-    typename TypeParam::HashSetType set;
-
-    EXPECT_TRUE(set.IsEmpty());
-    EXPECT_EQ  (set.Count(), 0);
-    EXPECT_EQ  (set.CellCount(), 0);
-
-    EXPECT_FALSE(set.Contains(this->element1));
-    EXPECT_FALSE(set.Contains(this->element2));
-    EXPECT_FALSE(set.Contains(this->element3));
-}
-
 TYPED_TEST(HashSetFixture, ElementsManipulation)
 {
     typename TypeParam::HashSetType set;
+
+
+    // Initial state
+
+    EXPECT_EQ(set.Count(), 0);
+    EXPECT_FALSE(set.Contains(this->element1));
+    EXPECT_FALSE(set.Contains(this->element2));
+    EXPECT_FALSE(set.Contains(this->element3));
+
 
     // Add elements
 

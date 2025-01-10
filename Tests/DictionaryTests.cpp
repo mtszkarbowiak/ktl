@@ -11,6 +11,7 @@
 #include "Collections/Dictionary.h"
 #include "Debugging/LifecycleTracker.h"
 
+
 // Capacity Management
 
 TEST(DictionaryCapacity, ReserveOnCall)
@@ -206,9 +207,9 @@ TEST(DictionaryRelocation, AddManyAndCompact)
 }
 
 
-// Element Relocation
+// Element Lifecycle
 
-TEST(DictionaryRelocation, MoveConstructNoDragAlloc)
+TEST(DictionaryElementLifecycle, MoveConstructNoDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -233,7 +234,7 @@ TEST(DictionaryRelocation, MoveConstructNoDragAlloc)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(DictionaryRelocation, MoveConstructDragAlloc)
+TEST(DictionaryElementLifecycle, MoveConstructDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -260,3 +261,92 @@ TEST(DictionaryRelocation, MoveConstructDragAlloc)
 
 
 // Element Manipulation
+
+template<typename Key, typename Value, typename Allocator>
+struct DictionaryTestParam
+{
+    using KeyType   = Key;
+    using ValueType = Value;
+    using AllocType = Allocator;
+    using DictType  = Dictionary<KeyType, ValueType, AllocType>;
+};
+
+using DictionaryTestParams = ::testing::Types <
+    DictionaryTestParam<int32, int32, DefaultAlloc>
+    , DictionaryTestParam<int32, int32, FixedAlloc<96>>
+    , DictionaryTestParam<Index, int32, DefaultAlloc>
+    , DictionaryTestParam<Index, int32, FixedAlloc<64>>
+>;
+
+template<typename Param>
+struct DictionaryFixture : public ::testing::Test
+{
+    using KeyType   = typename Param::KeyType;
+    using ValueType = typename Param::ValueType;
+    using DictType  = typename Param::DictType;
+
+    const KeyType key1 = KeyType{ 1 };
+    const KeyType key2 = KeyType{ 2 };
+    const KeyType key3 = KeyType{ 3 };
+
+    const ValueType value1 = ValueType{ 1 };
+    const ValueType value2 = ValueType{ 2 };
+    const ValueType value3 = ValueType{ 3 };
+};
+
+TYPED_TEST_SUITE(DictionaryFixture, DictionaryTestParams);
+
+TYPED_TEST(DictionaryFixture, ElementsManipulation)
+{
+    typename TypeParam::DictType dict;
+
+    // Initial state
+
+    EXPECT_EQ(dict.Count(), 0);
+    EXPECT_FALSE(dict.Contains(this->key1));
+    EXPECT_FALSE(dict.Contains(this->key2));
+    EXPECT_FALSE(dict.Contains(this->key3));
+
+
+    // Add elements
+
+    GTEST_ASSERT_TRUE(dict.Add(this->key1, this->value1));
+    GTEST_ASSERT_TRUE(dict.Add(this->key2, this->value2));
+    GTEST_ASSERT_TRUE(dict.Add(this->key3, this->value3));
+
+    GTEST_ASSERT_FALSE(dict.Add(this->key1, this->value1));
+    GTEST_ASSERT_FALSE(dict.Add(this->key2, this->value2));
+    GTEST_ASSERT_FALSE(dict.Add(this->key3, this->value3));
+
+    EXPECT_EQ(dict.Count(), 3);
+    EXPECT_EQ(dict.CellCount(), 3);
+
+
+    // Remove elements
+
+    EXPECT_TRUE(dict.Remove(this->key1));
+    EXPECT_TRUE(dict.Remove(this->key2));
+    EXPECT_TRUE(dict.Remove(this->key3));
+
+    EXPECT_FALSE(dict.Remove(this->key1));
+    EXPECT_FALSE(dict.Remove(this->key2));
+    EXPECT_FALSE(dict.Remove(this->key3));
+
+
+    // Add elements again
+
+    EXPECT_FALSE (dict.Contains(this->key2));
+    EXPECT_TRUE (dict.Add(this->key2, this->value2));
+    EXPECT_FALSE(dict.Add(this->key2, this->value2));
+    EXPECT_TRUE (dict.Contains(this->key2));
+
+    EXPECT_EQ(dict.Count(), 1);
+    EXPECT_EQ(dict.CellCount(), 4);
+
+
+    // Compact
+
+    dict.Compact();
+    EXPECT_EQ(dict.Count(), 1);
+    EXPECT_EQ(dict.CellCount(), 1);
+};
