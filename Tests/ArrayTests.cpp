@@ -14,7 +14,7 @@
 
 // Capacity Management
 
-TEST(Array_Capacity, Reserve_Call)
+TEST(ArrayCapacity, ReserveOnCall)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -31,7 +31,7 @@ TEST(Array_Capacity, Reserve_Call)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Array_Capacity, Reserve_Ctor)
+TEST(ArrayCapacity, ReserveOnCtor)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -47,7 +47,7 @@ TEST(Array_Capacity, Reserve_Ctor)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Array_Capacity, Reserve_Add)
+TEST(ArrayCapacity, ReserveOnAdd)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -65,7 +65,7 @@ TEST(Array_Capacity, Reserve_Add)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Array_Capacity, Compact_Free)
+TEST(ArrayCapacity, CompactOnFree)
 {
     using Item = int32;
     Array<Item> array;
@@ -89,7 +89,7 @@ TEST(Array_Capacity, Compact_Free)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Array_Capacity, Compact_Reloc)
+TEST(ArrayCapacity, CompactOnReloc)
 {
     constexpr int32 TestCapacity1 = 256;
     constexpr int32 TestCapacity2 = 3;
@@ -116,7 +116,7 @@ TEST(Array_Capacity, Compact_Reloc)
 
 // Element Lifecycle Management
 
-TEST(Array_ElementLifecycle, Add)
+TEST(ArrayElementLifecycle, Add)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -128,7 +128,7 @@ TEST(Array_ElementLifecycle, Add)
     LIFECYCLE_TEST_DIFF(2) // Include temporary
 }
 
-TEST(Array_ElementLifecycle, Emplace)
+TEST(ArrayElementLifecycle, Emplace)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -140,7 +140,7 @@ TEST(Array_ElementLifecycle, Emplace)
     LIFECYCLE_TEST_DIFF(1)
 }
 
-TEST(Array_ElementLifecycle, InsertAt)
+TEST(ArrayElementLifecycle, InsertAt)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -152,7 +152,7 @@ TEST(Array_ElementLifecycle, InsertAt)
     LIFECYCLE_TEST_DIFF(1)
 }
 
-TEST(Array_ElementLifecycle, RemoveAt)
+TEST(ArrayElementLifecycle, RemoveAt)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -168,7 +168,7 @@ TEST(Array_ElementLifecycle, RemoveAt)
 
 // Element Access
 
-TEST(Array_ElementAccess, Index)
+TEST(ArrayElementAccess, Index)
 {
     constexpr int32 ElementCount = 12;
 
@@ -180,7 +180,7 @@ TEST(Array_ElementAccess, Index)
         GTEST_ASSERT_EQ(array[i], i);
 }
 
-TEST(Array_ElementAccess, ConstIndex)
+TEST(ArrayElementAccess, ConstIndex)
 {
     constexpr int32 ElementCount = 12;
 
@@ -199,7 +199,7 @@ TEST(Array_ElementAccess, ConstIndex)
 
 // Element Relocation
 
-TEST(Array_Relocation, Reserve)
+TEST(ArrayRelocation, Reserve)
 {
     constexpr int32 ElementCount = 12;
 
@@ -226,7 +226,7 @@ TEST(Array_Relocation, Reserve)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Array_Relocation, Compact)
+TEST(ArrayRelocation, Compact)
 {
     constexpr int32 InitCapacity = 128;
     constexpr int32 ElementCount = 12;
@@ -252,7 +252,7 @@ TEST(Array_Relocation, Compact)
     LIFECYCLE_TEST_DIFF(2 * ElementCount)
 }
 
-TEST(Array_Relocation, MoveCtor_NoDragAlloc)
+TEST(ArrayRelocation, MoveCtorNoDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -277,7 +277,7 @@ TEST(Array_Relocation, MoveCtor_NoDragAlloc)
     LIFECYCLE_TEST_DIFF(2 * ElementCount)
 }
 
-TEST(Array_Relocation, MoveAsgn_NoDragAlloc)
+TEST(ArrayRelocation, MoveAsgnNoDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -306,7 +306,7 @@ TEST(Array_Relocation, MoveAsgn_NoDragAlloc)
     LIFECYCLE_TEST_DIFF(2 * ElementCount + 1)
 }
 
-TEST(Array_Relocation, MoveCtor_DragAlloc)
+TEST(ArrayRelocation, MoveCtorDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -330,7 +330,7 @@ TEST(Array_Relocation, MoveCtor_DragAlloc)
     LIFECYCLE_TEST_DIFF(1 * ElementCount)
 }
 
-TEST(Array_Relocation, MoveAsgn_DragAlloc)
+TEST(ArrayRelocation, MoveAsgnDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -362,7 +362,7 @@ TEST(Array_Relocation, MoveAsgn_DragAlloc)
 
 // Element Copying
 
-TEST(Array_Copying, CopyCtor)
+TEST(ArrayCopying, CopyCtor)
 {
     constexpr int32 ElementCount = 12;
     LIFECYCLE_TEST_INTO
@@ -379,7 +379,7 @@ TEST(Array_Copying, CopyCtor)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Array_Copying, CopyAsgn)
+TEST(ArrayCopying, CopyAsgn)
 {
     constexpr int32 ElementCount = 12;
     LIFECYCLE_TEST_INTO
@@ -400,7 +400,7 @@ TEST(Array_Copying, CopyAsgn)
 
 // Element Manipulation
 
-TEST(Array_ElementManipulation, Insert)
+TEST(ArrayElementManipulation, Insert)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -423,7 +423,7 @@ TEST(Array_ElementManipulation, Insert)
     LIFECYCLE_TEST_OUT
 }
 
-TEST(Array_ElementManipulation, InsertAt)
+TEST(ArrayElementManipulation, InsertAt)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -446,7 +446,7 @@ TEST(Array_ElementManipulation, InsertAt)
     LIFECYCLE_TEST_OUT
 }
 
-TEST(Array_ElementManipulation, Remove)
+TEST(ArrayElementManipulation, Remove)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -468,7 +468,7 @@ TEST(Array_ElementManipulation, Remove)
     LIFECYCLE_TEST_OUT
 }
 
-TEST(Array_ElementManipulation, RemoveStable)
+TEST(ArrayElementManipulation, RemoveStable)
 {
     LIFECYCLE_TEST_INTO
     {

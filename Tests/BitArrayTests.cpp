@@ -13,7 +13,7 @@
 
 // Capacity Management
 
-TEST(BitArray_Capacity, Reserving_Call)
+TEST(BitArrayCapacity, ReservingOnCall)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -30,7 +30,7 @@ TEST(BitArray_Capacity, Reserving_Call)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(BitArray_Capacity, Reserving_Ctor)
+TEST(BitArrayCapacity, ReservingOnCtor)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -46,7 +46,7 @@ TEST(BitArray_Capacity, Reserving_Ctor)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(BitArray_Capacity, Reserving_Add)
+TEST(BitArrayCapacity, ReservingOnAdd)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -67,7 +67,7 @@ TEST(BitArray_Capacity, Reserving_Add)
 
 // Element Access
 
-TEST(BitArray_ElementAccess, BitReferences)
+TEST(BitArrayElementAccess, BitReferences)
 {
     BitArray<> array;
 
@@ -81,7 +81,7 @@ TEST(BitArray_ElementAccess, BitReferences)
     GTEST_ASSERT_EQ(true, array[1]);
 }
 
-TEST(BitArray_ElementAccess, ConstEnumerator)
+TEST(BitArrayElementAccess, ConstEnumerator)
 {
     BitArray<> array;
     array.Add(true);
@@ -100,7 +100,7 @@ TEST(BitArray_ElementAccess, ConstEnumerator)
 
 // Element Relocation
 
-TEST(BitArray_Relocation, MoveCtor_NoDragAlloc)
+TEST(BitArrayRelocation, MoveCtorNoDragAlloc)
 {
     constexpr int32 ElementCount = 128;
     using NoDragAlloc = FixedAlloc<sizeof(uint64) * 2>;
@@ -116,7 +116,7 @@ TEST(BitArray_Relocation, MoveCtor_NoDragAlloc)
         GTEST_ASSERT_EQ(i % 2 == 0, targetArray[i]);
 }
 
-TEST(BitArray_Relocation, MoveAsgn_NoDragAlloc)
+TEST(BitArrayRelocation, MoveAsgnNoDragAlloc)
 {
     constexpr int32 ElementCount = 128;
     using NoDragAlloc = FixedAlloc<sizeof(uint64) * 2>;
@@ -133,7 +133,7 @@ TEST(BitArray_Relocation, MoveAsgn_NoDragAlloc)
         GTEST_ASSERT_EQ(i % 2 == 0, targetArray[i]);
 }
 
-TEST(BitArray_Relocation, MoveCtor_DragAlloc)
+TEST(BitArrayRelocation, MoveCtorDragAlloc)
 {
     constexpr int32 ElementCount = 128;
     using DragAlloc = HeapAlloc;
@@ -149,7 +149,7 @@ TEST(BitArray_Relocation, MoveCtor_DragAlloc)
         GTEST_ASSERT_EQ(i % 2 == 0, targetArray[i]);
 }
 
-TEST(BitArray_Relocation, MoveAsgn_DragAlloc)
+TEST(BitArrayRelocation, MoveAsgnDragAlloc)
 {
     constexpr int32 ElementCount = 128;
     using DragAlloc = HeapAlloc;
@@ -169,7 +169,7 @@ TEST(BitArray_Relocation, MoveAsgn_DragAlloc)
 
 // Element Copying
 
-TEST(BitArray_Copying, CopyCtor)
+TEST(BitArrayCopying, CopyCtor)
 {
     constexpr int32 ElementCount = 128;
 
@@ -182,7 +182,7 @@ TEST(BitArray_Copying, CopyCtor)
         GTEST_ASSERT_EQ(i % 2 == 0, arrayDst[i]);
 }
 
-TEST(BitArray_Copying, CopyAsgn)
+TEST(BitArrayCopying, CopyAsgn)
 {
     constexpr int32 ElementCount = 128;
 
@@ -200,7 +200,7 @@ TEST(BitArray_Copying, CopyAsgn)
 
 // Element Manipulation
 
-TEST(BitArray_ElementManipulation, StableInsert_OneBlock)
+TEST(BitArrayElementManipulation, StableInsertOneBlock)
 {
     BitArray<> array;
     for (int32 i = 0; i < 6; ++i)
@@ -224,7 +224,7 @@ TEST(BitArray_ElementManipulation, StableInsert_OneBlock)
     GTEST_ASSERT_EQ(false, array.GetBit(6));
 }
 
-TEST(BitArray_ElementManipulation, StableInsert_MultipleBlocks)
+TEST(BitArrayElementManipulation, StableInsertMultipleBlocks)
 {
     constexpr int32 ElementCount = 1024;
     constexpr int32 MidPoint = ElementCount / 2;
@@ -256,7 +256,7 @@ TEST(BitArray_ElementManipulation, StableInsert_MultipleBlocks)
     }
 }
 
-TEST(BitArray_ElementManipulation, StableRemove_OneBlock)
+TEST(BitArrayElementManipulation, StableRemoveOneBlock)
 {
     BitArray<> array;
     for (int32 i = 0; i < 6; ++i)
@@ -278,7 +278,7 @@ TEST(BitArray_ElementManipulation, StableRemove_OneBlock)
     GTEST_ASSERT_EQ(false, array.GetBit(4));
 }
 
-TEST(BitArray_ElementManipulation, StableRemove_MultipleBlocks)
+TEST(BitArrayElementManipulation, StableRemoveMultipleBlocks)
 {
     constexpr int32 ElementCount = 1024;
     constexpr int32 MidPoint = ElementCount / 2;

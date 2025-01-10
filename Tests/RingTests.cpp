@@ -14,7 +14,7 @@
 
 // Capacity Management
 
-TEST(Ring_Capacity, Reserve_Call)
+TEST(RingCapacity, ReserveOnCall)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -31,7 +31,7 @@ TEST(Ring_Capacity, Reserve_Call)
     GTEST_ASSERT_FALSE(ring.IsAllocated());
 }
 
-TEST(Ring_Capacity, Reserve_Ctor)
+TEST(Ring_Capacity, ReserveOnCtor)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -47,7 +47,7 @@ TEST(Ring_Capacity, Reserve_Ctor)
     GTEST_ASSERT_FALSE(ring.IsAllocated());
 }
 
-TEST(Ring_Capacity, Reserve_Add)
+TEST(RingCapacity, ReserveOnAdd)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, ARRAY_DEFAULT_CAPACITY);
@@ -65,7 +65,7 @@ TEST(Ring_Capacity, Reserve_Add)
     GTEST_ASSERT_FALSE(ring.IsAllocated());
 }
 
-TEST(Ring_Capacity, Compact_Free)
+TEST(RingCapacity, CompactOnFree)
 {
     using Item = int32;
     Ring<Item> array;
@@ -89,7 +89,7 @@ TEST(Ring_Capacity, Compact_Free)
     GTEST_ASSERT_FALSE(array.IsAllocated());
 }
 
-TEST(Ring_Capacity, Compact_Reloc)
+TEST(RingCapacity, CompactOnReloc)
 {
     constexpr int32 TestCapacity1 = 256;
     constexpr int32 TestCapacity2 = 3;
@@ -116,7 +116,7 @@ TEST(Ring_Capacity, Compact_Reloc)
 
 // Element Lifecycle Management
 
-TEST(Ring_ElementLifecycle, PushBack)
+TEST(RingElementLifecycle, PushBack)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -128,7 +128,7 @@ TEST(Ring_ElementLifecycle, PushBack)
     LIFECYCLE_TEST_DIFF(2) // Include temporary
 }
 
-TEST(Ring_ElementLifecycle, PushFront)
+TEST(RingElementLifecycle, PushFront)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -140,7 +140,7 @@ TEST(Ring_ElementLifecycle, PushFront)
     LIFECYCLE_TEST_DIFF(2) // Include temporary
 }
 
-TEST(Ring_ElementLifecycle, EmplaceBack)
+TEST(RingElementLifecycle, EmplaceBack)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -152,7 +152,7 @@ TEST(Ring_ElementLifecycle, EmplaceBack)
     LIFECYCLE_TEST_DIFF(1) // No temporary
 }
 
-TEST(Ring_ElementLifecycle, EmplaceFront)
+TEST(RingElementLifecycle, EmplaceFront)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -164,7 +164,7 @@ TEST(Ring_ElementLifecycle, EmplaceFront)
     LIFECYCLE_TEST_DIFF(1) // No temporary
 }
 
-TEST(Ring_ElementLifecycle, PopBack)
+TEST(RingElementLifecycle, PopBack)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -177,7 +177,7 @@ TEST(Ring_ElementLifecycle, PopBack)
     LIFECYCLE_TEST_DIFF(2) // Include temporary
 }
 
-TEST(Ring_ElementLifecycle, PopFront)
+TEST(RingElementLifecycle, PopFront)
 {
     LIFECYCLE_TEST_INTO
     {
@@ -193,7 +193,7 @@ TEST(Ring_ElementLifecycle, PopFront)
 
 // Element Access
 
-TEST(Ring_ElementAccess, Index)
+TEST(RingElementAccess, Index)
 {
     constexpr int32 ElementCount = 12;
     Ring<int32> ring;
@@ -203,7 +203,7 @@ TEST(Ring_ElementAccess, Index)
         GTEST_ASSERT_EQ(ring[i], i);
 }
 
-TEST(Ring_ElementAccess, ConstIndex)
+TEST(RingElementAccess, ConstIndex)
 {
     constexpr int32 ElementCount = 12;
     const Ring<int32> ring = [&ElementCount]() -> Ring<int32>
@@ -220,7 +220,7 @@ TEST(Ring_ElementAccess, ConstIndex)
 
 // Element Relocation
 
-TEST(Ring_Relocation, Reserve)
+TEST(RingRelocation, Reserve)
 {
     constexpr int32 ElementCount = 12;
 
@@ -250,7 +250,7 @@ TEST(Ring_Relocation, Reserve)
     LIFECYCLE_TEST_DIFF(5 * ElementCount)
 }
 
-TEST(Ring_Relocation, Compact)
+TEST(RingRelocation, Compact)
 {
     constexpr int32 ElementCount = 12;
 
@@ -274,7 +274,7 @@ TEST(Ring_Relocation, Compact)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Ring_Relocation, MoveCtor_NoDragAlloc)
+TEST(RingRelocation, MoveCtorNoDragAlloc)
 {
     const int32 ElementCount = 12;
 
@@ -298,7 +298,7 @@ TEST(Ring_Relocation, MoveCtor_NoDragAlloc)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Ring_Relocation, MoveAsgn_NoDragAlloc)
+TEST(RingRelocation, MoveAsgnNoDragAlloc)
 {
     constexpr int32 ElementCount = 12;
 
@@ -327,7 +327,7 @@ TEST(Ring_Relocation, MoveAsgn_NoDragAlloc)
     LIFECYCLE_TEST_DIFF(3 * ElementCount + 2)
 }
 
-TEST(Ring_Relocation, MoveCtor_DragAlloc)
+TEST(RingRelocation, MoveCtorDragAlloc)
 {
     const int32 ElementCount = 12;
 
@@ -351,7 +351,7 @@ TEST(Ring_Relocation, MoveCtor_DragAlloc)
     LIFECYCLE_TEST_DIFF(2 * ElementCount)
 }
 
-TEST(Ring_Relocation, MoveAsgn_DragAlloc)
+TEST(RingRelocation, MoveAsgnDragAlloc)
 {
     const int32 ElementCount = 12;
 
@@ -383,7 +383,7 @@ TEST(Ring_Relocation, MoveAsgn_DragAlloc)
 
 // Element Copying
 
-TEST(Ring_Copying, CopyCtor)
+TEST(RingCopying, CopyCtor)
 {
     constexpr int32 ElementCount = 12;
     LIFECYCLE_TEST_INTO
@@ -399,7 +399,7 @@ TEST(Ring_Copying, CopyCtor)
     LIFECYCLE_TEST_DIFF(3 * ElementCount)
 }
 
-TEST(Ring_Copying, CopyAsgn)
+TEST(RingCopying, CopyAsgn)
 {
     constexpr int32 ElementCount = 12;
     LIFECYCLE_TEST_INTO
@@ -420,7 +420,7 @@ TEST(Ring_Copying, CopyAsgn)
 
 // Element Manipulation
 
-TEST(Ring_ElementManipulation, PushBack_PopBack)
+TEST(RingElementManipulation, PushBackAndPopBack)
 {
     const int32 Cycles = 3;
     const int32 ElementCount = 100;
@@ -446,7 +446,7 @@ TEST(Ring_ElementManipulation, PushBack_PopBack)
     LIFECYCLE_TEST_OUT
 }
 
-TEST(Ring_ElementManipulation, PushBack_PopFront)
+TEST(RingElementManipulation, PushBackAndPopFront)
 {
     const int32 Cycles = 3;
     const int32 ElementCount = 100;
@@ -469,7 +469,7 @@ TEST(Ring_ElementManipulation, PushBack_PopFront)
     LIFECYCLE_TEST_OUT
 }
 
-TEST(Ring_ElementManipulation, PushFront_PopBack)
+TEST(RingElementManipulation, PushFrontAndPopBack)
 {
     const int32 Cycles = 3;
     const int32 ElementCount = 100;
@@ -492,7 +492,7 @@ TEST(Ring_ElementManipulation, PushFront_PopBack)
     LIFECYCLE_TEST_OUT
 }
 
-TEST(Ring_ElementManipulation, PushFront_PopFront)
+TEST(RingElementManipulation, PushFrontAndPopFront)
 {
     const int32 Cycles = 3;
     const int32 ElementCount = 100;
@@ -516,7 +516,7 @@ TEST(Ring_ElementManipulation, PushFront_PopFront)
 }
 
 
-TEST(Ring_ElementManipulation, EmplaceBack_PopBack)
+TEST(RingElementManipulation, EmplaceBackAndPopBack)
 {
     const int32 Cycles = 3;
     const int32 ElementCount = 1000;
@@ -539,7 +539,7 @@ TEST(Ring_ElementManipulation, EmplaceBack_PopBack)
     LIFECYCLE_TEST_OUT
 }
 
-TEST(Ring_ElementManipulation, EmplaceFront_PopFront)
+TEST(RingElementManipulation, EmplaceFrontAndPopFront)
 {
     const int32 Cycles = 3;
     const int32 ElementCount = 1000;

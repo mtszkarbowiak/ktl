@@ -14,7 +14,7 @@
 
 // Capacity Management
 
-TEST(HashSet_Capacity, Reserve_Call)
+TEST(HashSetCapacity, ReserveOnCall)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, HASH_SETS_DEFAULT_CAPACITY);
@@ -30,7 +30,7 @@ TEST(HashSet_Capacity, Reserve_Call)
     GTEST_ASSERT_FALSE(set.IsAllocated());
 }
 
-TEST(HashSet_Capacity, Reserve_Ctor)
+TEST(HashSetCapacity, ReserveOnCtor)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, HASH_SETS_DEFAULT_CAPACITY);
@@ -45,7 +45,7 @@ TEST(HashSet_Capacity, Reserve_Ctor)
     GTEST_ASSERT_FALSE(set.IsAllocated());
 }
 
-TEST(HashSet_Capacity, Reserve_Add)
+TEST(HashSetCapacity, ReserveOnAdd)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, HASH_SETS_DEFAULT_CAPACITY);
@@ -63,7 +63,7 @@ TEST(HashSet_Capacity, Reserve_Add)
     GTEST_ASSERT_FALSE(set.IsAllocated());
 }
 
-TEST(HashSet_Capacity, Compact_Free)
+TEST(HashSetCapacity, CompactOnFree)
 {
     HashSet<int32> set;
     set.Add(69);
@@ -84,7 +84,7 @@ TEST(HashSet_Capacity, Compact_Free)
     GTEST_ASSERT_FALSE(set.IsAllocated());
 }
 
-TEST(HashSet_Capacity, Compact_Reloc)
+TEST(HashSetCapacity, CompactOnReloc)
 {
     constexpr int32 TestCapacity1 = 256;
     constexpr int32 TestCapacity2 = 3;
