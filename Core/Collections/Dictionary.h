@@ -831,6 +831,359 @@ public:
     }
 
 
+    // Factorization
+
+    //TODO Of(std::init_list)
+
+
+    // Iterators
+
+private:
+    /// <summary>
+    /// Moves the iterator index to the next occupied slot.
+    /// If the end of the collection is reached, the capacity is returned.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE
+    auto SkipToOccupied(const int32 index) const -> int32
+    {
+        for (int32 i = index; i < _capacity; ++i)
+        {
+            if (DATA_OF(const Slot, _allocData)[i].IsOccupied())
+                return i;
+        }
+
+        return _capacity;
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto GetHint(const int32 index) const -> IterHint
+    {
+        // Ensure that the dictionary is not empty.
+        if (_capacity == 0)
+            return { 0, 0 };
+
+        // Count the number of total occupied slots.
+        int32 result = 0;
+
+        // Count the number of occupied slots before the current index.
+        for (int32 i = 0; i <= index; ++i)
+        {
+            if (DATA_OF(const Slot, _allocData)[i].IsOccupied())
+            {
+                // If the current index is occupied, and the result is zero, 
+                // it means that the index is the first occupied slot. (Fast path)
+                if (i == index && result == 0)
+                    return { _elementCountCached, _elementCountCached };
+
+                ++result;
+            }
+        }
+
+        // Count the number of occupied slots after the current index.
+        for (int32 i = index + 1; i < _capacity; ++i)
+        {
+            if (DATA_OF(const Slot, _allocData)[i].IsOccupied())
+                ++result;
+        }
+
+        return { result, result };
+    }
+
+
+public:
+    /// <summary>
+    /// Enumerates over the keys present in the dictionary.
+    /// </summary>
+    /// <remarks>
+    /// Keys must never be modified, especially their hash.
+    /// </remarks>
+    class KeyEnumerator
+    {
+        const Dictionary* _dictionary;
+        int32             _index;
+
+    public:
+        FORCE_INLINE explicit
+        KeyEnumerator(const Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ dictionary.SkipToOccupied(0) }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> const Key&
+        {
+            return DATA_OF(const Slot, _dictionary->_allocData)[_index].GetKey();
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() const -> const Key*
+        {
+            return &(DATA_OF(const Slot, _dictionary->_allocData)[_index].GetKey());
+        }
+
+
+        // Iteration
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> IterHint
+        {
+            return _dictionary->GetHint(_index);
+        }
+
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const noexcept
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++() -> KeyEnumerator&
+        {
+            ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
+            return *this;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> KeyEnumerator
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        auto operator==(const KeyEnumerator& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index == other._index;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator!=(const KeyEnumerator& other) const -> bool
+        {
+            return !(*this == other);
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator<(const KeyEnumerator& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index < other._index;
+        }
+    };
+
+    /// <summary>
+    /// Enumerates over the values present in the dictionary, allowing modification.
+    /// </summary>
+    class MutValueEnumerator
+    {
+        Dictionary* _dictionary;
+        int32       _index;
+
+    public:
+        FORCE_INLINE explicit
+        MutValueEnumerator(Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ dictionary.SkipToOccupied(0) }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() -> Value&
+        {
+            return DATA_OF(Slot, _dictionary->_allocData)[_index].GetValue();
+        }
+        
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> const Value&
+        {
+            return DATA_OF(const Slot, _dictionary->_allocData)[_index].GetValue();
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() -> Value*
+        {
+            return &(DATA_OF(Slot, _dictionary->_allocData)[_index].GetValue());
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() const -> const Value*
+        {
+            return &(DATA_OF(const Slot, _dictionary->_allocData)[_index].GetValue());
+        }
+
+
+        // Iteration
+        
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> IterHint
+        {
+            return _dictionary->GetHint(_index);
+        }
+
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++() -> MutValueEnumerator&
+        {
+            ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
+            return *this;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> MutValueEnumerator
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        auto operator==(const MutValueEnumerator& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index == other._index;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator!=(const MutValueEnumerator& other) const -> bool
+        {
+            return !(*this == other);
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator<(const MutValueEnumerator& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index < other._index;
+        }
+    };
+
+    /// <summary>
+    /// Enumerates over the values present in the dictionary, allowing only read access.
+    /// </summary>
+    class ConstValueEnumerator
+    {
+        const Dictionary* _dictionary;
+        int32             _index;
+
+    public:
+        FORCE_INLINE explicit
+        ConstValueEnumerator(const Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ dictionary.SkipToOccupied(0) }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> const Value&
+        {
+            return DATA_OF(const Slot, _dictionary->_allocData)[_index].GetValue();
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() const -> const Value*
+        {
+            return &(DATA_OF(const Slot, _dictionary->_allocData)[_index].GetValue());
+        }
+
+
+        // Iteration
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> IterHint
+        {
+            return _dictionary->GetHint();
+        }
+
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++() -> ConstValueEnumerator&
+        {
+            ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
+            return *this;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> ConstValueEnumerator
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        auto operator==(const ConstValueEnumerator& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index == other._index;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator!=(const ConstValueEnumerator& other) const -> bool
+        {
+            return !(*this == other);
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator<(const ConstValueEnumerator& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index < other._index;
+        }
+    };
+
+
+    NO_DISCARD FORCE_INLINE
+    auto Keys() -> KeyEnumerator
+    {
+        return KeyEnumerator{ *this };
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto Values() -> MutValueEnumerator
+    {
+        return MutValueEnumerator{ *this };
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto Values() const -> ConstValueEnumerator
+    {
+        return ConstValueEnumerator{ *this };
+    }
+
+
     // Constraints
 
     static_assert(

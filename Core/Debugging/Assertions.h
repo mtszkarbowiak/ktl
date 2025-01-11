@@ -87,3 +87,19 @@
 #else
     #define ASSERT_COLLECTION_SAFE_ACCESS(x)
 #endif
+
+
+// --- Iterators Assertions ---
+// Iterators are fundamental types, which can be invoked very frequently.
+// While iterator assertions may be very useful during development of custom collections,
+// they may be disabled in production builds to improve performance, without losing much safety.
+
+#ifndef ITERATOR_ASSERTIONS_ENABLED
+    #define ITERATOR_ASSERTIONS_ENABLED (ASSERTIONS_LEVEL >= 2)
+#endif
+
+#if ITERATOR_ASSERTIONS_ENABLED
+    #define ASSERT_ITERATOR_SAFETY(x) ASSERT(x)
+#else
+    #define ASSERT_ITERATOR_SAFETY(x)
+#endif
