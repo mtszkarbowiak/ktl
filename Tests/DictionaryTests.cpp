@@ -350,3 +350,20 @@ TYPED_TEST(DictionaryFixture, ElementsManipulation)
     EXPECT_EQ(dict.Count(), 1);
     EXPECT_EQ(dict.CellCount(), 1);
 };
+
+
+// Others
+
+TEST(DictionaryMisc, InitList)
+{
+    const auto dict = Dictionary<int32, int32>::Of({
+        { 1, 2 },
+        { 3, 4 },
+        { 5, 6 }
+    });
+
+    GTEST_ASSERT_EQ(dict.Count(), 3);
+    GTEST_ASSERT_TRUE(dict.Contains(1));
+    GTEST_ASSERT_TRUE(dict.Contains(3));
+    GTEST_ASSERT_TRUE(dict.Contains(5));
+}

@@ -785,8 +785,10 @@ public:
     Dictionary(const int32 capacity)
     {
         const int32 requiredCapacity  = Math::NextPow2(capacity);
-        const int32 requestedCapacity = AllocHelper::InitCapacity(capacity);
+        const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
         _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
+
+        BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
     }
 
     /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
@@ -795,8 +797,11 @@ public:
     Dictionary(const int32 capacity, AllocContext&& context) // Universal reference
         : _allocData{ FORWARD(AllocContext, context) }
     {
-        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
+        const int32 requiredCapacity = Math::NextPow2(capacity);
+        const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
+
+        BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
     }
 
 
@@ -833,7 +838,18 @@ public:
 
     // Factorization
 
-    //TODO Of(std::init_list)
+    /// <summary> Creates a dictionary with the specified elements. </summary>
+    NO_DISCARD static constexpr
+    auto Of(std::initializer_list<std::pair<Key, Value>> list) -> Dictionary<Key, Value>
+    {
+        const int32 capacity = static_cast<int32>(list.size());
+        Dictionary<Key, Value> result{ capacity };
+
+        for (const auto& pair : list)
+            result.Add(pair.first, pair.second);
+
+        return result;
+    }
 
 
     // Iterators
