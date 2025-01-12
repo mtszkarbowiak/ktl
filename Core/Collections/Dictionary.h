@@ -11,6 +11,7 @@
 #include "LoadFHelper.h"
 #include "Collections/CollectionsUtils.h"
 #include "Types/Nullable.h"
+#include "Types/Pair.h"
 
 /// <summary>
 /// Open-addressing hash map with power-of-two capacity and specified probing strategy.
@@ -1180,6 +1181,198 @@ public:
         }
     };
 
+    /// <summary>
+    /// Enumerates over the key-value pairs present in the dictionary.
+    /// </summary>
+    class MutPairEnumerator
+    {
+        Dictionary* _dictionary;
+        int32       _index;
+
+    public:
+        using MutPair   = Pair<const K*, V*>;
+        using ConstPair = Pair<const K*, const V*>;
+
+        FORCE_INLINE explicit
+        MutPairEnumerator(Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ dictionary.SkipToOccupied(0) }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() -> MutPair
+        {
+            auto& slot = DATA_OF(Slot, _dictionary->_allocData)[_index];
+            return MutPair{ &slot.GetKey(), &slot.GetValue() };
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> ConstPair
+        {
+            const auto& slot = DATA_OF(const Slot, _dictionary->_allocData)[_index];
+            return ConstPair{ &slot.GetKey(), &slot.GetValue() };
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() -> MutPair
+        {
+            auto& slot = DATA_OF(Slot, _dictionary->_allocData)[_index];
+            return MutPair{ &slot.GetKey(), &slot.GetValue() };
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() const -> ConstPair
+        {
+            const auto& slot = DATA_OF(const Slot, _dictionary->_allocData)[_index];
+            return ConstPair{ &slot.GetKey(), &slot.GetValue() };
+        }
+
+
+        // Iteration
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> IterHint
+        {
+            return _dictionary->GetHint(_index);
+        }
+
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++() -> MutPairEnumerator&
+        {
+            ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
+            return *this;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> MutPairEnumerator
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        auto operator==(const MutPairEnumerator& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index == other._index;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator!=(const MutPairEnumerator& other) const -> bool
+        {
+            return !(*this == other);
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator<(const MutPairEnumerator& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index < other._index;
+        }
+    };
+
+    class ConstPairEnumerator
+    {
+        const Dictionary* _dictionary;
+        int32             _index;
+
+    public:
+        using ConstPair = Pair<const K*, const V*>;
+
+        FORCE_INLINE explicit
+        ConstPairEnumerator(const Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ dictionary.SkipToOccupied(0) }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> ConstPair
+        {
+            const auto& slot = DATA_OF(const Slot, _dictionary->_allocData)[_index];
+            return ConstPair{ &slot.GetKey(), &slot.GetValue() };
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() const -> ConstPair
+        {
+            const auto& slot = DATA_OF(const Slot, _dictionary->_allocData)[_index];
+            return ConstPair{ &slot.GetKey(), &slot.GetValue() };
+        }
+
+
+        // Iteration
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> IterHint
+        {
+            return _dictionary->GetHint(_index);
+        }
+
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++() -> ConstPairEnumerator&
+        {
+            ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
+            return *this;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> ConstPairEnumerator
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        auto operator==(const ConstPairEnumerator& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index == other._index;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator!=(const ConstPairEnumerator& other) const -> bool
+        {
+            return !(*this == other);
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator<(const ConstPairEnumerator& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index < other._index;
+        }
+    };
+
 
     NO_DISCARD FORCE_INLINE
     auto Keys() -> KeyEnumerator
@@ -1197,6 +1390,18 @@ public:
     auto Values() const -> ConstValueEnumerator
     {
         return ConstValueEnumerator{ *this };
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto Pairs() -> MutPairEnumerator
+    {
+        return MutPairEnumerator{ *this };
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto Pairs() const -> ConstPairEnumerator
+    {
+        return ConstPairEnumerator{ *this };
     }
 
 

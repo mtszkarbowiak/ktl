@@ -19,6 +19,8 @@ TEST(DictionaryEnumerators, Empty)
     GTEST_ASSERT_EQ(dict.Values().Hint().Max, 0);
     GTEST_ASSERT_EQ(dict.Keys().Hint().Min, 0);
     GTEST_ASSERT_EQ(dict.Keys().Hint().Max, 0);
+    GTEST_ASSERT_EQ(dict.Pairs().Hint().Min, 0);
+    GTEST_ASSERT_EQ(dict.Pairs().Hint().Max, 0);
 
     GTEST_ASSERT_EQ(Querying::Count(dict.Values()), 0);
     GTEST_ASSERT_EQ(Querying::Count(dict.Keys()), 0);
@@ -38,6 +40,8 @@ TEST(DictionaryEnumerators, Hint)
     GTEST_ASSERT_EQ(dict.Keys().Hint().Max, 3);
     GTEST_ASSERT_EQ(dict.Values().Hint().Min, 3);
     GTEST_ASSERT_EQ(dict.Values().Hint().Max, 3);
+    GTEST_ASSERT_EQ(dict.Pairs().Hint().Min, 3);
+    GTEST_ASSERT_EQ(dict.Pairs().Hint().Max, 3);
 }
 
 TEST(DictionaryEnumerators, Count)
@@ -57,10 +61,14 @@ TEST(DictionaryEnumerators, Count)
 
     const int32 countKeys = Count(dict.Keys());
     GTEST_ASSERT_EQ(countKeys, 3);
+
+    const int32 countPairs = Count(dict.Pairs());
+    GTEST_ASSERT_EQ(countPairs, 3);
 }
 
 TEST(DictionaryEnumerators, Sum)
 {
+    using namespace Querying;
     using namespace Statistics;
 
     Dictionary<int32, int32> dict;
@@ -71,9 +79,21 @@ TEST(DictionaryEnumerators, Sum)
     dict.Remove(3);
     dict.Add(3, 4);
 
+    // Values
     const int32 sum = Sum(dict.Values());
     GTEST_ASSERT_EQ(sum, 2 + 4 + 6);
 
+    // Keys
     const int32 sumKeys = Sum(dict.Keys());
     GTEST_ASSERT_EQ(sumKeys, 1 + 3 + 5);
+
+    // Pairs
+    const auto sumKeyVal = [](const auto& pair) -> int32
+    {
+        return *pair.Key + *pair.Value;
+    };
+    const int32 sumPairs = dict.Pairs()
+        | Select<decltype(sumKeyVal)>(sumKeyVal)
+        | ToSum();
+    GTEST_ASSERT_EQ(sumPairs, 1 + 2 + 3 + 4 + 5 + 6);
 }
