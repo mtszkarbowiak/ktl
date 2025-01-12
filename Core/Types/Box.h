@@ -44,7 +44,7 @@ private:
 public:
     /// <summary> Checks if the box stores no valid element. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    bool IsEmpty() const
+    auto IsEmpty() const -> bool
     {
         // Allocator is nullable.
         return _allocData.Get() == nullptr;
@@ -52,7 +52,7 @@ public:
 
     /// <summary> Checks if the box stores a valid element. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    bool HasValue() const
+    auto HasValue() const -> bool
     {
         // Allocator is nullable.
         return _allocData.Get() != nullptr;
@@ -61,7 +61,7 @@ public:
     /// <summary> Accesses the stored element. </summary>
     /// <remarks> The box must not be empty. </remarks>
     NO_DISCARD FORCE_INLINE constexpr
-    Element* Get()
+    auto Get() -> Element*
     {
         return DATA_OF(Element, _allocData);
     }
@@ -69,20 +69,20 @@ public:
     /// <summary> Accesses the stored element. </summary>
     /// <remarks> The box must not be empty. </remarks>
     NO_DISCARD FORCE_INLINE constexpr
-    const Element* Get() const
+    auto Get() const -> const Element*
     {
         return DATA_OF(const Element, _allocData);
     }
 
 
     NO_DISCARD FORCE_INLINE constexpr
-    Element& operator*()
+    auto operator*() -> Element&
     {
         return *Get();
     }
 
     NO_DISCARD FORCE_INLINE constexpr
-    const Element& operator*() const
+    auto operator*() const -> const Element&
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_allocData.Get() != nullptr); // Box must not be empty!
         return *Get();
@@ -90,13 +90,13 @@ public:
 
 
     NO_DISCARD FORCE_INLINE constexpr
-    Element* operator->()
+    auto operator->() -> Element*
     {
         return Get();
     }
 
     NO_DISCARD FORCE_INLINE constexpr
-    const Element* operator->() const
+    auto operator->() const -> const Element*
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_allocData.Get() != nullptr); // Box must not be empty!
         return Get();
@@ -163,11 +163,11 @@ public:
 
     /// <summary> Copying a box is not allowed. </summary>
     /// <remarks> Blocking copy operation allows using the box as a unique pointer. </remarks>
-    Box& operator=(const Box& other) = delete;
+    auto operator=(const Box& other) -> Box& = delete;
 
     /// <summary> Resets the box and moves the contents of the other box into this one. </summary>
-    FORCE_INLINE
-    Box& operator=(Box&& other) noexcept
+    MAY_DISCARD FORCE_INLINE
+    auto operator=(Box&& other) noexcept -> Box&
     {
         if (this == &other)
         {
@@ -200,7 +200,7 @@ public:
 
     template<typename A2>
     NO_DISCARD FORCE_INLINE constexpr
-    bool operator==(const Box<T, A2>& other) const
+    auto operator==(const Box<T, A2>& other) const -> bool
     {
         if (IsEmpty() && other.IsEmpty())
         {
@@ -215,7 +215,7 @@ public:
 
     template<typename A2>
     NO_DISCARD FORCE_INLINE constexpr
-    bool operator!=(const Box<T, A2>& other) const
+    auto operator!=(const Box<T, A2>& other) const -> bool
     {
         return !(*this == other);
     }
@@ -225,7 +225,7 @@ public:
 
     /// <summary> Explicitly creates an empty box. </summary>
     NO_DISCARD static FORCE_INLINE constexpr
-    Box Empty()
+    auto Empty() -> Box
     {
         return Box{};
     }
@@ -234,7 +234,7 @@ public:
     /// <remarks> This overload does not allows for allocators with context. </remarks>
     template<typename... Args>
     NO_DISCARD static FORCE_INLINE constexpr
-    Box Make(Args&&... args)
+    auto Make(Args&&... args) -> Box
     {
         Box box;
         box._allocData.Allocate(sizeof(Element));
@@ -247,7 +247,7 @@ public:
     /// <remarks> This overload allows for allocators with context. </remarks>
     template<typename... Args, typename AllocContext>
     NO_DISCARD static FORCE_INLINE constexpr
-    Box MakeWithContext(AllocContext&& context, Args&&... args)
+    auto MakeWithContext(AllocContext&& context, Args&&... args) -> Box
     {
         Box box;
         box._allocData = AllocData{ FORWARD(AllocContext, context) };
