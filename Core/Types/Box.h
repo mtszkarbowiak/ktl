@@ -154,7 +154,8 @@ public:
             }
             else 
             {
-                _allocData.Allocate(sizeof(Element));
+                const int32 allocated = _allocData.Allocate(sizeof(Element));
+                ASSERT_COLLECTION_SAFE_MOD(allocated > 0); // Allocation must succeed.
                 new(Get()) Element(MOVE(*other.Get()));
                 other.Reset();
             }
@@ -237,7 +238,8 @@ public:
     auto Make(Args&&... args) -> Box
     {
         Box box;
-        box._allocData.Allocate(sizeof(Element));
+        const int32 allocated = box._allocData.Allocate(sizeof(Element));
+        ASSERT_COLLECTION_SAFE_MOD(allocated > 0); // Allocation must succeed.
         new(box.Get()) Element(FORWARD(Args..., args)...);
 
         return box;
@@ -251,7 +253,8 @@ public:
     {
         Box box;
         box._allocData = AllocData{ FORWARD(AllocContext, context) };
-        box._allocData.Allocate(sizeof(Element));
+        const int32 allocated = box._allocData.Allocate(sizeof(Element));
+        ASSERT_COLLECTION_SAFE_MOD(allocated > 0); // Allocation must succeed.
         new(box.Get()) Element(FORWARD(Args, args)...);
 
         return box;
