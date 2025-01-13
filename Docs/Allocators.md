@@ -5,24 +5,23 @@
 
 ## Intro
 
-One of the fundamental elements of the library are allocators. As the name suggests, their role is to help us interact with memory. This definition is vague though, thus in the further chapters, details of how allocators work will be explored.
+One of the fundamental elements of the library is its use of allocators. As the name suggests, their role is to help manage memory. While this definition is broad, the following chapters will explore the details of how allocators work in this context.
 
+**All allocators must operate under the assumption that their sole responsibility is to allocate and deallocate memory, with no awareness of the type stored in that memory.**
 
-**All allocators must operate  under assmption, that allocator's reponsibility is exclusively to allocate and deallocate memory, without any information about type to be stored in that memory.**
+This decision to use type-erased allocators has profound implications. Before diving deeper, here are some constraints that allocators impose, requiring collections to handle these aspects:
 
-This decision to use type-erased allocators has profound impact. First, let's go through things which allocators may not do, thus they need to be taken care of by collections using them:
-
-1. Allocators must not relocate memory. The logic of relocation should be defined in the collections.
+1. Allocators must not relocate memory. Relocation logic should be defined within the collections.
 2. Allocators have no compile-time information about allocation alignment.
 
-Those two responsibilities enforce lengthy blocks of code in collection to handle those features, but they allow for very simple and versitale API. 
+These two constraints necessitate additional code in collections to handle these features. However, they enable a simple and versatile API.
 
 
 ## Features
 
 ### Capacity
 
-Capacity constraints is the most fundamental element of allocators telling what is predetermined maximal and minimal size of allocation. It is used by collection to calculate how many elements it can hold. As allocators always operate on raw memory, it is expressed in bytes.
+Capacity constraints are a fundamental aspect of allocators, defining the predetermined maximum and minimum allocation sizes. These constraints help collections calculate the number of elements they can hold. Since allocators always operate on raw memory, capacity is expressed in bytes.
 
 ```cpp
 class MyAlloc
@@ -36,7 +35,7 @@ class MyAlloc
 
 ### Nullability
 
-Nullability is a compile-time feature telling, if the allocator can distinguish its active and inactive state. Allocator declares its inactive state by returning null by its data getter.
+Nullability is a compile-time feature that indicates whether the allocator can distinguish between its active and inactive states. An allocator declares its inactive state by returning null from its data getter.
 
 ```cpp
 class MyAlloc
@@ -47,11 +46,11 @@ class MyAlloc
 };
 ```
 
-> This feature may be a subject of changes in the future. Currently it is used only by `Box` as collections track allocation activity by capacity.
+> This feature may be subject to future changes. Currently, it is used only by `Box`, as collections track allocation activity via capacity.
 
 ### Binding Type
 
-Binding type is a type, which is used to store information required to perform allocation and deallocation stored in collections. It also defines methods allowing to use the allocated data.
+The binding type is the type used to store information required for allocation and deallocation within collections. It also defines methods for interacting with the allocated data.
 
 ```cpp
 class MyAlloc
@@ -73,17 +72,17 @@ class MyAlloc
 
 ### Dragging
 
-Dragging is the most important, run-time feature telling, if the allocator data has ability to move its data without losing track of stored memory. The interaction between this method and moves is futher explored in the next section. Lets see what this feature changes:
+Dragging is a critical runtime feature that determines whether allocator data can move its memory without losing track of the stored memory. This interaction with moves is explored further in the next section. Here's what dragging changes:
 
-**Dragging** allocator data (binding) can be moved with active allocation (both by constructor and assignment). The move should be fast, and never change returned address. For example, heap allocation just moves a pointer.
+**Dragging**: Allocator data (binding) can be moved along with active allocations (via constructors or assignments). The move should be efficient and must not alter the returned address (e.g., heap allocators simply move a pointer).
 
-**Non-dragging** allocator data (binding) can **not** be moved with active allocation. This means that the collection itself is responsible for manual transfer of stored objects.
+**Non-dragging**: Allocator data cannot be moved along with active allocations. The collection is responsible for manually transferring stored objects.
 
-Dragging is a run-time feature. This allows polymorphic allocators to minifest different behaviors, depending which of their suballocators is engaged. Be cautios though, as **there is not guarantee how much time will pass between the dragging check and the move itself!**
+Dragging is a runtime feature, allowing polymorphic allocators to exhibit different behaviors depending on which suballocator is engaged. However, **there is no guarantee of how much time will pass between a dragging check and the actual move.**
 
-> Compilers can detect dragging (if returned value is compile-time) and optimize entire branch for opposite dragging, qualified as dead code. Thus it should not be concern regarding performance.
+> Compilers can optimize branches for dragging checks if the returned value is determined at compile time. This eliminates concerns about performance overhead.
 
-To declare dragging, a special method is placed in the `Data` class.
+To declare dragging, include a specific method in the Data class:
 
 ```cpp
 class MyAlloc
@@ -97,7 +96,7 @@ class MyAlloc
 
 ## Lifecycle
 
-Allocation lifecycle is closely bound with lifecycle of data object. One binding can represent one allocation, thus requesting allocation twice without deallocation in between is illegal. **Deallocation must take place before destruction (or assignment).** The lifecycle can also be presented as an [automata](Images/AllocDataAutomata.svg).
+The allocation lifecycle is closely tied to the lifecycle of the data object. A single binding represents one allocation; thus, requesting allocation twice without deallocation in between is illegal. Deallocation must occur before destruction or reassignment. This lifecycle can also be represented as an [automaton](Images/AllocDataAutomata.svg).
 
 ```cpp
 MyAlloc alloc{};
@@ -112,31 +111,37 @@ while(...)
 // ~MyAlloc()
 ```
 
-Remember, that allocation data does not retain information about the allocated space. Once allocation is performed, the collection itself takes charge of saving that information. 
+Note that allocation data does not retain information about the allocated space. After allocation, the collection is responsible for maintaining this information.
 
 
 ## Basic Allocators
 
 ### `HeapAlloc`
 
-The most basic context-less allocator. It uses `malloc(...)`. This one is often the slowest too, especially for big allocations. It is the default allocator, as it is the only one that can be assumed to have always the biggest potential allocation sizes, thus it should be used as an ultimate fallback. It this allocator fails, you are doing something very, very wrong.
+This is the simplest context-less allocator, using `malloc(...)`. While often the slowest (especially for large allocations), it serves as the default allocator because it offers the largest potential allocation sizes. If this allocator fails, the issue is likely critical.
 
 ### `FixedAlloc<int32 Size>`
 
-More advanced context-less allocator, which stores all values in the data object itself. It can be used for very small collections but has the best possible performance, as allocation requires no additional operations. Remember that its capacity is always a single capacity value (to prevent reallocations). This can trigger capacity checks in collection requiring specific capacities (e.g. `HashSet` powers of two). Remember also, that `Size` is the buffer size in bytes, not number of elements to be stored. If you want to handle allocation failure use `FallbackAlloc`. 
+This allocator is a more advanced, context-less implementation, storing all its data within a single fixed-size object. It is specifically designed for small collections, delivering excellent performance by eliminating additional allocation steps. Key points include:
+
+- Fixed capacity: The size is fixed and immutable, disallowing reallocations.
+- Compatibility checks: Collections with specific capacity requirements (e.g., HashSet power-of-two constraints) might require verification against the fixed size.
+- Byte-based sizing: The Size parameter represents the buffer size in bytes, not the count of individual elements, as allocators have no informationa about the element type.
+
+If allocation failures are a concern, consider pairing this with FallbackAlloc for added robustness.
 
 ### `FallbackAlloc<typename A1, typename A2>` (Not implemented yet)
 
-Allocator that use other allocators and switch between them if necessary. It works, by detecting if allocation with the first allocator succeeded, then it uses the next allocator. If all of them fail, it itself fails. Example use: `FallbackAlloc<FixedAlloc, HeapAlloc>`. Notably, ability to fallback is given by using by declaring yet another allocator, so that allocators have extreme flexibility.
+This allocator chains other allocators, switching between them as needed. If one fails, it moves to the next. Example: `FallbackAlloc<FixedAlloc, HeapAlloc>`. This feature provides extreme flexibility by allowing cascading fallbacks.
 
 ### `BumpAlloc`
 
-The simplest context-full allocator. It uses preallocated block of memory and and only moves to pointer to allocate next blocks. Once the user is sure, that all deallocations took place, they can request the pointer to be reset to the first byte of the block.
+The simplest context-full allocator, using a preallocated memory block. It only moves a pointer to allocate the next block. Once all deallocations are complete, the pointer can be reset to the start of the block.
 
 
 ## Allocator Utility Tools
 
-Operations on allocators by the collections are often very similar. To re-use code a specialized class is used, with signature:
+Collections often perform similar operations on allocators. To simplify code reuse, a specialized helper class is provided:
 
 ```cpp
 template<
@@ -148,9 +153,19 @@ template<
 class AllocHelperOf;
 ```
 
-It has a lot of stuff to manage allocations. You should check it out before writing your own functions for capacity management.
+This class offers various tools for managing allocations. Review it before implementing your own capacity management functions.
 
 
-## Capacity Glossary
+## Capacity
 
-> This section is not yet ready.
+Using allocators requires a meticulous approach to capacity management. Capacity is influenced by constraints derived from both the collection and the allocator. Its calculation adheres to a specific convention:
+
+- **Required**: The minimum capacity necessary to store the number of elements the collection aims to allocate.
+- **Requested**: The capacity requested by the collection, which may exceed the required capacity to meet a collection-specific minimum, known as the default capacity.
+- **Default**: A predefined, non-zero minimum capacity specific to the collection type. This boosts the number of elements for collections that are inefficient at low capacities, such as hash-based collections.
+- **Allocated**: The size of the memory block that the allocator ultimately decides to allocate. This may exceed the requested capacity.
+- **Used**: The effective size of the memory block utilized by the collection. This value can never exceed the allocated capacity.
+
+This system allows allocators to optimize memory usage by allocating additional space to minimize reallocations or even avoid future allocation failures that might occur due to insufficient memory.
+
+> In the future, an example with specific numerical values may be added for better illustration.
