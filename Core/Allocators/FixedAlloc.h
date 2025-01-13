@@ -46,6 +46,7 @@ public:
         FORCE_INLINE constexpr
         Data(Data&&) noexcept
         {
+            //TODO Should it crash here?
             // Pass
         }
 
@@ -66,6 +67,7 @@ public:
         MAY_DISCARD FORCE_INLINE constexpr
         auto operator=(Data&&) noexcept -> Data&
         {
+            //TODO Should it crash here?
             // Pass
             return *this;
         }
