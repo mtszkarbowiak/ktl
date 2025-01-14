@@ -51,8 +51,8 @@ public:
     using AllocData   = typename A::Data;
     using AllocHelper = AllocHelperOf<Element, A, ARRAY_DEFAULT_CAPACITY, G>;
 
-    using MutEnumerator   = typename Span<Element>::MutEnumerator;
-    using ConstEnumerator = typename Span<Element>::ConstEnumerator;
+    using MutCursor   = typename Span<Element>::MutCursor;
+    using ConstCursor = typename Span<Element>::ConstCursor;
 
 private:
     AllocData _allocData{};
@@ -649,22 +649,22 @@ public:
     }
 
 
-    // Iterators
+    // Cursors
 
-    /// <summary> Creates an enumerator for the array. </summary>
+    /// <summary> Creates a cursor for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Values() -> MutEnumerator
+    auto Values() -> MutCursor
     {
         Element* data = DATA_OF(Element, _allocData);
-        return MutEnumerator{ data, data + _count };
+        return MutCursor{ data, data + _count };
     }
 
-    /// <summary> Creates an enumerator for the array. </summary>
+    /// <summary> Creates a cursor for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstEnumerator
+    auto Values() const -> ConstCursor
     {
         const Element* data = DATA_OF(const Element, _allocData);
-        return ConstEnumerator{ data, data + _count };
+        return ConstCursor{ data, data + _count };
     }
 
 

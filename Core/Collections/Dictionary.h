@@ -853,7 +853,7 @@ public:
     }
 
 
-    // Iterators
+    // Cursors
 
 private:
     /// <summary>
@@ -914,14 +914,14 @@ public:
     /// <remarks>
     /// Keys must never be modified, especially their hash.
     /// </remarks>
-    class KeyEnumerator
+    class KeyCursor
     {
         const Dictionary* _dictionary;
         int32             _index;
 
     public:
         FORCE_INLINE explicit
-        KeyEnumerator(const Dictionary& dictionary)
+        KeyCursor(const Dictionary& dictionary)
             : _dictionary{ &dictionary }
             , _index{ dictionary.SkipToOccupied(0) }
         {
@@ -958,7 +958,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> KeyEnumerator&
+        auto operator++() -> KeyCursor&
         {
             ++_index;
             _index = _dictionary->SkipToOccupied(_index);
@@ -966,7 +966,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> KeyEnumerator
+        auto operator++(int) -> KeyCursor
         {
             auto copy = *this;
             ++*this;
@@ -977,20 +977,20 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const KeyEnumerator& other) const -> bool
+        auto operator==(const KeyCursor& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const KeyEnumerator& other) const -> bool
+        auto operator!=(const KeyCursor& other) const -> bool
         {
             return !(*this == other);
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const KeyEnumerator& other) const -> bool
+        auto operator<(const KeyCursor& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index < other._index;
@@ -1000,14 +1000,14 @@ public:
     /// <summary>
     /// Enumerates over the values present in the dictionary, allowing modification.
     /// </summary>
-    class MutValueEnumerator
+    class MutValueCursor
     {
         Dictionary* _dictionary;
         int32       _index;
 
     public:
         FORCE_INLINE explicit
-        MutValueEnumerator(Dictionary& dictionary)
+        MutValueCursor(Dictionary& dictionary)
             : _dictionary{ &dictionary }
             , _index{ dictionary.SkipToOccupied(0) }
         {
@@ -1056,7 +1056,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> MutValueEnumerator&
+        auto operator++() -> MutValueCursor&
         {
             ++_index;
             _index = _dictionary->SkipToOccupied(_index);
@@ -1064,7 +1064,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> MutValueEnumerator
+        auto operator++(int) -> MutValueCursor
         {
             auto copy = *this;
             ++*this;
@@ -1075,20 +1075,20 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const MutValueEnumerator& other) const -> bool
+        auto operator==(const MutValueCursor& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const MutValueEnumerator& other) const -> bool
+        auto operator!=(const MutValueCursor& other) const -> bool
         {
             return !(*this == other);
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const MutValueEnumerator& other) const -> bool
+        auto operator<(const MutValueCursor& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index < other._index;
@@ -1098,14 +1098,14 @@ public:
     /// <summary>
     /// Enumerates over the values present in the dictionary, allowing only read access.
     /// </summary>
-    class ConstValueEnumerator
+    class ConstValueCursor
     {
         const Dictionary* _dictionary;
         int32             _index;
 
     public:
         FORCE_INLINE explicit
-        ConstValueEnumerator(const Dictionary& dictionary)
+        ConstValueCursor(const Dictionary& dictionary)
             : _dictionary{ &dictionary }
             , _index{ dictionary.SkipToOccupied(0) }
         {
@@ -1142,7 +1142,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> ConstValueEnumerator&
+        auto operator++() -> ConstValueCursor&
         {
             ++_index;
             _index = _dictionary->SkipToOccupied(_index);
@@ -1150,7 +1150,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> ConstValueEnumerator
+        auto operator++(int) -> ConstValueCursor
         {
             auto copy = *this;
             ++*this;
@@ -1161,20 +1161,20 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const ConstValueEnumerator& other) const -> bool
+        auto operator==(const ConstValueCursor& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const ConstValueEnumerator& other) const -> bool
+        auto operator!=(const ConstValueCursor& other) const -> bool
         {
             return !(*this == other);
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const ConstValueEnumerator& other) const -> bool
+        auto operator<(const ConstValueCursor& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index < other._index;
@@ -1184,7 +1184,7 @@ public:
     /// <summary>
     /// Enumerates over the key-value pairs present in the dictionary.
     /// </summary>
-    class MutPairEnumerator
+    class MutPairCursor
     {
         Dictionary* _dictionary;
         int32       _index;
@@ -1194,7 +1194,7 @@ public:
         using ConstPair = Pair<const K*, const V*>;
 
         FORCE_INLINE explicit
-        MutPairEnumerator(Dictionary& dictionary)
+        MutPairCursor(Dictionary& dictionary)
             : _dictionary{ &dictionary }
             , _index{ dictionary.SkipToOccupied(0) }
         {
@@ -1247,7 +1247,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> MutPairEnumerator&
+        auto operator++() -> MutPairCursor&
         {
             ++_index;
             _index = _dictionary->SkipToOccupied(_index);
@@ -1255,7 +1255,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> MutPairEnumerator
+        auto operator++(int) -> MutPairCursor
         {
             auto copy = *this;
             ++*this;
@@ -1266,27 +1266,27 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const MutPairEnumerator& other) const -> bool
+        auto operator==(const MutPairCursor& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const MutPairEnumerator& other) const -> bool
+        auto operator!=(const MutPairCursor& other) const -> bool
         {
             return !(*this == other);
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const MutPairEnumerator& other) const -> bool
+        auto operator<(const MutPairCursor& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index < other._index;
         }
     };
 
-    class ConstPairEnumerator
+    class ConstPairCursor
     {
         const Dictionary* _dictionary;
         int32             _index;
@@ -1295,7 +1295,7 @@ public:
         using ConstPair = Pair<const K*, const V*>;
 
         FORCE_INLINE explicit
-        ConstPairEnumerator(const Dictionary& dictionary)
+        ConstPairCursor(const Dictionary& dictionary)
             : _dictionary{ &dictionary }
             , _index{ dictionary.SkipToOccupied(0) }
         {
@@ -1334,7 +1334,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> ConstPairEnumerator&
+        auto operator++() -> ConstPairCursor&
         {
             ++_index;
             _index = _dictionary->SkipToOccupied(_index);
@@ -1342,7 +1342,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> ConstPairEnumerator
+        auto operator++(int) -> ConstPairCursor
         {
             auto copy = *this;
             ++*this;
@@ -1353,20 +1353,20 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const ConstPairEnumerator& other) const -> bool
+        auto operator==(const ConstPairCursor& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const ConstPairEnumerator& other) const -> bool
+        auto operator!=(const ConstPairCursor& other) const -> bool
         {
             return !(*this == other);
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const ConstPairEnumerator& other) const -> bool
+        auto operator<(const ConstPairCursor& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index < other._index;
@@ -1375,33 +1375,33 @@ public:
 
 
     NO_DISCARD FORCE_INLINE
-    auto Keys() -> KeyEnumerator
+    auto Keys() -> KeyCursor
     {
-        return KeyEnumerator{ *this };
+        return KeyCursor{ *this };
     }
 
     NO_DISCARD FORCE_INLINE
-    auto Values() -> MutValueEnumerator
+    auto Values() -> MutValueCursor
     {
-        return MutValueEnumerator{ *this };
+        return MutValueCursor{ *this };
     }
 
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstValueEnumerator
+    auto Values() const -> ConstValueCursor
     {
-        return ConstValueEnumerator{ *this };
+        return ConstValueCursor{ *this };
     }
 
     NO_DISCARD FORCE_INLINE
-    auto Pairs() -> MutPairEnumerator
+    auto Pairs() -> MutPairCursor
     {
-        return MutPairEnumerator{ *this };
+        return MutPairCursor{ *this };
     }
 
     NO_DISCARD FORCE_INLINE
-    auto Pairs() const -> ConstPairEnumerator
+    auto Pairs() const -> ConstPairCursor
     {
-        return ConstPairEnumerator{ *this };
+        return ConstPairCursor{ *this };
     }
 
 

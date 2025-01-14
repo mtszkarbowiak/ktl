@@ -618,14 +618,14 @@ public:
     /// <remarks>
     /// Warning: Dereferencing the iterator returns a mutable bit reference, not a value.
     /// </remarks>
-    class MutEnumerator
+    class MutCursor
     {
         BitArray* _array;
         int32     _index;
 
     public:
         FORCE_INLINE explicit
-        MutEnumerator(BitArray& array)
+        MutCursor(BitArray& array)
             : _array{ &array }
             , _index{ 0 }
         {
@@ -635,21 +635,21 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const MutEnumerator& other) const -> bool
+        auto operator==(const MutCursor& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const MutEnumerator& other) const -> bool
+        auto operator!=(const MutCursor& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const MutEnumerator& other) const -> bool
+        auto operator<(const MutCursor& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
@@ -701,7 +701,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> MutEnumerator&
+        auto operator++() -> MutCursor&
         {
             ++_index;
             return *this;
@@ -709,9 +709,9 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> MutEnumerator
+        auto operator++(int) -> MutCursor
         {
-            MutEnumerator copy{ *this };
+            MutCursor copy{ *this };
             ++_index;
             return copy;
         }
@@ -723,14 +723,14 @@ public:
     /// <remarks>
     /// Warning: Dereferencing the iterator returns a const bit reference, not a value.
     /// </remarks>
-    class ConstEnumerator
+    class ConstCursor
     {
         const BitArray* _array;
         int32           _index;
 
     public:
         FORCE_INLINE explicit
-        ConstEnumerator(const BitArray& array)
+        ConstCursor(const BitArray& array)
             : _array{ &array }
             , _index{ 0 }
         {
@@ -740,21 +740,21 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const ConstEnumerator& other) const -> bool
+        auto operator==(const ConstCursor& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const ConstEnumerator& other) const -> bool
+        auto operator!=(const ConstCursor& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const ConstEnumerator& other) const -> bool
+        auto operator<(const ConstCursor& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
@@ -788,30 +788,30 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> ConstEnumerator&
+        auto operator++() -> ConstCursor&
         {
             ++_index;
             return *this;
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> ConstEnumerator
+        auto operator++(int) -> ConstCursor
         {
-            ConstEnumerator copy{ *this };
+            ConstCursor copy{ *this };
             ++_index;
             return copy;
         }
     };
 
     NO_DISCARD FORCE_INLINE
-    auto Values() -> MutEnumerator
+    auto Values() -> MutCursor
     {
-        return MutEnumerator{ *this };
+        return MutCursor{ *this };
     }
 
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstEnumerator
+    auto Values() const -> ConstCursor
     {
-        return ConstEnumerator{ *this };
+        return ConstCursor{ *this };
     }
 };
