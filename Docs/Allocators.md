@@ -1,6 +1,6 @@
 # Allocators
 
-> - This document outlines the coding practices applied within codebase of [KTL](https://github.com/mtszkarbowiak/mk-stl).
+> This document outlines the coding practices applied within codebase of [KTL](https://github.com/mtszkarbowiak/mk-stl).
 
 
 ## Intro
@@ -130,9 +130,9 @@ This allocator is a more advanced, context-less implementation, storing all its 
 
 If allocation failures are a concern, consider pairing this with FallbackAlloc for added robustness.
 
-### `FallbackAlloc<typename A1, typename A2>` (Not implemented yet)
+### `FallbackAlloc<typename A1, typename A2>` *
 
-This allocator chains other allocators, switching between them as needed. If one fails, it moves to the next. Example: `FallbackAlloc<FixedAlloc, HeapAlloc>`. This feature provides extreme flexibility by allowing cascading fallbacks.
+(Not implemented yet) This allocator chains other allocators, switching between them as needed. If one fails, it moves to the next. Example: `FallbackAlloc<FixedAlloc, HeapAlloc>`. This feature provides extreme flexibility by allowing cascading fallbacks.
 
 ### `BumpAlloc`
 
