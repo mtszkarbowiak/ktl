@@ -10,6 +10,7 @@
 #include "Language/Keywords.h"
 #include "Language/Templates.h"
 #include "Types/Numbers.h"
+#include "Types/IterHint.h"
 
 namespace Querying
 {
@@ -87,6 +88,14 @@ namespace Querying
         auto operator*() -> ElementType
         {
             return _projection.operator()(*_cursor);
+        }
+
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> IterHint
+        {
+            // SelectCursor does not change the number of elements.
+            return _cursor.Hint();
         }
     };
 
@@ -189,6 +198,15 @@ namespace Querying
         {
             return *_cursor;
         }
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> IterHint
+        {
+            // WhereCursor may reduce the number of elements.
+            // Yet currently, there is no way to know how many elements will be skipped.
+            // In the future an advanced hint system could be implemented.
+            return _cursor.Hint();
+        }
     };
 
     /// <summary> Filters the elements of the collection using the specified predicate. </summary>
@@ -235,11 +253,7 @@ namespace Querying
     }
 
 
-    //TODO Implement First with Array<T> 
-    //TODO Implement Last with Ring<T>
-    //TODO Implement Skip with int32
-    //TODO Implement GroupBy with Dictionary<TKey, Array<TValue>>
-    //TODO Implement OrderBy with Array<T>
-    //TODO Implement Reverse with Array<T>
-    //TODO Implement Distinct with HashSet<T>
+    //TODO(mtszkarbowiak) Implement First with Array<T> 
+    //TODO(mtszkarbowiak) Implement Last with Ring<T>
+    //TODO(mtszkarbowiak) Implement Skip with int32
 }
