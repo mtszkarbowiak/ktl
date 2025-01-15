@@ -299,18 +299,19 @@ PRIVATE:
         }
         else
         {
+            _capacity  = AllocHelper::Allocate(_allocData, requestedCapacity);
+
             BulkOperations::MoveLinearContent<Slot>(
-                DATA_OF(Slot, _allocData),
                 DATA_OF(Slot, newData),
+                DATA_OF(Slot, _allocData),
                 _capacity
             );
             BulkOperations::DestroyLinearContent<Slot>(
-                DATA_OF(Slot, _allocData),
+                DATA_OF(Slot, newData),
                 _capacity
             );
 
-            _allocData = MOVE(newData);
-            _capacity = allocatedCapacity;
+            newData.Free();
         }
 
         // 5. Update the cached counts.

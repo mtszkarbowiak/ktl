@@ -554,7 +554,6 @@ protected:
         {
             const int32 requiredCapacity = AllocHelper::InitCapacity(other._countCached);
 
-            _allocData   = AllocData{};
             _capacity    = AllocHelper::Allocate(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
@@ -572,7 +571,6 @@ protected:
         {
             const int32 requiredCapacity = AllocHelper::InitCapacity(other._countCached);
 
-            _allocData   = AllocData{};
             _capacity    = AllocHelper::Allocate(_allocData, requiredCapacity);
             _countCached = other._countCached;
             _head        = 0;
