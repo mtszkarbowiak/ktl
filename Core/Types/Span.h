@@ -282,6 +282,18 @@ public:
 
         // Access
 
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> SizeHint
+        {
+            const int32 remaining = static_cast<int32>(_end - _begin);
+            return {
+                remaining,
+                Nullable<Index>{remaining}
+            };
+        }
+
+
         NO_DISCARD FORCE_INLINE
         auto operator*() const -> const T&
         {
