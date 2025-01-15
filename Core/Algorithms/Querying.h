@@ -252,8 +252,5 @@ namespace Querying
         return Count(FORWARD(_C, cursor));
     }
 
-
-    //TODO(mtszkarbowiak) Implement First with Array<T> 
-    //TODO(mtszkarbowiak) Implement Last with Ring<T>
-    //TODO(mtszkarbowiak) Implement Skip with int32
+    //TODO(mtszkarbowiak) Implement ToContains, ToAny, ToAll, ToFirst, ToLast, ToSkip
 }
