@@ -805,7 +805,7 @@ public:
 
         // Iteration
 
-        /// <summary> Check if the enumerator points to a valid element. </summary>
+        /// <summary> Check if the cursor points to a valid element. </summary>
         NO_DISCARD FORCE_INLINE explicit
         operator bool() const 
         {
@@ -813,7 +813,7 @@ public:
             return _indexOfElement < _ring->_countCached;
         }
 
-        /// <summary> Moves the enumerator to the next element. </summary>
+        /// <summary> Moves the cursor to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
         auto operator++() -> MutCursor&
         {
@@ -822,7 +822,7 @@ public:
             return *this;
         }
 
-        /// <summary> Moves the enumerator to the next element. </summary>
+        /// <summary> Moves the cursor to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
         MAY_DISCARD FORCE_INLINE
         auto operator++(int) -> MutCursor
@@ -914,7 +914,7 @@ public:
 
         // Iteration
 
-        /// <summary> Check if the enumerator points to a valid element. </summary>
+        /// <summary> Check if the cursor points to a valid element. </summary>
         NO_DISCARD FORCE_INLINE explicit
         operator bool() const
         {
@@ -922,7 +922,7 @@ public:
             return _indexOfElement < _ring->_countCached;
         }
 
-        /// <summary> Moves the enumerator to the next element. </summary>
+        /// <summary> Moves the cursor to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
         auto operator++() -> ConstCursor&
         {
@@ -931,7 +931,7 @@ public:
             return *this;
         }
 
-        /// <summary> Moves the enumerator to the next element. </summary>
+        /// <summary> Moves the cursor to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
         MAY_DISCARD FORCE_INLINE
         auto operator++(int) -> ConstCursor
