@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "Collections/Index.h"
+#include "Types/Index.h"
 
 /// <summary>
 /// Hint from the iterator about the number of elements to iterate over.

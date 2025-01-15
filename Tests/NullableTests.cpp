@@ -7,8 +7,8 @@
 
 #include <gtest/gtest.h>
 
-#include "Collections/Index.h"
 #include "Debugging/LifecycleTracker.h"
+#include "Types/Index.h"
 #include "Types/Nullable.h"
 #include "Types/Numbers.h"
 #include "Types/Ref.h"
