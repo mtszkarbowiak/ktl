@@ -46,8 +46,9 @@ public:
         FORCE_INLINE constexpr
         Data(Data&&) noexcept
         {
-            //TODO Should it crash here?
-            // Pass
+            DEBUG_BREAK; // FixedAlloc must never be moved!
+            // FixedAlloc can never be moved - `MovesItems` is always false.
+            // Although, it must compile to allow run-time polymorphism.
         }
 
         FORCE_INLINE constexpr
@@ -67,8 +68,9 @@ public:
         MAY_DISCARD FORCE_INLINE constexpr
         auto operator=(Data&&) noexcept -> Data&
         {
-            //TODO Should it crash here?
-            // Pass
+            DEBUG_BREAK; // FixedAlloc must never be moved!
+            // FixedAlloc can never be moved - `MovesItems` is always false.
+            // Although, it must compile to allow run-time polymorphism.
             return *this;
         }
 
