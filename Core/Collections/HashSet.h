@@ -540,7 +540,42 @@ protected:
         if (other._capacity == 0 || other._elementCountCached == 0)
             return;
 
-        //TODO(mtszkarbowiak) Implement HashSet::MoveToEmpty(HashSet&& other)
+        if (other._allocData.MovesItems())
+        {
+            _allocData = MOVE(other._allocData);
+            _capacity = other._capacity;
+            _elementCountCached = other._elementCountCached;
+            _cellsCountCached = other._cellsCountCached;
+
+            // The items have been moved with the allocator.
+            // The capacity must be reset manually.
+
+            other._capacity = 0;
+            other._elementCountCached = 0;
+            other._cellsCountCached = 0;
+        }
+        else
+        {
+            BulkOperations::MoveLinearContent<Slot>(
+                DATA_OF(Slot, other._allocData),
+                DATA_OF(Slot, _allocData),
+                other._capacity
+            );
+            BulkOperations::DestroyLinearContent<Slot>(
+                DATA_OF(Slot, other._allocData),
+                other._capacity
+            );
+
+            // It could be considered rebuilding the dictionary on move.
+
+            _capacity = other._capacity;
+            _elementCountCached = other._elementCountCached;
+            _cellsCountCached = other._cellsCountCached;
+            other._allocData.Free();
+            other._capacity = 0;
+            other._elementCountCached = 0;
+            other._cellsCountCached = 0;
+        }
     }
 
     void CopyToEmpty(const Slot* source, const int32 count)
@@ -578,7 +613,7 @@ public:
     FORCE_INLINE
     HashSet(HashSet&& other) noexcept
     {
-        MoveFrom(MOVE(other));
+        MoteToEmpty(MOVE(other));
     }
 
     /// <summary> Initializes a set by copying another set. </summary>
@@ -598,6 +633,8 @@ public:
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
+
+        BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
     }
 
     /// <summary> Initializes an empty hash set with an active allocation of the specified capacity and context. </summary>
@@ -608,6 +645,8 @@ public:
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
+
+        BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
     }
 
 
@@ -639,6 +678,27 @@ public:
     {
         Reset();
     }
+
+
+    // Factorization
+
+    /// <summary> Creates a has set with the specified elements. </summary>
+    NO_DISCARD static constexpr
+    auto Of(std::initializer_list<Element> list) -> HashSet
+    {
+        const int32 capacity = static_cast<int32>(list.size());
+        HashSet set{ capacity };
+
+        for (const Element& element : list)
+            set.Add(element);
+
+        return set;
+    }
+
+
+    // Cursors
+
+    //TODO(mtszkarbowiak) Implement HashSet cursors
 
 
     // Constraints

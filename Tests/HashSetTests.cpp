@@ -184,9 +184,9 @@ TYPED_TEST(HashSetFixture, ElementsManipulation)
     // Add elements again
 
     EXPECT_FALSE(set.Contains(this->element2));
-    EXPECT_TRUE (set.Add(this->element2));
+    EXPECT_TRUE(set.Add(this->element2));
     EXPECT_FALSE(set.Add(this->element2));
-    EXPECT_TRUE (set.Contains(this->element2));
+    EXPECT_TRUE(set.Contains(this->element2));
 
     GTEST_ASSERT_EQ(set.Count(), 1);
     GTEST_ASSERT_EQ(set.CellCount(), 4);
@@ -197,4 +197,46 @@ TYPED_TEST(HashSetFixture, ElementsManipulation)
     set.Compact();
     GTEST_ASSERT_EQ(set.Count(), 1);
     GTEST_ASSERT_EQ(set.CellCount(), 1);
-}
+};
+
+
+// Initialization
+
+TEST(HashSetMisc, InitList)
+{
+    const auto set = HashSet<int32>::Of({
+        1, 3, 5
+    });
+
+    GTEST_ASSERT_EQ(set.Count(), 3);
+    GTEST_ASSERT_TRUE(set.Contains(1));
+    GTEST_ASSERT_TRUE(set.Contains(3));
+    GTEST_ASSERT_TRUE(set.Contains(5));
+};
+
+TEST(HashSetMisc, CopyCtor)
+{
+    const HashSet<int32> src = HashSet<int32>::Of({
+        1, 3, 5
+    });
+
+    HashSet<int32> set{ src };
+
+    GTEST_ASSERT_EQ(src.Count(), set.Count());
+    GTEST_ASSERT_TRUE(set.Contains(1));
+    GTEST_ASSERT_TRUE(set.Contains(5));
+};
+
+TEST(HashSetMisc, CopyAsgn)
+{
+    const HashSet<int32> src = HashSet<int32>::Of({
+        1, 3, 5
+    });
+
+    HashSet<int32> set{};
+    set = src;
+
+    GTEST_ASSERT_EQ(src.Count(), set.Count());
+    GTEST_ASSERT_TRUE(set.Contains(1));
+    GTEST_ASSERT_TRUE(set.Contains(5));
+};
