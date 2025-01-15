@@ -873,11 +873,11 @@ private:
     }
 
     NO_DISCARD FORCE_INLINE
-    auto GetHint(const int32 index) const -> IterHint
+    auto GetHint(const int32 index) const -> SizeHint
     {
         // Ensure that the dictionary is not empty.
         if (_capacity == 0)
-            return { 0, 0 };
+            return { 0, Nullable<Index>{ 0 }};
 
         // Count the number of total occupied slots.
         int32 result = 0;
@@ -890,7 +890,12 @@ private:
                 // If the current index is occupied, and the result is zero, 
                 // it means that the index is the first occupied slot. (Fast path)
                 if (i == index && result == 0)
-                    return { _elementCountCached, _elementCountCached };
+                {
+                    return {
+                        _elementCountCached,
+                        Nullable<Index>{ _elementCountCached }
+                    };
+                }
 
                 ++result;
             }
@@ -903,7 +908,7 @@ private:
                 ++result;
         }
 
-        return { result, result };
+        return { result, Nullable<Index>{ result } };
     }
 
 
@@ -946,7 +951,7 @@ public:
         // Iteration
 
         NO_DISCARD FORCE_INLINE
-        auto Hint() const -> IterHint
+        auto Hint() const -> SizeHint
         {
             return _dictionary->GetHint(_index);
         }
@@ -1044,7 +1049,7 @@ public:
         // Iteration
         
         NO_DISCARD FORCE_INLINE
-        auto Hint() const -> IterHint
+        auto Hint() const -> SizeHint
         {
             return _dictionary->GetHint(_index);
         }
@@ -1130,7 +1135,7 @@ public:
         // Iteration
 
         NO_DISCARD FORCE_INLINE
-        auto Hint() const -> IterHint
+        auto Hint() const -> SizeHint
         {
             return _dictionary->GetHint();
         }
@@ -1235,7 +1240,7 @@ public:
         // Iteration
 
         NO_DISCARD FORCE_INLINE
-        auto Hint() const -> IterHint
+        auto Hint() const -> SizeHint
         {
             return _dictionary->GetHint(_index);
         }
@@ -1322,7 +1327,7 @@ public:
         // Iteration
 
         NO_DISCARD FORCE_INLINE
-        auto Hint() const -> IterHint
+        auto Hint() const -> SizeHint
         {
             return _dictionary->GetHint(_index);
         }

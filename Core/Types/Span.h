@@ -160,10 +160,13 @@ public:
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         NO_DISCARD FORCE_INLINE
-        auto Hint() const -> IterHint
+        auto Hint() const -> SizeHint
         {
             const int32 remaining = static_cast<int32>(_end - _begin);
-            return { remaining, remaining };
+            return {
+                remaining,
+                Nullable<Index>{remaining}
+            };
         }
 
         

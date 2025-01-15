@@ -92,7 +92,7 @@ namespace Querying
 
 
         NO_DISCARD FORCE_INLINE
-        auto Hint() const -> IterHint
+        auto Hint() const -> SizeHint
         {
             // SelectCursor does not change the number of elements.
             return _cursor.Hint();
@@ -200,7 +200,7 @@ namespace Querying
         }
 
         NO_DISCARD FORCE_INLINE
-        auto Hint() const -> IterHint
+        auto Hint() const -> SizeHint
         {
             // WhereCursor may reduce the number of elements.
             // Yet currently, there is no way to know how many elements will be skipped.

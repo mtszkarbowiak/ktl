@@ -16,11 +16,11 @@ TEST(DictionaryEnumerators, Empty)
 {
     Dictionary<int32, int32> dict;
     GTEST_ASSERT_EQ(dict.Values().Hint().Min, 0);
-    GTEST_ASSERT_EQ(dict.Values().Hint().Max, 0);
+    GTEST_ASSERT_EQ(dict.Values().Hint().Max.Value(), 0);
     GTEST_ASSERT_EQ(dict.Keys().Hint().Min, 0);
-    GTEST_ASSERT_EQ(dict.Keys().Hint().Max, 0);
+    GTEST_ASSERT_EQ(dict.Keys().Hint().Max.Value(), 0);
     GTEST_ASSERT_EQ(dict.Pairs().Hint().Min, 0);
-    GTEST_ASSERT_EQ(dict.Pairs().Hint().Max, 0);
+    GTEST_ASSERT_EQ(dict.Pairs().Hint().Max.Value(), 0);
 
     GTEST_ASSERT_EQ(Querying::Count(dict.Values()), 0);
     GTEST_ASSERT_EQ(Querying::Count(dict.Keys()), 0);
@@ -37,11 +37,11 @@ TEST(DictionaryEnumerators, Hint)
     dict.Add(3, 4);
 
     GTEST_ASSERT_EQ(dict.Keys().Hint().Min, 3);
-    GTEST_ASSERT_EQ(dict.Keys().Hint().Max, 3);
+    GTEST_ASSERT_EQ(dict.Keys().Hint().Max.Value(), 3);
     GTEST_ASSERT_EQ(dict.Values().Hint().Min, 3);
-    GTEST_ASSERT_EQ(dict.Values().Hint().Max, 3);
+    GTEST_ASSERT_EQ(dict.Values().Hint().Max.Value(), 3);
     GTEST_ASSERT_EQ(dict.Pairs().Hint().Min, 3);
-    GTEST_ASSERT_EQ(dict.Pairs().Hint().Max, 3);
+    GTEST_ASSERT_EQ(dict.Pairs().Hint().Max.Value(), 3);
 }
 
 TEST(DictionaryEnumerators, Count)

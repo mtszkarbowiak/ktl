@@ -765,7 +765,7 @@ public:
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         NO_DISCARD FORCE_INLINE
-        auto Hint() const -> IterHint
+        auto Hint() const -> SizeHint
         {
             const int32 remaining = _ring->Count() - _indexOfElement;
             return { remaining, remaining };
@@ -886,7 +886,7 @@ public:
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         NO_DISCARD FORCE_INLINE
-        auto Hint() const -> IterHint
+        auto Hint() const -> SizeHint
         {
             const int32 remaining = _ring->Count() - _indexOfElement;
             return { remaining, remaining };
