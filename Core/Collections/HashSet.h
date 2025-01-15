@@ -168,18 +168,18 @@ PRIVATE:
     /// <param name="data"> The data array to search. </param>
     /// <param name="capacity"> The capacity of the data array. </param>
     /// <param name="key"> The key of the element to find. </param>
-    /// <param name="keyCell"> The index of the cell that contains the key. </param>
-    /// <param name="firstFreeSlot"> The index of the first empty slot. </param>
-    static void FindSlot(
+    NO_DISCARD
+    static auto FindSlot(
         const Slot* data,
         const int32 capacity,
-        const Element& key,
-        Nullable<Index>& keyCell,
-        Nullable<Index>& firstFreeSlot
-    )
+        const Element& key
+    ) ->  Bucketing::SearchResult
     {
         ASSERT_COLLECTION_INTEGRITY(data);
         ASSERT_COLLECTION_INTEGRITY(Math::IsPow2(capacity)); // Make sure the capacity is a power of 2
+
+        Nullable<Index> keyCell;
+        Nullable<Index> firstFreeSlot;
 
         const int32 capacityBitMask = capacity - 1;
         const int32 initIndex = H::GetHash(key) & capacityBitMask;
@@ -199,7 +199,7 @@ PRIVATE:
 
                 // No matching cell found, stop search
                 keyCell.Clear();
-                return;
+                return { keyCell, firstFreeSlot };
             }
 
             const Cell& cell = slot.Value();
@@ -207,7 +207,7 @@ PRIVATE:
             {
                 // Found the key
                 firstFreeSlot.Clear();
-                return;
+                return { keyCell, firstFreeSlot };
             }
 
             // Record the first deleted slot if no empty slot was found yet
@@ -224,6 +224,8 @@ PRIVATE:
         // The set is full, or no suitable slot was found
         keyCell.Clear();
         firstFreeSlot.Clear();
+
+        return { keyCell, firstFreeSlot };
     }
 
     void RebuildImpl(const int32 minCapacity)
@@ -260,14 +262,14 @@ PRIVATE:
                 continue;
 
             // Find a place for the element in the new set.
-            Nullable<Index> keyCell, firstFreeSlot;
-            FindSlot(
+            const Bucketing::SearchResult searchResult = FindSlot(
                 DATA_OF(Slot, newData), 
                 allocatedCapacity, 
-                oldCell.Value(), 
-                keyCell, 
-                firstFreeSlot
+                oldCell.Value()
             );
+
+            const Nullable<::Index>& keyCell = searchResult.FoundObject;
+            const Nullable<::Index>& firstFreeSlot = searchResult.FreeBucket;
 
             // If the key was found, move the element to the new slot.
             if (keyCell.HasValue())
@@ -404,15 +406,13 @@ public:
             return false;
 
         // Find the cell that contains the key
-        Nullable<Index> keyCell;
-        Nullable<Index> firstFreeSlot;
-        FindSlot(
+        const Bucketing::SearchResult searchResult = FindSlot(
             DATA_OF(const Slot, _allocData),
             _capacity,
-            key, 
-            keyCell, 
-            firstFreeSlot
+            key
         );
+
+        const Nullable<::Index>& keyCell = searchResult.FoundObject;
 
         // If the key was found, return true
         return keyCell.HasValue();
@@ -431,40 +431,34 @@ public:
         }
 
         // Find the cell that contains the key
-        Nullable<Index> keyCell;
-        Nullable<Index> firstFreeSlot;
-        FindSlot(
+        Bucketing::SearchResult searchResult = FindSlot(
             DATA_OF(const Slot, _allocData),
             _capacity, 
-            element, 
-            keyCell, 
-            firstFreeSlot
+            element
         );
 
         // If the key was found, return
-        if (keyCell.HasValue())
+        if (searchResult.FoundObject.HasValue())
             return false;
 
         // If there is no free slot, rebuild the set
-        if (firstFreeSlot.IsEmpty())
+        if (searchResult.FreeBucket.IsEmpty())
         {
             RebuildImpl(_elementCountCached + 1);
-            FindSlot(
+            searchResult = FindSlot(
                 DATA_OF(const Slot, _allocData),
                 _capacity, 
-                element, 
-                keyCell, 
-                firstFreeSlot
+                element
             );
 
             // Note: This implementation is different than the original.
             // Instead of checking the slack ratio, it rebuilds the set when there is no free slot.
         }
 
-        ASSERT(firstFreeSlot.HasValue()); // There must be a free slot
+        ASSERT(searchResult.FreeBucket.HasValue()); // There must be a free slot
 
         // Add the element to the set
-        Slot* slot = DATA_OF(Slot, _allocData) + firstFreeSlot.Value();
+        Slot* slot = DATA_OF(Slot, _allocData) + searchResult.FreeBucket.Value();
         slot->Set(Cell{ MOVE(element) });
 
         ++_elementCountCached;
@@ -490,15 +484,13 @@ public:
             return false;
 
         // Find the cell that contains the key
-        Nullable<Index> keyCell;
-        Nullable<Index> firstFreeSlot;
-        FindSlot(
+        const Bucketing::SearchResult searchResult = FindSlot(
             DATA_OF(const Slot, _allocData),
             _capacity,
-            key, 
-            keyCell, 
-            firstFreeSlot
+            key
         );
+
+        const Nullable<::Index>& keyCell = searchResult.FoundObject;
 
         // If the key was not found, return
         if (!keyCell.HasValue())
