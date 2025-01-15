@@ -71,6 +71,20 @@ public:
         return _value;
     }
 
+    /// <summary> Reference to the value or the fallback. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto ValueOr(const Element& fallback) const -> const Element&
+    {
+        if (HasValue())
+        {
+            return _value;
+        }
+        else 
+        {
+            return fallback;
+        }
+    }
+
     /// <summary> Overwrites the value with the specified one by move. </summary>
     void Set(Element&& value)
     {
@@ -306,6 +320,20 @@ public:
     {
         ASSERT(HasValue());
         return _value;
+    }
+
+    /// <summary> Reference to the value or the fallback. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto ValueOr(const Element& fallback) const -> const Element&
+    {
+        if (HasValue())
+        {
+            return _value;
+        }
+        else 
+        {
+            return fallback;
+        }
     }
 
     /// <summary> Overwrites the value with the specified one by move. </summary>
