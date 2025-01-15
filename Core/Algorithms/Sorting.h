@@ -6,5 +6,5 @@
 // See the LICENSE file for more details.
 
 
-//TODO QuickSort
-//TODO TimSort
+//TODO(mtszkarbowiak) Implement QuickSort
+//TODO(mtszkarbowiak) Implement TimSort

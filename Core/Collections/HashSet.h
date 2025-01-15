@@ -124,8 +124,6 @@ public:
         return _cellsCountCached - _elementCountCached;
     }
 
-    //TODO Explicit load factor
-
 
     // Hashing
 
