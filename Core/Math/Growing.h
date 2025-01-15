@@ -11,68 +11,81 @@
 #include "Language/Keywords.h"
 
 /// <summary>
-/// Set of functions used to calculate the size of a collection.
+/// Multiplies the capacity by 1.5.
+/// Default growth strategy for MSVC.
 /// </summary>
-/// <remarks>
-/// This class explicitly avoids using any references to allocations or collections.
-/// It is because the functions calculated requested capacity, not the actual capacity.
-/// </remarks>
-class Growing final
+class NaturalGrowth final
 {
 public:
-    /// <summary>
-    /// Multiplies the capacity by 1.5.
-    /// Default growth strategy for MSVC.
-    /// </summary>
     NO_DISCARD static FORCE_INLINE
-    int32 Natural(const int32 capacity)
+    auto Grow(const int32 capacity) -> int32
     {
         ASSERT_COLLECTION_SAFE_MOD(capacity >= 2); // The collection must have at least 2 elements.
         return capacity + (capacity >> 1);
     }
+};
 
-    /// <summary>
-    /// Multiplies the capacity by 2.
-    /// Default growth strategy for Clang and GCC.
-    /// </summary>
+/// <summary>
+/// Multiplies the capacity by 2.
+/// Default growth strategy for Clang and GCC.
+/// </summary>
+class DoubleGrowth final
+{
+public:
     NO_DISCARD static FORCE_INLINE
-    int32 Double(const int32 capacity)
+    auto Grow(const int32 capacity) -> int32
     {
         return capacity << 1;
     }
+};
 
-    /// <summary>
-    /// Multiplies the capacity by 2 until it reaches the threshold.
-    /// Then, it multiplies the capacity by 1.5.
-    /// </summary>
-    template<int32 Threshold = 64>
+/// <summary>
+/// Multiplies the capacity by 2 until it reaches the threshold.
+/// Then, it multiplies the capacity by 1.5.
+/// </summary>
+template<int32 Threshold = 64>
+class BalancedGrowth final
+{
+public:
     NO_DISCARD static FORCE_INLINE
-    int32 Balanced(const int32 capacity)
+    auto Grow(const int32 capacity) -> int32
     {
         ASSERT_COLLECTION_SAFE_MOD(capacity >= 2); // The collection must have at least 2 elements.
         return capacity < Threshold
             ? capacity << 1
             : capacity + (capacity >> 1);
     }
+};
 
-    /// <summary>
-    /// Multiplies the capacity by 1.25.
-    /// To be used when the collection is expected to grow very slowly.
-    /// </summary>
+/// <summary>
+/// Multiplies the capacity by 1.25.
+/// To be used when the collection is expected to grow very slowly.
+/// </summary>
+class RelaxedGrowth final
+{
+public:
     NO_DISCARD static FORCE_INLINE
-    int32 Relaxed(const int32 capacity)
+    auto Grow(const int32 capacity) -> int32
     {
         ASSERT_COLLECTION_SAFE_MOD(capacity >= 4); // The collection must have at least 4 elements.
         return capacity + (capacity >> 2);
     }
+};
 
-
+/// <summary>
+/// Default growth strategy, to be used when the strategy is not important.
+/// </summary>
+class DefaultGrowth final
+{
+public:
     /// <summary>
     /// Default growth strategy, to be used when the strategy is not important.
     /// </summary>
     NO_DISCARD static FORCE_INLINE
-    int32 Default(const int32 capacity)
+    auto Grow(const int32 capacity) -> int32
     {
-        return Balanced(capacity);
+        return BalancedGrowth<64>::Grow(capacity);
     }
 };
+
+//TODO Add minimal capacity for each growth strategy

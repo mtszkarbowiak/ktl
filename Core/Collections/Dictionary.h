@@ -254,7 +254,7 @@ public:
 
     // No explicit 'element' type, as the dictionary is a collection of key-value pairs.
     using AllocData   = typename A::Data;
-    using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, Growing::Double>;
+    using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, DoubleGrowth>;
     using LoadFHelper = LoadFHelperOf<HASH_SETS_DEFAULT_SLACK_RATIO>;
 
 PRIVATE:

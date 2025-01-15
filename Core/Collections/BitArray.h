@@ -35,7 +35,7 @@
 /// </remarks>
 template<
     typename A = DefaultAlloc,
-    int32(&G)(int32) = Growing::Default
+    typename G = DefaultGrowth
 >
 class BitArray
 {

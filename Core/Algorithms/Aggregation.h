@@ -18,7 +18,7 @@ namespace Querying
     /// </summary>
     template<
         typename A = HeapAlloc,
-        int32(&G)(int32) = Growing::Default,
+        typename G = DefaultGrowth,
         typename _C
     >
     NO_DISCARD
@@ -39,7 +39,7 @@ namespace Querying
     /// </summary>
     template<
         typename A = HeapAlloc,
-        int32(&G)(int32) = Growing::Default,
+        typename G = DefaultGrowth,
         typename _C
     >
     NO_DISCARD

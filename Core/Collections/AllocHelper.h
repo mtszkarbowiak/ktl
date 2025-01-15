@@ -33,7 +33,7 @@ template<
     typename Element, 
     typename Alloc, 
     int32 DefaultUncapped,
-    int32(&Grow)(int32)
+    typename Growth
 >
 class AllocHelperOf final
 {
@@ -99,7 +99,7 @@ public:
 
         // Keep applying the growth policy until the capacity is sufficient.
         while (newCapacity < minCapacity)
-            newCapacity = Grow(newCapacity);
+            newCapacity = Growth::Grow(newCapacity);
 
         // Ultimately, cap the capacity to the maximum allowed by the allocator.
         newCapacity = Math::Min(newCapacity, MaxElements);
