@@ -663,7 +663,7 @@ public:
         auto Hint() const -> SizeHint
         {
             const int32 remaining = _array->Count() - _index;
-            return { remaining, remaining };
+            return { remaining, Nullable<::Index>{ remaining } };
         }
 
         NO_DISCARD FORCE_INLINE
@@ -768,7 +768,7 @@ public:
         auto Hint() const -> SizeHint
         {
             const int32 remaining = _array->Count() - _index;
-            return { remaining, remaining };
+            return { remaining, Nullable<::Index>{ remaining } };
         }
 
         NO_DISCARD FORCE_INLINE
