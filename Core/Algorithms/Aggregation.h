@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "Algorithms/Querying.h
+#include "Algorithms/Querying.h"
 #include "Collections/Array.h"
 
 namespace Querying
@@ -18,19 +18,19 @@ namespace Querying
     /// </summary>
     template<
         typename _C,
-        typename A,
-        int32(&G)(int32)
+        typename A = HeapAlloc,
+        int32(&G)(int32) = Growing::Default
     >
     NO_DISCARD
     auto ToArray(_C&& cursor, const int32 capacity) -> Array<decltype(*cursor), A, G>
     {
         using ElementType = decltype(*cursor);
-        Array<ElementType, A, G> collector{ capacity };
+        Array<ElementType, A, G> array{ capacity };
 
         for (; cursor; ++cursor)
-            collector.Add(*cursor);
+            array.Add(*cursor);
 
-        return collector.ToArray();
+        return array;
     }
 
     /// <summary>
@@ -39,13 +39,13 @@ namespace Querying
     /// </summary>
     template<
         typename _C,
-        typename A,
-        int32(&G)(int32)
+        typename A = HeapAlloc,
+        int32(&G)(int32) = Growing::Default
     >
     NO_DISCARD
     auto ToArray(_C&& cursor) -> Array<decltype(*cursor), A, G>
     {
-        const int32 predictedCount = cursor.Hint().Max;
+        const int32 predictedCount = cursor.Hint().Max.ValueOr(0);
         return ToArray<_C, A, G>(FORWARD(_C, cursor), predictedCount);
     }
 }
