@@ -352,7 +352,7 @@ TYPED_TEST(DictionaryFixture, ElementsManipulation)
 };
 
 
-// Others
+// Initialization
 
 TEST(DictionaryMisc, InitList)
 {
@@ -360,10 +360,41 @@ TEST(DictionaryMisc, InitList)
         { 1, 2 },
         { 3, 4 },
         { 5, 6 }
-    });
+        });
 
     GTEST_ASSERT_EQ(dict.Count(), 3);
     GTEST_ASSERT_TRUE(dict.Contains(1));
     GTEST_ASSERT_TRUE(dict.Contains(3));
     GTEST_ASSERT_TRUE(dict.Contains(5));
-}
+};
+
+TEST(DictionaryMisc, CopyCtor)
+{
+    const Dictionary<int32, int32> src = Dictionary<int32, int32>::Of({
+        { 1, 2 },
+        { 3, 4 },
+        { 5, 6 }
+    });
+
+    Dictionary<int32, int32> dict{ src };
+
+    GTEST_ASSERT_EQ(src.Count(), dict.Count());
+    GTEST_ASSERT_TRUE(dict.Contains(1));
+    GTEST_ASSERT_TRUE(dict.Contains(5));
+};
+
+TEST(DictionaryMisc, CopyAsgn)
+{
+    const Dictionary<int32, int32> src = Dictionary<int32, int32>::Of({
+        { 1, 2 },
+        { 3, 4 },
+        { 5, 6 }
+    });
+
+    Dictionary<int32, int32> dict{};
+    dict = src;
+
+    GTEST_ASSERT_EQ(src.Count(), dict.Count());
+    GTEST_ASSERT_TRUE(dict.Contains(1));
+    GTEST_ASSERT_TRUE(dict.Contains(5));
+};

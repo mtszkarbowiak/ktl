@@ -707,6 +707,19 @@ public:
 
     // Utility
 
+    /// <summary> Adds all key-value pairs from the other dictionary to this one. </summary>
+    void Append(const Dictionary& other)
+    {
+        const Slot* otherSlots = DATA_OF(const Slot, other._allocData);
+        for (int32 i = 0; i < other._capacity; ++i)
+        {
+            const Slot& slot = otherSlots[i];
+            if (slot.IsOccupied())
+                Add(slot.GetKey(), slot.GetValue());
+        }
+    }
+
+
 protected:
     /// <summary>
     /// Moves the contents of the other set to this one.
@@ -777,7 +790,7 @@ public:
     FORCE_INLINE constexpr
     Dictionary(const Dictionary& other)
     {
-        DEBUG_BREAK; //TODO(mtszkarbowiak) Implement Dictionary::Dictionary(const Dictionary&)=
+        Append(other);
     }
 
     /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
@@ -799,7 +812,7 @@ public:
     {
         const int32 requiredCapacity = Math::NextPow2(capacity);
         const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
-        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
+        _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
 
         BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
     }
@@ -823,7 +836,7 @@ public:
     {
         if (this != &other)
         {
-            DEBUG_BREAK; //TODO(mtszkarbowiak) Implement Dictionary::operator=(const Dictionary&)
+            Append(other);
         }
         return *this;
     }
