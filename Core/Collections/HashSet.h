@@ -178,8 +178,7 @@ PRIVATE:
         Nullable<Index>& firstFreeSlot
     )
     {
-        const Index initIndex = HashOf<Element>::GetHash(key) % capacity; //TODO Binary masking
-        //TODO Use template argument for the hash function
+        const Index initIndex = H::GetHash(key) % capacity; //TODO Binary masking
 
         keyCell.Set(initIndex);
         firstFreeSlot.Clear();
