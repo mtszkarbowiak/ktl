@@ -178,7 +178,11 @@ PRIVATE:
         Nullable<Index>& firstFreeSlot
     )
     {
-        const Index initIndex = H::GetHash(key) % capacity; //TODO(mtszkarbowiak) Binary masking for HashSets
+        ASSERT_COLLECTION_INTEGRITY(data);
+        ASSERT_COLLECTION_INTEGRITY(Math::IsPow2(capacity)); // Make sure the capacity is a power of 2
+
+        const int32 capacityBitMask = capacity - 1;
+        const int32 initIndex = H::GetHash(key) & capacityBitMask;
 
         keyCell.Set(initIndex);
         firstFreeSlot.Clear();
@@ -213,7 +217,7 @@ PRIVATE:
             }
 
             // Move to the next slot using the probing strategy
-            keyCell.Set((initIndex + P::Next(capacity, checkCount)) % capacity); //TODO(mtszkarbowiak) Binary masking for HashSets
+            keyCell.Set((initIndex + P::Next(capacity, checkCount)) % capacityBitMask);
             ++checkCount;
         }
 

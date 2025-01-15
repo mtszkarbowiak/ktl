@@ -376,8 +376,10 @@ PRIVATE:
     ) -> Bucketing::SearchResult
     {
         ASSERT_COLLECTION_INTEGRITY(slots);
+        ASSERT_COLLECTION_INTEGRITY(Math::IsPow2(capacity)); // Make sure the capacity is a power of 2
 
-        const int32 initIndex = H::GetHash(key) % capacity;
+        const int32 capacityBitMask = capacity - 1;
+        const int32 initIndex = H::GetHash(key) & capacityBitMask;
 
         int32 currentIndex = initIndex;
         Nullable<Index> firstFree{};
@@ -408,7 +410,7 @@ PRIVATE:
                 return { Nullable<Index>{ currentIndex }, {} };
             }
 
-            currentIndex = (initIndex + P::Next(capacity, numChecks)) % capacity;
+            currentIndex = (initIndex + P::Next(capacity, numChecks)) & capacityBitMask;
         }
 
         // If everything failed, return double null to indicate that the search was unsuccessful.
