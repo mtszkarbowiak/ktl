@@ -17,9 +17,9 @@ namespace Querying
     /// with the specified capacity.
     /// </summary>
     template<
-        typename _C,
         typename A = HeapAlloc,
-        int32(&G)(int32) = Growing::Default
+        int32(&G)(int32) = Growing::Default,
+        typename _C
     >
     NO_DISCARD
     auto ToArray(_C&& cursor, const int32 capacity) -> Array<decltype(*cursor), A, G>
@@ -28,7 +28,7 @@ namespace Querying
         Array<ElementType, A, G> array{ capacity };
 
         for (; cursor; ++cursor)
-            array.Add(*cursor);
+            array.Add(MOVE(*cursor));
 
         return array;
     }
@@ -38,15 +38,15 @@ namespace Querying
     /// which capacity is predicted by the cursor hint.
     /// </summary>
     template<
-        typename _C,
         typename A = HeapAlloc,
-        int32(&G)(int32) = Growing::Default
+        int32(&G)(int32) = Growing::Default,
+        typename _C
     >
     NO_DISCARD
     auto ToArray(_C&& cursor) -> Array<decltype(*cursor), A, G>
     {
         const int32 predictedCount = cursor.Hint().Max.ValueOr(0);
-        return ToArray<_C, A, G>(FORWARD(_C, cursor), predictedCount);
+        return ToArray<A, G, _C>(FORWARD(_C, cursor), predictedCount);
     }
 }
 

@@ -116,7 +116,6 @@ TEST(QuerySelectWhere, Array)
 }
 
 
-
 TEST(QueryToArray, Array)
 {
     using namespace Querying;
@@ -125,15 +124,14 @@ TEST(QueryToArray, Array)
     const auto selector = [](const int32 value) { return value * 2; };
     const auto predicate = [](const int32 value) { return value % 4 == 0; };
 
-    const auto result = ToArray(
+    const auto result = ToArray<FixedAlloc<128>>(
         array.Values()
             | Select<decltype(selector)>(selector)
             | Where<decltype(predicate)>(predicate)
     );
 
-    const auto expected = Array<int32>::Of({ 4, 8 });
-    GTEST_ASSERT_EQ(
-        Sum(result.Values()),
-        Sum(expected.Values())
-    );
+    // Expected: { 4, 8 }
+    GTEST_ASSERT_EQ(result.Count(), 2);
+    GTEST_ASSERT_EQ(result[0], 4);
+    GTEST_ASSERT_EQ(result[1], 8);
 }

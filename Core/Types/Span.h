@@ -289,7 +289,7 @@ public:
             const int32 remaining = static_cast<int32>(_end - _begin);
             return {
                 remaining,
-                Nullable<Index>{remaining}
+                Nullable<Index>{ remaining }
             };
         }
 
