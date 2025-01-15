@@ -54,7 +54,7 @@ public:
     using Value = V;
 
     /// <summary>
-    /// Wrapper over a key-value pair that tracks the state of the slot, as element of hash map.
+    /// Wrapper over a key-value pair that tracks the state of the slot, potentially containing an element of hash map.
     /// </summary>
     class Slot
     {
@@ -252,9 +252,9 @@ public:
         }
     };
 
-    using Element     = Slot;
+    // No explicit 'element' type, as the dictionary is a collection of key-value pairs.
     using AllocData   = typename A::Data;
-    using AllocHelper = AllocHelperOf<Element, A, HASH_SETS_DEFAULT_CAPACITY, Growing::Double>;
+    using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, Growing::Double>;
     using LoadFHelper = LoadFHelperOf<HASH_SETS_DEFAULT_SLACK_RATIO>;
 
 PRIVATE:

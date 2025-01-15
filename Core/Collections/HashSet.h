@@ -46,7 +46,7 @@ public:
     // Cell is a slot which had an element at some point.
     // Slot without a cell means that it was never occupied.
 
-    using Element = T; //TODO Naming ambiguity! Is an element referring to a slot or a stored value?
+    using Element = T;
     using Cell    = Nullable<Element>;
     using Slot    = Nullable<Cell>;
 
@@ -480,7 +480,6 @@ public:
     auto Add(const Element& element) -> bool
     {
         return Add(MOVE(Element{ element })); //TODO Consider using forwarding reference.
-        // Why do I need to explicitly select the move?
     }
 
     /// <summary> Removes the specified element from the set. </summary>
