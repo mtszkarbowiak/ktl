@@ -1412,23 +1412,15 @@ public:
 
     // Constraints
 
+    REQUIRE_TYPE_NOT_REFERENCE(Key);
+    REQUIRE_TYPE_NOT_REFERENCE(Value);
+    REQUIRE_TYPE_NOT_CONST(Key);
+    REQUIRE_TYPE_NOT_CONST(Value);
+    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Key);
+    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Value);
+
     static_assert(
         AllocHelper::HasBinaryMaskingSupport() == AllocHelper::BinaryMaskingSupportStatus::Supported, 
         "The allocator must support binary masking."
     );
-
-    static_assert(!std::is_reference<Key>                    ::value, "Type must not be a reference type.");
-    static_assert(!std::is_reference<Value>                  ::value, "Type must not be a reference type.");
-    static_assert(!std::is_const<Element>                    ::value, "Type must not be a const-qualified type.");
-    static_assert(!std::is_const<Value>                      ::value, "Type must not be a const-qualified type.");
-
-    static_assert(std::is_move_constructible<Key>            ::value, "Type must be move-constructible.");
-    static_assert(std::is_move_constructible<Value>          ::value, "Type must be move-constructible.");
-    static_assert(std::is_destructible<Key>                  ::value, "Type must be destructible.");
-    static_assert(std::is_destructible<Value>                ::value, "Type must be destructible.");
-
-    static_assert(std::is_nothrow_move_constructible<Key>    ::value, "Type must be nothrow move-constructible.");
-    static_assert(std::is_nothrow_move_constructible<Value>  ::value, "Type must be nothrow move-constructible.");
-    static_assert(std::is_nothrow_destructible<Key>          ::value, "Type must be nothrow destructible.");
-    static_assert(std::is_nothrow_destructible<Value>        ::value, "Type must be nothrow destructible.");
 };

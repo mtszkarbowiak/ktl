@@ -11,6 +11,7 @@
 #include "Collections/AllocHelper.h"
 #include "Collections/Index.h"
 #include "Language/Communism.h"
+#include "Language/Constraints.h"
 #include "Language/Templates.h"
 #include "Language/TypeInfo.h"
 #include "Math/Arithmetic.h"

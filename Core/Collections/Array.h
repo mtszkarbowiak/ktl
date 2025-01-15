@@ -714,11 +714,7 @@ public:
 
     // Constraints
 
-    static_assert(!std::is_reference<Element>                ::value, "Type must not be a reference type.");
-    static_assert(!std::is_const<Element>                    ::value, "Type must not be a const-qualified type.");
-
-    static_assert(std::is_move_constructible<Element>        ::value, "Type must be move-constructible.");
-    static_assert(std::is_destructible<Element>              ::value, "Type must be destructible.");
-    static_assert(std::is_nothrow_move_constructible<Element>::value, "Type must be nothrow move-constructible.");
-    static_assert(std::is_nothrow_destructible<Element>      ::value, "Type must be nothrow destructible.");
+    REQUIRE_TYPE_NOT_REFERENCE(Element);
+    REQUIRE_TYPE_NOT_CONST(Element);
+    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Element);
 };
