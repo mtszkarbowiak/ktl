@@ -1,4 +1,9 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/mk-stl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #include <gtest/gtest.h>
 
@@ -25,8 +30,8 @@ TEST(ArrayIterators, ConstEnumerator)
     {
         actualSum += *enumerator;
 
-        GTEST_ASSERT_EQ(enumerator.Hint().Min, elementsLeft);
-        GTEST_ASSERT_EQ(enumerator.Hint().Max, elementsLeft);
+        GTEST_ASSERT_EQ(enumerator.Hint().Min,         elementsLeft);
+        GTEST_ASSERT_EQ(enumerator.Hint().Max.Value(), elementsLeft);
 
         ++index;
         --elementsLeft;
@@ -54,8 +59,8 @@ TEST(ArrayIterators, MutableEnumerator)
     {
         *enumerator = TestElements - *enumerator;
 
-        GTEST_ASSERT_EQ(enumerator.Hint().Min, elementsLeft);
-        GTEST_ASSERT_EQ(enumerator.Hint().Max, elementsLeft);
+        GTEST_ASSERT_EQ(enumerator.Hint().Min,         elementsLeft);
+        GTEST_ASSERT_EQ(enumerator.Hint().Max.Value(), elementsLeft);
 
         ++index;
         --elementsLeft;

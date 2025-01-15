@@ -9,6 +9,11 @@ set(CMAKE_CXX_STANDARD ${CMAKE_CXX_STANDARD})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Assertions level configuration
+set(ASSERTIONS_LEVEL "2" CACHE STRING "Set the level of assertions (0, 1, 2, 3)")
+add_compile_definitions(ASSERTIONS_LEVEL=${ASSERTIONS_LEVEL})
+message(STATUS "ASSERTIONS_LEVEL is set to: ${ASSERTIONS_LEVEL}")
+
 # Configure build options for MSVC
 if(MSVC)
     # Debug options

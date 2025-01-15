@@ -1,4 +1,9 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/ktl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #pragma once
 
@@ -15,7 +20,7 @@ class Ref
 public:
     using Element = T;
 
-private:
+PRIVATE:
     Element* _value;
     
 
@@ -46,14 +51,14 @@ public:
     }
 
     FORCE_INLINE
-    Ref& operator=(const Ref& other)
+    auto operator=(const Ref& other) -> Ref&
     {
         _value = other._value;
         return *this;
     }
 
     FORCE_INLINE
-    Ref& operator=(Ref&& other) noexcept
+    auto operator=(Ref&& other) noexcept -> Ref&
     {
         _value = other._value;
         other._value = nullptr;
@@ -69,9 +74,9 @@ public:
 
     friend TombstoneNullable<Ref>;
 
-private:
-    FORCE_INLINE
-    explicit Ref(MAYBE_UNUSED TombstoneDepth tombstoneTag) noexcept
+PRIVATE:
+    FORCE_INLINE explicit
+    Ref(MAYBE_UNUSED TombstoneDepth tombstoneTag) noexcept
         : _value{ nullptr }
     {
         ASSERT_COLLECTION_INTEGRITY(tombstoneTag.Value == 1); // Reference does not support any other tombstone depth.
@@ -79,13 +84,13 @@ private:
     }
 
     NO_DISCARD FORCE_INLINE
-    bool IsTombstone() const
+    auto IsTombstone() const -> bool
     {
         return _value == nullptr;
     }
 
     NO_DISCARD FORCE_INLINE
-    int8 GetTombstoneLevel() const
+    auto GetTombstoneLevel() const -> int8
     {
         return 1; // Reference does not support any other tombstone depth.
     }
@@ -95,25 +100,25 @@ private:
 
 public:
     NO_DISCARD FORCE_INLINE
-    Element& Value() const
+    auto Value() const -> Element&
     {
         return *_value;
     }
 
     NO_DISCARD FORCE_INLINE
-    Element* Get() const
+    auto Get() const -> Element*
     {
         return _value;
     }
 
     NO_DISCARD FORCE_INLINE
-    Element& operator*() const
+    auto operator*() const -> Element&
     {
         return Value();
     }
 
     NO_DISCARD FORCE_INLINE
-    Element* operator->() const
+    auto operator->() const -> Element*
     {
         return _value;
     }
@@ -122,19 +127,19 @@ public:
     // Comparison
 
     NO_DISCARD FORCE_INLINE
-    bool operator==(const Ref& other) const
+    auto operator==(const Ref& other) const -> bool
     {
         return _value == other._value;
     }
 
     NO_DISCARD FORCE_INLINE
-    bool operator!=(const Ref& other) const
+    auto operator!=(const Ref& other) const -> bool
     {
         return _value != other._value;
     }
 
     NO_DISCARD FORCE_INLINE
-    bool operator<(const Ref& otherTag) const
+    auto operator<(const Ref& otherTag) const -> bool
     {
         return _value < otherTag._value;
     }

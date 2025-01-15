@@ -1,9 +1,13 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/ktl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #pragma once
 
 #include "Collections/CollectionsUtils.h"
-
 
 /// <summary>
 /// A container for dynamically resizable arrays of elements,
@@ -37,7 +41,7 @@
 template<
     typename T,
     typename A = HeapAlloc,
-    int32(&G)(int32) = Growing::Default
+    typename G = DefaultGrowth
 >
 class Array
 {
@@ -46,10 +50,10 @@ public:
     using AllocData   = typename A::Data;
     using AllocHelper = AllocHelperOf<Element, A, ARRAY_DEFAULT_CAPACITY, G>;
 
-    using MutEnumerator   = typename Span<Element>::MutEnumerator;
-    using ConstEnumerator = typename Span<Element>::ConstEnumerator;
+    using MutCursor   = typename Span<Element>::MutCursor;
+    using ConstCursor = typename Span<Element>::ConstCursor;
 
-private:
+PRIVATE:
     AllocData _allocData{};
     int32     _capacity{};
     int32     _count{};
@@ -59,14 +63,14 @@ private:
 public:
     /// <summary> Checks if the array has an active allocation. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    bool IsAllocated() const
+    auto IsAllocated() const -> bool
     {
         return _capacity > 0;
     }
 
     /// <summary> Number of elements that can be stored without invoking the allocator. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 Capacity() const 
+    auto Capacity() const -> int32
     {
         return _capacity;
     }
@@ -76,21 +80,21 @@ public:
 
     /// <summary> Checks if the array has any elements. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    bool IsEmpty() const
+    auto IsEmpty() const -> bool
     {
         return _count == 0;
     }
 
     /// <summary> Number of currently stored elements. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 Count() const
+    auto Count() const -> int32
     {
         return _count;
     }
 
     /// <summary> Number of elements that can be added without invoking the allocator. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 Slack() const
+    auto Slack() const -> int32
     {
         return _capacity - _count;
     }
@@ -99,7 +103,6 @@ public:
     // Allocation Manipulation
 
     /// <summary> Ensures that adding items up to the requested capacity will not invoke the allocator. </summary>
-    FORCE_INLINE //TODO You sure?
     void Reserve(const int32 minCapacity)
     {
         if (minCapacity < 1)
@@ -149,7 +152,6 @@ public:
     /// Attempts to reduce the capacity to the number of stored elements, without losing any elements.
     /// If the array is empty, the allocation will be freed.
     /// </summary>
-    FORCE_INLINE //TODO You sure?
     void Compact()
     {
         // Check if there is possibility of relocation.
@@ -200,7 +202,7 @@ public:
     /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
     /// </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    Element* Data()
+    auto Data() -> Element*
     {
         return DATA_OF(Element, _allocData);
     }
@@ -210,7 +212,7 @@ public:
     /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
     /// </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    const Element* Data() const
+    auto Data() const -> const Element*
     {
         return DATA_OF(const Element, _allocData);
     }
@@ -218,7 +220,7 @@ public:
 
     /// <summary> Accesses the element at the given index. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    Element& operator[](const int32 index)
+    auto operator[](const int32 index) -> Element&
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _count);
         return DATA_OF(Element, _allocData)[index];
@@ -226,7 +228,7 @@ public:
 
     /// <summary> Accesses the element at the given index. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    const Element& operator[](const int32 index) const
+    auto operator[](const int32 index) const -> const Element&
     {
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _count);
         return DATA_OF(const Element, _allocData)[index];
@@ -241,7 +243,7 @@ public:
     /// <param name="element"> Element to add. </param>
     template<typename U> // Universal reference
     MAY_DISCARD FORCE_INLINE
-    Element& Add(U&& element)
+    auto Add(U&& element) -> Element&
     {
         static_assert(
             std::is_same<typename std::decay<U>::type, Element>::value,
@@ -264,7 +266,7 @@ public:
     /// <param name="args"> Arguments to forward to the constructor. </param>
     template<typename... Args> // Parameter pack
     MAY_DISCARD FORCE_INLINE
-    Element& Emplace(Args&&... args)
+    auto Emplace(Args&&... args) -> Element&
     {
         if (_count == _capacity)
             Reserve(_capacity + 1);
@@ -287,7 +289,7 @@ public:
     /// <returns> Reference to the added element. </returns>
     template<typename U> // Universal reference
     MAY_DISCARD FORCE_INLINE
-    Element& InsertAt(const int32 index, U&& element)
+    auto InsertAt(const int32 index, U&& element) -> Element&
     {
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _count);  // Allow index == _count for appending
 
@@ -329,7 +331,7 @@ public:
     /// </remarks>
     template<typename U> // Universal reference
     MAY_DISCARD
-    Element& InsertAtStable(const int32 index, U&& element)
+    auto InsertAtStable(const int32 index, U&& element) -> Element&
     {
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _count);  // Allow index == _count for appending
 
@@ -444,7 +446,7 @@ public:
 
     /// <summary> Creates a span of the stored elements. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    Span<Element> AsSpan() noexcept
+    auto AsSpan() noexcept -> Span<Element>
     {
         return Span<Element>{ DATA_OF(Element, _allocData), _count };
     }
@@ -458,7 +460,7 @@ public:
     /// because they may be returned from a function as a span.
     /// </remarks>
     MAY_DISCARD
-    Span<Element> AddElements(const Element* source, const int32 count)
+    auto AddElements(const Element* source, const int32 count) -> Span<Element>
     {
         const int32 newCount = _count + count;
         Reserve(newCount);
@@ -479,7 +481,7 @@ public:
     /// because they may be returned from a function as a span.
     /// </remarks>
     MAY_DISCARD
-    Span<Element> AddElements(const Span<Element> source)
+    auto AddElements(const Span<Element> source) -> Span<Element>
     {
         return AddElements(source.Data(), source.Count());
     }
@@ -492,7 +494,7 @@ public:
     /// because they may be returned from a function as a span.
     /// </remarks>
     MAY_DISCARD
-    Span<Element> AddRepetitions(const Element& source, const int32 count)
+    auto AddRepetitions(const Element& source, const int32 count) -> Span<Element>
     {
         const int32 newCount = _count + count;
         Reserve(newCount);
@@ -594,7 +596,7 @@ public:
     // Collection Lifecycle  - Assignments
 
     FORCE_INLINE
-    Array& operator=(Array&& other) noexcept
+    auto operator=(Array&& other) noexcept -> Array&
     {
         if (this != &other) 
         {
@@ -604,7 +606,7 @@ public:
         return *this;
     }
 
-    Array& operator=(const Array& other)
+    auto operator=(const Array& other) -> Array&
     {
         if (this != &other) 
         {
@@ -632,7 +634,7 @@ public:
     /// <summary> Creates an array with the specified elements. </summary>
     template<typename U>
     NO_DISCARD static constexpr
-    Array<Element> Of(std::initializer_list<U> list)
+    auto Of(std::initializer_list<U> list) -> Array<Element>
     {
         const int32 capacity = static_cast<int32>(list.size());
         Array<Element> result{ capacity };
@@ -644,42 +646,42 @@ public:
     }
 
 
-    // Iterators
+    // Cursors
 
-    /// <summary> Creates an enumerator for the array. </summary>
+    /// <summary> Creates a cursor for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    MutEnumerator Values()
+    auto Values() -> MutCursor
     {
         Element* data = DATA_OF(Element, _allocData);
-        return MutEnumerator{ data, data + _count };
+        return MutCursor{ data, data + _count };
     }
 
-    /// <summary> Creates an enumerator for the array. </summary>
+    /// <summary> Creates a cursor for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    ConstEnumerator Values() const
+    auto Values() const -> ConstCursor
     {
         const Element* data = DATA_OF(const Element, _allocData);
-        return ConstEnumerator{ data, data + _count };
+        return ConstCursor{ data, data + _count };
     }
 
 
     /// <summary> STL-style begin iterator. </summary>
     NO_DISCARD FORCE_INLINE
-    Element* begin()
+    auto begin() -> Element*
     {
         return DATA_OF(Element, _allocData);
     }
 
     /// <summary> STL-style begin iterator. </summary>
     NO_DISCARD FORCE_INLINE
-    const Element* begin() const
+    auto begin() const -> const Element*
     {
         return DATA_OF(const Element, _allocData);
     }
 
     /// <summary> STL-style const begin iterator. </summary>
     NO_DISCARD FORCE_INLINE
-    const Element* cbegin() const
+    auto cbegin() const -> const Element*
     {
         return DATA_OF(const Element, _allocData);
     }
@@ -687,21 +689,21 @@ public:
 
     /// <summary> STL-style end iterator. </summary>
     NO_DISCARD FORCE_INLINE
-    Element* end()
+    auto end() -> Element*
     {
         return DATA_OF(Element, _allocData) + _count;
     }
 
     /// <summary> STL-style end iterator. </summary>
     NO_DISCARD FORCE_INLINE
-    const Element* end() const
+    auto end() const -> const Element*
     {
         return DATA_OF(const Element, _allocData) + _count;
     }
 
     /// <summary> STL-style const end iterator. </summary>
     NO_DISCARD FORCE_INLINE
-    const Element* cend() const
+    auto cend() const -> const Element*
     {
         return DATA_OF(const Element, _allocData) + _count;
     }
@@ -709,11 +711,7 @@ public:
 
     // Constraints
 
-    static_assert(!std::is_reference<Element>                ::value, "Type must not be a reference type.");
-    static_assert(!std::is_const<Element>                    ::value, "Type must not be a const-qualified type.");
-
-    static_assert(std::is_move_constructible<Element>        ::value, "Type must be move-constructible.");
-    static_assert(std::is_destructible<Element>              ::value, "Type must be destructible.");
-    static_assert(std::is_nothrow_move_constructible<Element>::value, "Type must be nothrow move-constructible.");
-    static_assert(std::is_nothrow_destructible<Element>      ::value, "Type must be nothrow destructible.");
+    REQUIRE_TYPE_NOT_REFERENCE(Element);
+    REQUIRE_TYPE_NOT_CONST(Element);
+    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Element);
 };

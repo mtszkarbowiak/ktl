@@ -1,4 +1,9 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/ktl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #pragma once
 
@@ -10,8 +15,8 @@ namespace Math
     /// <summary> Returns the smallest of two values. </summary>
     /// <remarks> The values must be comparable with the less-than operator. </remarks>
     template<typename T>
-    FORCE_INLINE
-    constexpr static auto Min(const T a, const T b) -> T
+    NO_DISCARD static FORCE_INLINE constexpr
+    auto Min(const T a, const T b) -> T
     {
         return a < b ? a : b;
     }
@@ -19,8 +24,8 @@ namespace Math
     /// <summary> Returns the largest of two values. </summary>
     /// <remarks> The values must be comparable with the less-than operator. </remarks>
     template<typename T>
-    FORCE_INLINE
-    constexpr static auto Max(const T a, const T b) -> T
+    NO_DISCARD static FORCE_INLINE constexpr
+    auto Max(const T a, const T b) -> T
     {
         return b < a ? a : b;
     }
@@ -28,8 +33,8 @@ namespace Math
     /// <summary> Clamps the value between the given minimum and maximum. </summary>
     /// <remarks> The values must be comparable with the less-than operator. </remarks>
     template<typename T>
-    FORCE_INLINE
-    constexpr static auto Clamp(const T value, const T min, const T max) -> T
+    NO_DISCARD static FORCE_INLINE constexpr
+    auto Clamp(const T value, const T min, const T max) -> T
     {
         if (value < min)
         {
@@ -46,8 +51,8 @@ namespace Math
 
 
     /// <summary> Returns the smallest power of 2 greater or equal to the given number. </summary>
-    FORCE_INLINE
-    constexpr static auto NextPow2(const int32 count) -> int32
+    NO_DISCARD static FORCE_INLINE constexpr
+    auto NextPow2(const int32 count) -> int32
     {
         int32 capacity = count - 1;
         capacity |= capacity >> 1;
@@ -59,8 +64,8 @@ namespace Math
     }
 
     /// <summary> Returns the highest power of 2 smaller or equal to the given number. </summary>
-    FORCE_INLINE
-    constexpr static auto PrevPow2(const int32 count) -> int32
+    NO_DISCARD static FORCE_INLINE constexpr
+    auto PrevPow2(const int32 count) -> int32
     {
         if (count <= 0) return 0; // Handle invalid input gracefully.
         int32 capacity = count;
@@ -73,8 +78,8 @@ namespace Math
     }
 
     /// <summary> Checks if the given number is a power of 2. </summary>
-    FORCE_INLINE
-    constexpr static auto IsPow2(const int32 count) -> bool
+    NO_DISCARD static FORCE_INLINE constexpr
+    auto IsPow2(const int32 count) -> bool
     {
         return count > 0 && (count & (count - 1)) == 0;
     }

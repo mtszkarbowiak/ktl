@@ -1,1036 +1,1440 @@
-//// Created by Mateusz Karbowiak 2024
-//
-//#pragma once
-//
-//#include "Collections/CollectionsUtils.h"
-//
-//template<
-//    typename K,
-//    typename V,
-//    typename Alloc = DefaultAlloc,
-//    int32(&Probe)(int32, int32) = Probing::Linear,
-//    int32(&Grow)(int32) = Growing::Default
-//>
-//class Dictionary;
-//
-///// <summary> Potential entry of the dictionary. </summary>
-///// <remarks>
-///// The bucket must be predeclared to allow for type traits.
-///// </remarks>
-//template<typename K, typename V>
-//class DictionaryBucket final
-//{
-//public:
-//    using BucketState = Bucketing::BucketState;
-//
-//private:
-//    V _value;
-//    K _key;
-//    BucketState _state;
-//
-//public:
-//    FORCE_INLINE
-//    BucketState State() const { return _state; }
-//
-//    FORCE_INLINE
-//    const K& Key() const { return _key; }
-//
-//    FORCE_INLINE
-//    const V& Value() const { return _value; }
-//
-//    FORCE_INLINE
-//    V& Value() { return _value; }
-//
-//
-//    DictionaryBucket() : _state{ BucketState::Empty } {}
-//
-//    template<typename K_, typename V_>
-//    explicit DictionaryBucket(K_&& key, V_&& value) noexcept
-//        : _value{ FORWARD(V_, value) }
-//        , _key{ FORWARD(K_, key) }
-//        , _state{ BucketState::Occupied }
-//    {
-//    }
-//
-//    DictionaryBucket(DictionaryBucket&& other) noexcept
-//        : _value{ MOVE(other._value) }
-//        , _key{ MOVE(other._key) }
-//        , _state{ other._state }
-//    {
-//        other._state = BucketState::Empty;
-//        other._value.~V();
-//        other._key.  ~K();
-//    }
-//
-//    DictionaryBucket(const DictionaryBucket& other) = delete;
-//
-//    void Reset()
-//    {
-//        if (_state == BucketState::Occupied)
-//        {
-//            _value.~V();
-//            _key.  ~K();
-//        }
-//        _state = BucketState::Empty;
-//    }
-//
-//    DictionaryBucket& operator=(DictionaryBucket&& other) noexcept
-//    {
-//        if (this == &other)
-//            return *this;
-//
-//        Reset();
-//
-//        if (other._state == BucketState::Occupied)
-//        {
-//            new (&_value) V(MOVE(other._value));
-//            new (&_key)   K(MOVE(other._key));
-//            _state = BucketState::Occupied;
-//        }
-//
-//        return *this;
-//    }
-//
-//    DictionaryBucket& operator=(const DictionaryBucket& other) = delete;
-//
-//    ~DictionaryBucket()
-//    {
-//        Reset();
-//    }
-//};
-//
-//
-///// <summary> Type trait indicating whether a type is a C-style type. </summary>
-///// <remarks>
-///// If both key and value types are C-style, the bucket is also C-style.
-///// Allow the dictionary to use optimized memory operations.
-///// </remarks>
-//template<typename K, typename V>
-//struct TIsCStyle<DictionaryBucket<K, V>>
-//{
-//    static constexpr bool Value = TIsCStyle<K>::Value && TIsCStyle<V>::Value;
-//};
-//
-//
-//template<
-//    typename K,
-//    typename V,
-//    typename Alloc,
-//    int32(&Probe)(int32, int32),
-//    int32(&Grow)(int32)
-//>
-//class Dictionary 
-//{
-//    using Bucket             = DictionaryBucket<K, V>;
-//    using BucketSearchResult = Bucketing::BucketSearchResult;
-//    using BucketState        = Bucketing::BucketState;
-//    using HashType           = int32; //TODO Add support for custom hash types
-//    using AllocData          = typename Alloc::Data;
-//    using AllocHelper        = AllocHelperOf<Bucket, Alloc, ARRAY_DEFAULT_CAPACITY, Grow>;
-//
-//    AllocData _allocData;
-//    int32 _capacity;
-//    int32 _elementsCount;
-//    int32 _deletedCount;
-//
-//
-//    // Capacity Access and Utility
-//
-//public:
-//    /// <summary> Checks if the array has an active allocation. </summary>
-//    FORCE_INLINE
-//    constexpr bool IsAllocated() const noexcept
-//    {
-//        return _capacity > 0;
-//    }
-//
-//    /// <summary> Number of elements that can be stored without invoking the allocator. </summary>
-//    FORCE_INLINE
-//    constexpr int32 Capacity() const noexcept
-//    {
-//        return _capacity;
-//    }
-//
-//protected:
-//    /// <summary> Searches for the bucket with the specified key. </summary>
-//    void FindBucket(const K& key, BucketSearchResult& result) const
-//    {
-//        ASSERT(IsAllocated());
-//        ASSERT(Math::NextPow2(_capacity) == _capacity);
-//
-//        const HashType hashMask = static_cast<HashType>(_capacity) - 1;
-//        const Bucket* data = DATA_OF(const Bucket, _allocData);
-//
-//        int32 bucketIndex = GetHash(key) & hashMask;
-//        int32 insertIndex = -1;
-//        int32 checkCount  = 0;
-//
-//        result.FoundObject = -1;
-//        result.FreeBucket  = -1;
-//
-//        while (checkCount < _capacity)
-//        {
-//            const Bucket& bucket = data[bucketIndex];
-//
-//            if (bucket.State() == BucketState::Empty)
-//            {
-//                // Found an empty bucket
-//                result.FoundObject = -1;
-//                result.FreeBucket = (insertIndex != -1) ? insertIndex : bucketIndex;
-//                return;
-//            }
-//
-//            if (bucket.State() == BucketState::Deleted)
-//            {
-//                // Keep track of the first available deleted slot
-//                if (insertIndex == -1)
-//                    insertIndex = bucketIndex;
-//            }
-//            else if (bucket.Key() == key)
-//            {
-//                // Found the key
-//                result.FoundObject = bucketIndex;
-//                return;
-//            }
-//
-//            // Move to the next probe
-//            ++checkCount;
-//            bucketIndex = (bucketIndex + Probe(_capacity, checkCount)) & hashMask;
-//        }
-//
-//        // If no match or free slot was found
-//        result.FoundObject = -1;
-//        result.FreeBucket  = insertIndex;
-//    }
-//
-//    /// <summary>
-//    /// Realigns the dictionary entries, using a new allocation of the specified minimal capacity.
-//    /// </summary>
-//    void Rebuild(const int32 minCapacity)
-//    {
-//        // The rebuilding process consists of several steps:
-//        // 1. Move the items to a temporary storage, if possible drag the content.
-//        // 2. Allocate the new storage, reset the collection capacity.
-//        // 3. Iterate over the temporary storage, adding the items to the new storage and repositioning them.
-//        // 4. Destroy the temporary storage.
-//
-//
-//        // 1.1. Prepare intermediate bucket storage.
-//        AllocData tempAlloc{ _allocData }; // Copy the binding
-//
-//        // 1.2. Transfer the items to the temporary storage.
-//        if (_allocData.MovesItems())
-//        {
-//            // If the allocator can move the items, we can just move the data.
-//            tempAlloc = MOVE(_allocData);
-//        }
-//        else
-//        {
-//            // If the allocator cannot move the items, we need to manually move the content.
-//            tempAlloc.Allocate(_capacity * sizeof(Bucket));
-//            BulkOperations::MoveLinearContent<Bucket>(
-//                DATA_OF(Bucket, _allocData),
-//                DATA_OF(Bucket, tempAlloc),
-//                _capacity
-//            );
-//        }
-//
-//        // 2. Allocate the new storage.
-//        const int32 oldCapacity = _capacity;
-//        const int32 requestedCapacity = AllocHelper::NextCapacity(_capacity, minCapacity);
-//        _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
-//
-//        // 2.1. We have raw memory, so we need to manually call the constructors.
-//        // This is necessary, as the memory is not zeroed. If the bucket is C-style, we can skip this step.
-//        BulkOperations::DefaultLinearContent<Bucket>(
-//            DATA_OF(Bucket, _allocData),
-//            _capacity
-//        );
-//
-//
-//        // 3. Iterate over the temporary storage, adding the items to the new storage and repositioning them.
-//        for (int32 i = 0; i < oldCapacity; ++i)
-//        {
-//            Bucket& oldBucket = DATA_OF(Bucket, tempAlloc)[i];
-//
-//            if (oldBucket.State() != BucketState::Occupied)
-//                continue;
-//
-//            BucketSearchResult searchResult;
-//            FindBucket(oldBucket.Key(), searchResult);
-//
-//            ASSERT(searchResult.FoundObject == -1); // It would make no sense, if the object was found.
-//            ASSERT(searchResult.FreeBucket  != -1); // We should always find a free bucket, as we have just allocated the new storage.
-//
-//            Bucket& newBucket = DATA_OF(Bucket, _allocData)[searchResult.FreeBucket];
-//            newBucket = MOVE(oldBucket);
-//        }
-//        // The collection itself is now rebuilt, time for cleaning...
-//
-//        // 4. Destroy the temporary storage.
-//        BulkOperations::DestroyLinearContent<Bucket>(
-//            DATA_OF(Bucket, tempAlloc),
-//            oldCapacity
-//        );
-//
-//        tempAlloc.Free();
-//    }
-//
-//public:
-//    /// <summary>
-//    /// Rebuilds the dictionary to the smallest possible size.
-//    /// If the dictionary is empty, the allocation is freed.
-//    /// </summary>
-//    void Compact()
-//    {
-//        // Check if there is possibility of relocation.
-//        if (_elementsCount == 0) 
-//        {
-//            if (_capacity > 0)
-//            {
-//                _allocData.Free();
-//                _capacity = 0;
-//            }
-//            return;
-//        }
-//
-//        // Rebuild the dictionary
-//        Rebuild(_elementsCount * HASH_SETS_DEFAULT_SLACK_RATIO);
-//    }
-//
-//    /// <summary> Potentially rebuilds the dictionary to achieve the specified minimal capacity. </summary>
-//    void Reserve(const int32 minCapacity)
-//    {
-//        if (_capacity >= minCapacity)
-//            return;
-//
-//        if (_capacity == 0)
-//        {
-//            const int32 requrestedCapacity = AllocHelper::NextCapacity(_capacity, minCapacity); //TODO Typo
-//            _capacity = AllocHelper::Allocate(_allocData, requrestedCapacity);
-//
-//            // Initialize the dictionary
-//            for (int32 i = 0; i < _capacity; ++i)
-//                new (DATA_OF(Bucket, _allocData) + i) Bucket();
-//        }
-//        else
-//        {
-//            // Rebuild the dictionary
-//            Rebuild(minCapacity);
-//        }
-//    }
-//
-//    /// <summary> Resets the dictionary to an empty state. </summary>
-//    void Reset()
-//    {
-//        if (_capacity == 0)
-//            return;
-//
-//        BulkOperations::DestroyLinearContent<Bucket>(DATA_OF(Bucket, _allocData), _capacity);
-//
-//        _allocData.Free();
-//        _capacity = 0;
-//        _elementsCount = 0;
-//        _deletedCount = 0;
-//    }
-//
-//
-//
-//    // Count Access
-//
-//    /// <summary> Number of valid key-value pairs in the dictionary. </summary>
-//    FORCE_INLINE
-//    int32 Count() const noexcept
-//    {
-//        return _elementsCount;
-//    }
-//
-//    /// <summary> Checks if the dictionary has no valid key-value pairs. </summary>
-//    FORCE_INLINE
-//    bool IsEmpty() const noexcept
-//    {
-//        return _elementsCount == 0;
-//    }
-//
-//
-//
-//    // Element Access
-//
-//    /// <summary> Checks if there is a bucket associated with the specified key. </summary>
-//    FORCE_INLINE
-//    bool Contains(const K& key) const
-//    {
-//        if (_elementsCount == 0)
-//            return false;
-//
-//        BucketSearchResult searchResult;
-//        FindBucket(key, searchResult);
-//
-//        return searchResult.FoundObject != -1;
-//    }
-//
-//    /// <summary>
-//    /// Tries to get the value associated with the specified key.
-//    /// If the key does not exist, nullptr is returned.
-//    /// </summary>
-//    FORCE_INLINE
-//    V* TryGet(const K& key)
-//    {
-//        if (_elementsCount == 0)
-//            return nullptr;
-//
-//        BucketSearchResult searchResult;
-//        FindBucket(key, searchResult);
-//
-//        if (searchResult.FoundObject == -1)
-//            return nullptr;
-//
-//        return &DATA_OF(Bucket, _allocData)[searchResult.FoundObject].Value();
-//    }
-//
-//    /// <summary>
-//    /// Tries to get the value associated with the specified key.
-//    /// If the key does not exist, nullptr is returned.
-//    /// </summary>
-//    FORCE_INLINE
-//    const V* TryGet(const K& key) const
-//    {
-//        if (_elementsCount == 0)
-//            return nullptr;
-//
-//        BucketSearchResult searchResult;
-//        FindBucket(key, searchResult);
-//
-//        if (searchResult.FoundObject == -1)
-//            return nullptr;
-//
-//        return &DATA_OF(Bucket, _allocData)[searchResult.FoundObject].Value();
-//    }
-//
-//
-//    // Element Manipulation
-//
-//    /// <summary> Ensures that a bucket can be associated with the specified key. </summary>
-//    /// <remarks>
-//    /// There must be no already associated bucket with the same key. Otherwise, it will cause error.
-//    /// Warning: The lifetime of the bucket has not started yet.
-//    /// </remarks>
-//    template<typename K_, typename V_>
-//   
-//    Bucket* Add(K_&& key, V_&& value)
-//    {
-//        // 1. Ensure correct capacity
-//        if (_deletedCount > (_capacity / HASH_SETS_DEFAULT_SLACK_RATIO))
-//            Compact(); // If the number of deleted elements is too high, shrink the table
-//
-//        const int32 ensuredCapacity = (_elementsCount + 1) * HASH_SETS_DEFAULT_SLACK_RATIO + _deletedCount;
-//        Reserve(ensuredCapacity);
-//
-//        //TODO Prevent double rebuilding
-//        
-//        // 2. Find the bucket to reserve
-//        ASSERT(_capacity > 0); // The dictionary must be allocated
-//
-//        BucketSearchResult searchResult;
-//        FindBucket(key, searchResult);
-//
-//        ASSERT(searchResult.FoundObject == -1); // The key already exists in the dictionary
-//        ASSERT(searchResult.FreeBucket  != -1); // No free bucket was found
-//
-//        // 3. Reserve the bucket
-//        ++_elementsCount;
-//        Bucket* bucket = DATA_OF(Bucket, _allocData) + searchResult.FreeBucket;
-//        *bucket = Bucket(FORWARD(K_, key), FORWARD(V_, value));
-//        return bucket;
-//    }
-//
-//    /// <summary> Removes the bucket associated with the specified key, if it exists. </summary>
-//    /// <param name="key">The key of the bucket to remove.</param>
-//    /// <returns>True if the bucket was removed, false if the bucket was not found.</returns>
-//    bool Remove(const K& key)
-//    {
-//        if (_elementsCount == 0)
-//            return false;
-//
-//        BucketSearchResult searchResult;
-//        FindBucket(key, searchResult);
-//
-//        if (searchResult.FoundObject == -1)
-//            return false;
-//
-//        Bucket& bucket = DATA_OF(Bucket, _allocData)[searchResult.FoundObject];
-//        bucket.Reset();
-//        --_elementsCount;
-//        ++_deletedCount;
-//
-//        return true;
-//    }
-//
-//
-//    // Collections Lifecycle - Overriding Content
-//
-//private:
-//    FORCE_INLINE
-//    void MoveFrom(Dictionary&& other) noexcept
-//    {
-//        ASSERT(!IsAllocated()); // The dictionary must be empty!
-//
-//        if (!other.IsAllocated())
-//        {
-//            _allocData = AllocData{};
-//            _capacity = 0;
-//            _elementsCount = 0;
-//            _deletedCount = 0;
-//        }
-//        else if (other._allocData.MovesItems())
-//        {
-//            _allocData = MOVE(other._allocData);
-//            _capacity      = other._capacity;
-//            _elementsCount = other._elementsCount;
-//            _deletedCount  = other._deletedCount;
-//            other._capacity      = 0; // The allocation has been moved - reset the capacity!
-//            other._elementsCount = 0;
-//            other._deletedCount  = 0;
-//        }
-//        else
-//        {
-//            const int32 requestedCapacity = AllocHelper::InitCapacity(other._elementsCount);
-//
-//            _allocData     = AllocData{};
-//            _capacity      = AllocHelper::Allocate(_allocData, requestedCapacity);
-//            _elementsCount = other._elementsCount;
-//            _deletedCount  = other._deletedCount;
-//
-//            // No dictionary rebuilding, because moving is supposed to be as cheap as possible.
-//
-//            BulkOperations::MoveLinearContent<Bucket>(
-//                DATA_OF(Bucket, other._allocData),
-//                DATA_OF(Bucket, this->_allocData),
-//                _capacity
-//            );
-//
-//            other.Reset();
-//        }
-//    }
-//
-//    template<typename OtherAlloc>
-//    void CopyFrom(const Dictionary<K, V, OtherAlloc, Probe>& other)
-//    {
-//        static_assert(std::is_copy_constructible<K>::value, "Type must be copy-constructible.");
-//        static_assert(std::is_copy_constructible<V>::value, "Type must be copy-constructible.");
-//
-//        ASSERT(!IsAllocated()); // The dictionary must be empty!
-//
-//        if (other._capacity == 0)
-//        {
-//            // If no allocation is active, just zero the members.
-//            _allocData = AllocData{};
-//            _capacity = 0;
-//            _elementsCount = 0;
-//            _deletedCount = 0;
-//        }
-//        else
-//        {
-//            // Copy is expensive - Let's rebuild the dictionary.
-//            // Note: If we weren't rebuilding, we could have used BulkOperations::CopyLinearContent.
-//
-//            Reserve(other.Capacity());
-//
-//            for (auto iterator = other.Buckets(); iterator; ++iterator)
-//                Add(iterator->Key(), iterator->Value());
-//        }
-//    }
-//
-//
-//
-//    // Collection Lifecycle - Constructors
-//
-//public:
-//    /// <summary> Initializes an empty dictionary with no active allocation. </summary>
-//    FORCE_INLINE
-//    Dictionary()
-//        : _allocData{}
-//        , _capacity{ 0 }
-//        , _elementsCount{ 0 }
-//        , _deletedCount{ 0 }
-//    {
-//    }
-//
-//    /// <summary> Initializes a dictionary by moving the allocation from another array. </summary>
-//    FORCE_INLINE
-//    Dictionary(Dictionary&& other) noexcept
-//    {
-//        MoveFrom(MOVE(other));
-//    }
-//
-//    /// <summary> Initializes a dictionary by copying another dictionary. </summary>
-//    template<
-//        typename K_ = K,
-//        typename V_ = V,
-//        typename = typename std::enable_if<((
-//            std::is_copy_constructible<K>::value &&
-//            std::is_copy_constructible<V>::value &&
-//            std::is_same<K, K_>::value &&
-//            std::is_same<V, V_>::value
-//        ))>::type>
-//    Dictionary(const Dictionary& other)
-//        : _allocData{}
-//        , _capacity{ 0 }
-//        , _elementsCount{ 0 }
-//        , _deletedCount{ 0 }
-//    {
-//        CopyFrom<Alloc>(other);
-//    }
-//
-//    /// <summary> Initializes an dictionary array with an active context-less allocation of the specified capacity. </summary>
-//    FORCE_INLINE
-//    explicit Dictionary(const int32 capacity)
-//        : _allocData{}
-//        , _elementsCount{ 0 }
-//        , _deletedCount{ 0 }
-//    {
-//        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
-//        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
-//    }
-//
-//    /// <summary> Initializes an empty dictionary with an active allocation of the specified capacity and context. </summary>
-//    template<typename AllocContext>
-//    FORCE_INLINE
-//    explicit Dictionary(const int32 capacity, AllocContext&& context)
-//        : _allocData{ FORWARD(AllocContext, context) }
-//        , _elementsCount{ 0 }
-//        , _deletedCount{ 0 }
-//    {
-//        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
-//        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
-//    }
-//
-//
-//    // Collection Lifecycle - Assignments
-//
-//    FORCE_INLINE
-//    auto operator=(Dictionary&& other) noexcept -> Dictionary&
-//    {
-//        if (this != &other)
-//        {
-//            Reset();
-//            MoveFrom(MOVE(other));
-//        }
-//        return *this;
-//    }
-//
-//    template<
-//        typename K_ = K,
-//        typename V_ = V,
-//        typename = typename std::enable_if<((
-//            std::is_copy_constructible<K>::value &&
-//            std::is_copy_constructible<V>::value &&
-//            std::is_same<K, K_>::value &&
-//            std::is_same<V, V_>::value
-//        ))>::type>
-//    auto operator=(const Dictionary& other) -> Dictionary&
-//    {
-//        if (this != &other)
-//        {
-//            Reset();
-//            CopyFrom<Alloc>(other);
-//        }
-//        return *this;
-//    }
-//
-//
-//    // Collection Lifecycle - Destructor
-//
-//    ~Dictionary()
-//    {
-//        if (_capacity <= 0)
-//            return;
-//
-//        BulkOperations::DestroyLinearContent<Bucket>(DATA_OF(Bucket, _allocData), _capacity);
-//        _allocData.Free();
-//    }
-//
-//
-//    // Factorization
-//
-//    //TODO Implement Of(std::initializer_list<U> list)
-//
-//
-//    // Iteration
-//
-//    // Note: Dictionary is a complex collection, thus it has so many different enumerators.
-//
-//private:
-//    FORCE_INLINE
-//    int32 SkipToOccupied(const int32 index) const
-//    {
-//        for (int32 i = index; i < _capacity; ++i)
-//        {
-//            if (DATA_OF(const Bucket, _allocData)[i].State() == BucketState::Occupied)
-//                return i;
-//        }
-//        return _capacity;
-//    }
-//
-//
-//public:
-//    class KeyEnumerator
-//    {
-//        const Dictionary* _dictionary;
-//        int32 _index;
-//
-//    public:
-//        explicit KeyEnumerator(const Dictionary& dictionary)
-//            : _dictionary{ &dictionary }
-//            , _index{ 0 }
-//        {
-//            _index = _dictionary->SkipToOccupied(_index);
-//        }
-//
-//        // Access
-//
-//        FORCE_INLINE
-//        const K& operator*() const
-//        {
-//            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Key();
-//        }
-//
-//        FORCE_INLINE
-//        const K* operator->() const
-//        {
-//            return &DATA_OF(const Bucket, _dictionary->_allocData)[_index].Key();
-//        }
-//
-//
-//        // Iteration
-//
-//        FORCE_INLINE
-//        explicit operator bool() const noexcept
-//        {
-//            return _index < _dictionary->_capacity;
-//        }
-//
-//        FORCE_INLINE
-//        KeyEnumerator& operator++()
-//        {
-//            ++_index;
-//            _index = _dictionary->SkipToOccupied(_index);
-//            return *this;
-//        }
-//
-//        FORCE_INLINE
-//        KeyEnumerator operator++(int)
-//        {
-//            auto copy = *this;
-//            ++*this;
-//            return copy;
-//        }
-//    };
-//
-//    class MutValEnumerator
-//    {
-//        Dictionary* _dictionary;
-//        int32 _index;
-//
-//    public:
-//        explicit MutValEnumerator(Dictionary& dictionary)
-//            : _dictionary{ &dictionary }
-//            , _index{ 0 }
-//        {
-//            _index = _dictionary->SkipToOccupied(_index);
-//        }
-//
-//
-//        // Access
-//
-//        FORCE_INLINE
-//        V& operator*()
-//        {
-//            return DATA_OF(Bucket, _dictionary->_allocData)[_index].Value();
-//        }
-//
-//        FORCE_INLINE
-//        const V& operator*() const
-//        {
-//            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
-//        }
-//
-//        FORCE_INLINE
-//        V* operator->()
-//        {
-//            return &DATA_OF(Bucket, _dictionary->_allocData)[_index].Value();
-//        }
-//
-//        FORCE_INLINE
-//        const V* operator->() const
-//        {
-//            return &DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
-//        }
-//
-//
-//        // Iteration
-//
-//        FORCE_INLINE
-//        explicit operator bool() const noexcept
-//        {
-//            return _index < _dictionary->_capacity;
-//        }
-//
-//        FORCE_INLINE
-//        MutValEnumerator& operator++()
-//        {
-//            ++_index;
-//            _index = _dictionary->SkipToOccupied(_index);
-//            return *this;
-//        }
-//
-//        FORCE_INLINE
-//        MutValEnumerator operator++(int)
-//        {
-//            auto copy = *this;
-//            ++*this;
-//            return copy;
-//        }
-//    };
-//
-//    class ConstValEnumerator
-//    {
-//        const Dictionary* _dictionary;
-//        int32 _index;
-//
-//    public:
-//        explicit ConstValEnumerator(const Dictionary& dictionary)
-//            : _dictionary{ &dictionary }
-//            , _index{ 0 }
-//        {
-//            _index = _dictionary->SkipToOccupied(_index);
-//        }
-//
-//
-//        // Access
-//
-//        FORCE_INLINE
-//        const V& operator*() const
-//        {
-//            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
-//        }
-//
-//        FORCE_INLINE
-//        const V* operator->() const
-//        {
-//            return &DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
-//        }
-//
-//        // Iteration
-//
-//        FORCE_INLINE
-//        explicit operator bool() const noexcept
-//        {
-//            return _index < _dictionary->_capacity;
-//        }
-//
-//        FORCE_INLINE
-//        ConstValEnumerator& operator++()
-//        {
-//            ++_index;
-//            _index = _dictionary->SkipToOccupied(_index);
-//            return *this;
-//        }
-//
-//        FORCE_INLINE
-//        ConstValEnumerator operator++(int)
-//        {
-//            auto copy = *this;
-//            ++*this;
-//            return copy;
-//        }
-//    };
-//
-//    class MutBucketEnumerator
-//    {
-//        Dictionary* _dictionary;
-//        int32 _index;
-//
-//
-//    public:
-//        explicit MutBucketEnumerator(Dictionary& dictionary)
-//            : _dictionary{ &dictionary }
-//            , _index{ 0 }
-//        {
-//            _index = _dictionary->SkipToOccupied(_index);
-//        }
-//
-//
-//        // Access
-//
-//        /// <summary> Accesses the bucket at the current index. </summary>
-//        /// <remarks>
-//        /// The bucket itself must not be modified, as it would break the dictionary.
-//        /// Use <c>Value</c> and <c>Key</c> to access the bucket content.
-//        /// </remarks>
-//        FORCE_INLINE
-//        Bucket& operator*() = delete;
-//
-//        FORCE_INLINE
-//        const Bucket& operator*() const
-//        {
-//            return DATA_OF(const Bucket, _dictionary->_allocData)[_index];
-//        }
-//
-//        /// <summary> Accesses the bucket at the current index. </summary>
-//        /// <remarks>
-//        /// The bucket itself must not be modified, as it would break the dictionary.
-//        /// Use <c>Value</c> and <c>Key</c> to access the bucket content.
-//        /// </remarks>
-//        FORCE_INLINE
-//        Bucket* operator->() = delete;
-//
-//        FORCE_INLINE
-//        const Bucket* operator->() const
-//        {
-//            return &DATA_OF(const Bucket, _dictionary->_allocData)[_index];
-//        }
-//
-//
-//        FORCE_INLINE
-//        const K& Key() const
-//        {
-//            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Key();
-//        }
-//
-//        FORCE_INLINE
-//        V& Value()
-//        {
-//            return DATA_OF(Bucket, _dictionary->_allocData)[_index].Value();
-//        }
-//
-//        FORCE_INLINE
-//        const V& Value() const
-//        {
-//            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
-//        }
-//
-//
-//        // Iteration
-//
-//        FORCE_INLINE
-//        explicit operator bool() const noexcept
-//        {
-//            return _index < _dictionary->_capacity;
-//        }
-//
-//        FORCE_INLINE
-//        MutBucketEnumerator& operator++()
-//        {
-//            ++_index;
-//            _index = _dictionary->SkipToOccupied(_index);
-//            return *this;
-//        }
-//
-//        FORCE_INLINE
-//        MutBucketEnumerator operator++(int)
-//        {
-//            auto copy = *this;
-//            ++*this;
-//            return copy;
-//        }
-//    };
-//
-//    class ConstBucketEnumerator
-//    {
-//        const Dictionary* _dictionary;
-//        int32 _index;
-//
-//    public:
-//        explicit ConstBucketEnumerator(const Dictionary& dictionary)
-//            : _dictionary{ &dictionary }
-//            , _index{ 0 }
-//        {
-//            _index = _dictionary->SkipToOccupied(_index);
-//        }
-//        
-//
-//        // Access
-//
-//        FORCE_INLINE
-//        const Bucket& operator*() const
-//        {
-//            return DATA_OF(const Bucket, _dictionary->_allocData)[_index];
-//        }
-//
-//        FORCE_INLINE
-//        const Bucket* operator->() const
-//        {
-//            return &DATA_OF(const Bucket, _dictionary->_allocData)[_index];
-//        }
-//
-//
-//        FORCE_INLINE
-//        const K& Key() const
-//        {
-//            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Key();
-//        }
-//
-//        FORCE_INLINE
-//        const V& Value() const
-//        {
-//            return DATA_OF(const Bucket, _dictionary->_allocData)[_index].Value();
-//        }
-//
-//
-//        // Iteration
-//
-//        FORCE_INLINE
-//        explicit operator bool() const noexcept
-//        {
-//            return _index < _dictionary->_capacity;
-//        }
-//
-//        FORCE_INLINE
-//        ConstBucketEnumerator& operator++()
-//        {
-//            ++_index;
-//            _index = _dictionary->SkipToOccupied(_index);
-//            return *this;
-//        }
-//
-//        FORCE_INLINE
-//        ConstBucketEnumerator operator++(int)
-//        {
-//            auto copy = *this;
-//            ++*this;
-//            return copy;
-//        }
-//    };
-//
-//
-//    FORCE_INLINE
-//    KeyEnumerator Keys() const
-//    {
-//        return KeyEnumerator{ *this };
-//    }
-//    
-//    FORCE_INLINE
-//    MutValEnumerator Values()
-//    {
-//        return MutValEnumerator{ *this };
-//    }
-//
-//    FORCE_INLINE
-//    ConstValEnumerator Values() const
-//    {
-//        return ConstValEnumerator{ *this };
-//    }
-//
-//    FORCE_INLINE
-//    MutBucketEnumerator Buckets()
-//    {
-//        return MutBucketEnumerator{ this };
-//    }
-//
-//    FORCE_INLINE
-//    ConstBucketEnumerator Buckets() const
-//    {
-//        return ConstBucketEnumerator{ this };
-//    }
-//};
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/ktl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
+
+#pragma once
+
+#include "Collections/CollectionsUtils.h"
+#include "Collections/LoadFHelper.h"
+#include "Types/Index.h"
+#include "Types/Nullable.h"
+#include "Types/Pair.h"
+
+/// <summary>
+/// Open-addressing hash map with power-of-two capacity and specified probing strategy.
+/// It uses nested <c>Nullable</c> to track empty and deleted slots.
+/// </summary>
+/// 
+/// <typeparam name="K">
+/// The type of the keys identifying the stored values.
+/// Must be movable (both constructor and assignment), non-const, and non-reference.
+/// It must support hashing and equality comparison.
+/// If it supports tombstone semantics, it will be used by the collection.
+/// The hash of the key must never change to ensure the integrity of the map.
+/// </typeparam>
+/// <typeparam name="V">
+/// The type of the values stored in the set.
+/// Must be movable (both constructor and assignment), non-const, and non-reference.
+/// It does not need to support hashing or equality comparison, nor tombstone semantics.
+/// </typeparam>
+/// <typeparam name="A">
+/// (Optional) The type of the allocator to use.
+/// Can be either a dragging or non-dragging allocator.
+/// </typeparam>
+/// <typeparam name="H">
+/// (Optional) Class providing hashing function for the stored elements.
+/// </typeparam>
+/// <typeparam name="P">
+/// (Optional) Class providing a function that calculates the next probing index.
+/// </typeparam>
+template<
+    typename K,
+    typename V,
+    typename A = DefaultAlloc,
+    typename H = HashOf<K>,
+    typename P = LinearProbing
+>
+class Dictionary
+{
+public:
+    using Key   = K;
+    using Value = V;
+
+    /// <summary>
+    /// Wrapper over a key-value pair that tracks the state of the slot, potentially containing an element of hash map.
+    /// </summary>
+    class Slot
+    {
+        union // Use union to avoid default construction of the value
+        {
+            Value                   _value;
+        };
+
+        Nullable<Nullable<Key>> _key;
+
+
+        // Access
+        
+    public:
+        /// <summary>
+        /// Checks if the slot is ready to accept a new key-value pair.
+        /// It defines the first stage of the slot lifecycle.
+        /// </summary>
+        NO_DISCARD FORCE_INLINE
+        auto IsEmpty() const -> bool
+        {
+            return _key.IsEmpty();
+        }
+
+        /// <summary>
+        /// Checks if the slot is occupied by a key-value pair.
+        /// It defines the second stage of the slot lifecycle.
+        /// </summary>
+        NO_DISCARD FORCE_INLINE
+        auto IsOccupied() const -> bool
+        {
+            if (_key.IsEmpty())
+                return false;
+
+            return _key.Value().HasValue();
+        }
+
+        /// <summary>
+        /// Check if the slot was occupied by a key-value pair, but the key was removed.
+        /// The slot is still marked as not able to accept a new pair.
+        /// </summary>
+        NO_DISCARD FORCE_INLINE
+        auto IsDeleted() const -> bool
+        {
+            return _key.HasValue() && _key.Value().IsEmpty();
+        }
+
+        /// <summary>
+        /// Returns a reference to the stored pair value.
+        /// This method can be called only when the slot is occupied.
+        /// </summary>
+        NO_DISCARD FORCE_INLINE
+        auto GetValue() -> Value&
+        {
+            ASSERT_COLLECTION_SAFE_ACCESS(IsOccupied());
+            return _value;
+        }
+        
+        /// <summary>
+        /// Returns a reference to the stored pair value.
+        /// This method can be called only when the slot is occupied.
+        /// </summary>
+        NO_DISCARD FORCE_INLINE
+        auto GetValue() const -> const Value&
+        {
+            ASSERT_COLLECTION_SAFE_ACCESS(IsOccupied());
+            return _value;
+        }
+
+        /// <summary>
+        /// Returns a reference to the stored pair key.
+        /// This method can be called only when the slot is occupied.
+        /// </summary>
+        NO_DISCARD FORCE_INLINE
+        auto GetKey() -> Key&
+        {
+            ASSERT_COLLECTION_SAFE_ACCESS(IsOccupied());
+            return _key.Value().Value();
+        }
+
+        /// <summary>
+        /// Returns a reference to the stored pair key.
+        /// This method can be called only when the slot is occupied.
+        /// </summary>
+        NO_DISCARD FORCE_INLINE
+        auto GetKey() const -> const Key&
+        {
+            ASSERT_COLLECTION_SAFE_ACCESS(IsOccupied());
+            return _key.Value().Value();
+        }
+
+
+        // Manipulation
+
+        /// <summary>
+        /// Removes the key-value pair from the slot.
+        /// This method can be called only when the slot is occupied.
+        /// This is because it leave a mark that the slot was occupied prior to the removal.
+        /// </summary>
+        void Remove()
+        {
+            ASSERT_COLLECTION_SAFE_MOD(IsOccupied());
+            _value.~Value();
+            _key.Set(Nullable<Key>{});
+            ASSERT_COLLECTION_INTEGRITY(IsDeleted());
+        }
+
+        /// <summary>
+        /// Removes the key-value pair from the slot or the mark that it was removed.
+        /// Puts the slot in the initial state, capable of accepting a new pair.
+        /// This function should be called only during the rebuilding process.
+        /// </summary>
+        void Reset()
+        {
+            if (IsOccupied())
+                _value.~Value();
+            _key.Clear();
+            ASSERT_COLLECTION_INTEGRITY(IsEmpty());
+        }
+
+        /// <summary>
+        /// Sets the key-value pair in the slot.
+        /// This method can be called only when the slot is empty.
+        /// </summary>
+        template<typename K_, typename V_>
+        FORCE_INLINE
+        void Set(K_&& key, V_&& value) // Universal references
+        {
+            ASSERT_COLLECTION_SAFE_MOD(!IsOccupied());
+
+            // Value is manipulated manually
+            new (&_value) Value{ FORWARD(V_, value) };
+
+            // Set the key
+            Key theKey{ FORWARD(K_, key) };
+            Nullable<Key> nullableKey{ MOVE(theKey) };
+            _key.Set(MOVE(nullableKey));
+        }
+
+
+        // Lifecycle
+
+        /// <summary> Initializes an empty slot. </summary>
+        Slot()
+            // Do not initialize the key, it will be set by the user!
+            : _key{}
+        {
+            ASSERT_COLLECTION_INTEGRITY(IsEmpty());
+        }
+
+        /// <summary> Initializes a slot by moving other slot. </summary>
+        Slot(Slot&& other) noexcept
+            : _key{ MOVE(other._key) }
+        {
+            if (IsOccupied()) // Test self for key presence indication, not other. Key has been moved.
+            {
+                new (&_value) Value{ MOVE(other._value) };
+                other._value.~Value();
+            }
+
+            // No need to reset the other slot: 1. Members are already moved. 2. It will be destroyed.
+        }
+
+        /// <summary> Initializes a slot by copying other slot. </summary>
+        Slot(const Slot& other) = delete;
+
+        /// <summary> Assigns a slot by moving other slot. </summary>
+        auto operator=(Slot&& other) noexcept -> Slot&
+        {
+            if (this != &other)
+            {
+                Reset();
+
+                _key = MOVE(other._key);
+
+                if (IsOccupied()) // Test self for key presence indication, not other. Key has been moved.
+                {
+                    new (&_value) Value{ MOVE(other._value) };
+                    other._value.~Value();
+                }
+            }
+            return *this;
+        }
+
+        /// <summary> Assigns a slot by copying other slot. </summary>
+        auto operator=(const Slot& other) -> Slot& = delete;
+
+        /// <summary> Destroys the slot. </summary>
+        ~Slot()
+        {
+            if (IsOccupied()) 
+                _value.~Value();
+            
+            _key.~Nullable();
+        }
+    };
+
+    // No explicit 'element' type, as the dictionary is a collection of key-value pairs.
+    using AllocData   = typename A::Data;
+    using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, DoubleGrowth>;
+    using LoadFHelper = LoadFHelperOf<HASH_SETS_DEFAULT_SLACK_RATIO>;
+
+PRIVATE:
+    AllocData _allocData{};
+    int32     _capacity{};           // Number of slots
+    int32     _elementCountCached{}; // Number of elements
+    int32     _cellsCountCached{};   // Number of cells
+
+
+    // Capacity Access
+
+public:
+    /// <summary> Checks if the array has an active allocation. </summary>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto IsAllocated() const -> bool
+    {
+        return _capacity > 0;
+    }
+
+    /// <summary> Number of key-value pairs that can be stored without invoking the allocator. </summary>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto Capacity() const -> int32
+    {
+        return _capacity;
+    }
+
+
+    // Count Access
+
+    /// <summary> Checks if the array has any key-value pairs. </summary>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto IsEmpty() const -> bool
+    {
+        return _elementCountCached == 0;
+    }
+
+    /// <summary> Number of currently stored elements. </summary>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto Count() const -> int32
+    {
+        return _elementCountCached;
+    }
+
+    /// <summary>
+    /// Number of elements that could be added without invoking the allocator,
+    /// assuming that the collection would never be rebuilt.
+    /// </summary>
+    /// <remarks>
+    /// This is not the same as the slack in the allocation.
+    /// Some slots may not become occupied unless the collection is rebuilt.
+    /// </remarks>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto Slack() const -> int32
+    {
+        return _capacity - _cellsCountCached;
+    }
+
+    /// <summary> Number of cells - slots that store an element or a marker. </summary>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto CellCount() const -> int32
+    {
+        return _cellsCountCached;
+    }
+
+    /// <summary> Number of cells (not slots) that are empty. </summary>
+    auto CellSlack() const -> int32
+    {
+        return _cellsCountCached - _elementCountCached;
+    }
+
+
+PRIVATE:
+    NO_DISCARD FORCE_INLINE
+    auto IsValid() const -> bool
+    {
+        // Nothing to check if the set is empty
+        if (_capacity) 
+        {
+            return
+                0 == _elementCountCached &&
+                0 == _cellsCountCached;
+        }
+
+        // Ensure that the capacity is a power of two
+        if (!Math::IsPow2(_capacity))
+            return false;
+
+        // Iterate over all slots and recount the elements
+        int32 actualValidElements = 0, actualCells = 0;
+        for (int32 i = 0; i < _capacity; ++i)
+        {
+            const Slot& slot = DATA_OF(Slot, _allocData)[i];
+            if (slot.IsEmpty())
+                continue;
+
+            ++actualCells;
+
+            if (slot.IsOccupied())
+                ++actualValidElements;
+        }
+
+        // Compare the actual values with the cached ones
+        return
+            actualValidElements == _elementCountCached &&
+            actualCells         == _cellsCountCached;
+    }
+
+    /// <summary>
+    /// Attempts to find a slot with the specified key, or the first one to be selected for insertion.
+    /// </summary>
+    /// <param name="slots"> Array of slots to search. </param>
+    /// <param name="capacity"> Number of slots in the array. </param>
+    /// <param name="key"> Key to search for. </param>
+    NO_DISCARD
+    static auto FindSlot(
+        const Slot* slots,
+        const int32 capacity,
+        const Key& key
+    ) -> Bucketing::SearchResult
+    {
+        ASSERT_COLLECTION_INTEGRITY(slots);
+        ASSERT_COLLECTION_INTEGRITY(Math::IsPow2(capacity)); // Make sure the capacity is a power of 2
+
+        const int32 capacityBitMask = capacity - 1;
+        const int32 initIndex = H::GetHash(key) & capacityBitMask;
+
+        int32 currentIndex = initIndex;
+        Nullable<Index> firstFree{};
+
+        for (int32 numChecks = 0; numChecks < capacity; ++numChecks)
+        {
+            const Slot& slot = slots[currentIndex];
+
+            // If a free slot has been found before a slot with the key, we have the result.
+            if (slot.IsEmpty())
+            {
+                // If the previous slot was occupied we must use the next free slot.
+                // Otherwise, we can re-use the last deleted slot.
+                firstFree.SetIfNull(currentIndex);
+
+                return { {},  firstFree };
+            }
+
+            if (slot.IsDeleted() && firstFree.IsEmpty())
+            {
+                // Keep changing the first free index until the end of the search.
+                // Thus it will remember the last deleted slot, the one which can be re-used.
+                firstFree.Set(currentIndex);
+            }
+            else if (slot.IsOccupied() && slot.GetKey() == key)
+            {
+                // If the current slot has the key, just return the index :)
+                return { Nullable<Index>{ currentIndex }, {} };
+            }
+
+            currentIndex = (initIndex + P::Next(capacity, numChecks)) & capacityBitMask;
+        }
+
+        // If everything failed, return double null to indicate that the search was unsuccessful.
+        return {};
+    }
+
+    void RebuildImpl(const int32 miCapacitySlots)
+    {
+        ASSERT_COLLECTION_INTEGRITY(IsValid()); // Ensure the integrity of the collection
+        ASSERT_COLLECTION_SAFE_MOD(!IsEmpty()); // Rebuilding an empty collection is not allowed.
+
+        // 1. Set up the new content.
+        AllocData newData{ _allocData };
+        const int32 requiredCapacity  = Math::NextPow2(miCapacitySlots);
+        const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
+        const int32 allocatedCapacity = AllocHelper::Allocate(newData, requestedCapacity);
+
+        ASSERT_COLLECTION_INTEGRITY(Math::IsPow2(allocatedCapacity));
+
+        BulkOperations::DefaultLinearContent<Slot>(
+            DATA_OF(Slot, newData),
+            allocatedCapacity
+        );
+        
+        // 2. Rebuild the set into the new allocation.
+        for (int32 i = 0; i < _capacity; ++i) 
+        {
+            Slot& oldSlot = DATA_OF(Slot, _allocData)[i];
+            if (!oldSlot.IsOccupied()) // If there's no element, skip the slot.
+                continue;
+
+            const Bucketing::SearchResult result = FindSlot(
+                DATA_OF(Slot, newData),
+                allocatedCapacity,
+                oldSlot.GetKey()
+            );
+
+            // If a free slot was not found, it means that the allocation is too small, or the probing strategy failed.
+            ASSERT_COLLECTION_INTEGRITY(result.FreeBucket.HasValue());
+            // If the key was found, it means it had already been there, aka something went very (very) wrong.
+            ASSERT_COLLECTION_INTEGRITY(result.FoundObject.IsEmpty());
+
+            // Move the element to the new slot.
+            DATA_OF(Slot, newData)[result.FreeBucket.Value()] = MOVE(oldSlot);
+        }
+
+        // 3. Destroy the old slots and replace the allocation.
+        BulkOperations::DestroyLinearContent<Slot>(
+            DATA_OF(Slot, _allocData),
+            _capacity
+        );
+        _allocData.Free();
+
+        // 4. Replace the old allocation and reset the capacity.
+        if (newData.MovesItems())
+        {
+            _allocData = MOVE(newData);
+            _capacity  = allocatedCapacity;
+        }
+        else
+        {
+            _capacity  = AllocHelper::Allocate(_allocData, requestedCapacity);
+
+            BulkOperations::MoveLinearContent<Slot>(
+                DATA_OF(Slot, newData),
+                DATA_OF(Slot, _allocData),
+                _capacity
+            );
+            BulkOperations::DestroyLinearContent<Slot>(
+                DATA_OF(Slot, newData),
+                _capacity
+            );
+
+            newData.Free();
+        }
+
+        // 5. Update the cached counts.
+        _cellsCountCached = _elementCountCached;
+    }
+
+public:
+    /// <summary> Forces the set to rebuild itself. </summary>
+    void Rebuild()
+    {
+        const int32 desiredCapacity = LoadFHelper::SlotsForElements(_elementCountCached);
+        RebuildImpl(desiredCapacity);
+    }
+
+
+    // Allocation Manipulation
+
+public:
+    /// <summary>
+    /// Ensures that the set can store at least the specified number of slots (not elements).
+    /// May require rebuilding (rehashing) the set.
+    /// </summary>
+    /// <param name="minCapacitySlots"> The minimal number of <b>slots</b> that the set should be able to store. </param>
+    void ReserveSlots(const int32 minCapacitySlots)
+    {
+        if (minCapacitySlots < 1)
+            return; // Reserving 0 (or less) would never increase the capacity.
+
+        if (minCapacitySlots <= _capacity)
+            return; // Reserving the same capacity would not increase the capacity.
+
+        if (_capacity == 0)
+        {
+            // Allocate the initial capacity and initialize the slots
+            const int32 requiredCapacity  = Math::NextPow2(minCapacitySlots);
+            const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
+            _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
+            BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
+        }
+        else
+        {
+            // Rebuild the dictionary
+            RebuildImpl(minCapacitySlots);
+        }
+    }
+
+    /// <summary>
+    /// Attempts to reduce the capacity, without losing any elements.
+    /// If the set is empty, the allocation will be freed.
+    /// </summary>
+    void Compact()
+    {
+        if (_elementCountCached == 0 && _capacity > 0)
+        {
+            _allocData.Free();
+            _capacity = 0;
+            return;
+        }
+
+        Rebuild();
+    }
+
+    /// <summary> Removes all elements from the set and frees the allocation. </summary>
+    void Reset()
+    {
+        if (_capacity == 0)
+            return;
+
+        BulkOperations::DestroyLinearContent<Slot>(
+            DATA_OF(Slot, _allocData),
+            _capacity
+        );
+
+        _allocData.Free();
+        _capacity = 0;
+        _cellsCountCached = 0;
+        _elementCountCached = 0;
+    }
+
+
+    // Elements Access
+
+    /// <summary> Checks if the dictionary contains entry of specified key. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto Contains(const Key& key) const -> bool
+    {
+        if (_capacity == 0)
+            return false;
+
+        return FindSlot(DATA_OF(const Slot, _allocData), _capacity, key).FoundObject.HasValue();
+    }
+
+
+    /// <summary>
+    /// Adds the specified key-value pair to the dictionary.
+    /// </summary>
+    /// <returns>
+    /// If a new pair added, <c>true</c> is returned.
+    /// If the key was already in the set, and the value was just updated, <c>false</c> is returned.
+    /// </returns>
+    template<typename K_, typename V_> 
+    MAY_DISCARD FORCE_INLINE
+    auto Add(K_&& key, V_&& value) -> bool // Universal references
+    {
+        // Ensure that the dictionary has enough capacity.
+        {
+            const int32 requiredCapacity = LoadFHelper::SlotsForElements(_elementCountCached + 1);
+            ReserveSlots(requiredCapacity);
+        }
+
+        const K& keyConstRef = key; // If your code fails here, check if `K_` is `const K&` or `K&&`.
+        Bucketing::SearchResult searchResult = FindSlot(
+            DATA_OF(Slot, _allocData),
+            _capacity,
+            keyConstRef
+        );
+
+        // If the entry is present, then just update the value.
+        if (searchResult.FoundObject.HasValue()) 
+        {
+            auto& slot = DATA_OF(Slot, _allocData)[searchResult.FoundObject.Value()];
+            slot.GetValue() = FORWARD(V_, value);
+            return false;
+        }
+
+        // If the entry is not present, then add a new one.
+
+        // If a new slot was not found, it means that the allocation is too small, or the probing strategy failed.
+        // Rebuild the dictionary to ensure that the new slot will be found.
+        if (searchResult.FreeBucket.IsEmpty())
+        {
+            RebuildImpl(_elementCountCached + 1);
+            searchResult = FindSlot(
+                DATA_OF(Slot, _allocData),
+                _capacity,
+                keyConstRef
+            );
+        }
+
+        ASSERT_COLLECTION_INTEGRITY(searchResult.FreeBucket.HasValue()); // The new slot must be found.
+        ASSERT_COLLECTION_INTEGRITY(searchResult.FoundObject.IsEmpty()); // The searched object must not have appeared after rebuilding.
+
+        Slot& newSlot = DATA_OF(Slot, _allocData)[searchResult.FreeBucket.Value()];
+        newSlot.Set(FORWARD(K_, key), FORWARD(V_, value));
+
+        ++_elementCountCached;
+        ++_cellsCountCached;
+
+        return true;
+    }
+
+    /// <summary> Removes the entry with the specified key from the dictionary. </summary>
+    /// <returns> <c>true</c> if the entry was removed, <c>false</c> if the entry was not in the dictionary. </returns>
+    MAY_DISCARD FORCE_INLINE
+    auto Remove(const Key& key) -> bool
+    {
+        if (_capacity == 0)
+            return false;
+
+        const Bucketing::SearchResult result = FindSlot(
+            DATA_OF(Slot, _allocData),
+            _capacity,
+            key
+        );
+
+        if (result.FoundObject.IsEmpty())
+            return false;
+
+        // Use `Delete` specifically to mark the slot as deleted.
+        DATA_OF(Slot, _allocData)[result.FoundObject.Value()].Remove();
+        --_elementCountCached;
+
+        return true;
+    }
+
+
+    // Element Access
+
+    /// <summary>
+    /// Checks if the dictionary contains entry of specified key.
+    /// If true, a pointer to the value is returned. Otherwise, <c>nullptr</c>.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE
+    auto TryGet(const Key& key) -> Value*
+    {
+        if (_capacity == 0)
+            return nullptr;
+
+        const Bucketing::SearchResult result = FindSlot(
+            DATA_OF(Slot, _allocData),
+            _capacity,
+            key
+        );
+
+        if (result.FoundObject.IsEmpty())
+            return nullptr;
+
+        return &(DATA_OF(Slot, _allocData)[result.FoundObject.Value()].GetValue());
+    }
+
+    /// <summary>
+    /// Checks if the dictionary contains entry of specified key.
+    /// If true, a pointer to the value is returned. Otherwise, <c>nullptr</c>.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE
+    auto TryGet(const Key& key) const -> const Value*
+    {
+        if (_capacity == 0)
+            return nullptr;
+
+        const Bucketing::SearchResult result = FindSlot(
+            DATA_OF(Slot, _allocData),
+            _capacity,
+            key
+        );
+
+        if (result.FoundObject.IsEmpty())
+            return nullptr;
+
+        return &(DATA_OF(Slot, _allocData)[result.FoundObject.Value()].GetValue());
+    }
+
+    // Utility
+
+    /// <summary> Adds all key-value pairs from the other dictionary to this one. </summary>
+    void Append(const Dictionary& other)
+    {
+        const Slot* otherSlots = DATA_OF(const Slot, other._allocData);
+        for (int32 i = 0; i < other._capacity; ++i)
+        {
+            const Slot& slot = otherSlots[i];
+            if (slot.IsOccupied())
+                Add(slot.GetKey(), slot.GetValue());
+        }
+    }
+
+
+protected:
+    /// <summary>
+    /// Moves the contents of the other set to this one.
+    /// Make sure that this set is empty before calling this method.
+    /// </summary>
+    void MoteToEmpty(Dictionary&& other) noexcept
+    {
+        ASSERT_COLLECTION_SAFE_MOD(_capacity == 0 && _elementCountCached == 0); // The set must be empty, but the collection must be initialized!
+        ASSERT_COLLECTION_INTEGRITY(other.IsValid()); // Ensure the integrity of the collection
+
+        if (other._capacity == 0 || other._elementCountCached == 0)
+            return;
+
+        if (other._allocData.MovesItems())
+        {
+            _allocData = MOVE(other._allocData);
+            _capacity  = other._capacity;
+            _elementCountCached = other._elementCountCached;
+            _cellsCountCached   = other._cellsCountCached;
+
+            // The items have been moved with the allocator.
+            // The capacity must be reset manually.
+
+            other._capacity           = 0;
+            other._elementCountCached = 0;
+            other._cellsCountCached   = 0;
+        }
+        else
+        {
+            BulkOperations::MoveLinearContent<Slot>(
+                DATA_OF(Slot, other._allocData),
+                DATA_OF(Slot, _allocData),
+                other._capacity
+            );
+            BulkOperations::DestroyLinearContent<Slot>(
+                DATA_OF(Slot, other._allocData),
+                other._capacity
+            );
+
+            // It could be considered rebuilding the dictionary on move.
+
+            _capacity           = other._capacity;
+            _elementCountCached = other._elementCountCached;
+            _cellsCountCached   = other._cellsCountCached;
+            other._allocData.Free();
+            other._capacity = 0;
+            other._elementCountCached = 0;
+            other._cellsCountCached = 0;
+        }
+    }
+
+
+    // Collection Lifecycle - Constructors
+
+public:
+    /// <summary> Initializes an empty dictionary with no active allocation. </summary>
+    FORCE_INLINE constexpr
+    Dictionary() = default;
+
+    /// <summary> Initializes a dictionary by moving the allocation from another dictionary. </summary>
+    FORCE_INLINE constexpr
+    Dictionary(Dictionary&& other) noexcept
+    {
+        MoteToEmpty(MOVE(other));
+    }
+
+    /// <summary> Initializes a dictionary by copying another dictionary. </summary>
+    FORCE_INLINE constexpr
+    Dictionary(const Dictionary& other)
+    {
+        Append(other);
+    }
+
+    /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
+    FORCE_INLINE explicit
+    Dictionary(const int32 capacity)
+    {
+        const int32 requiredCapacity  = Math::NextPow2(capacity);
+        const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
+        _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
+
+        BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
+    }
+
+    /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
+    template<typename AllocContext>
+    FORCE_INLINE explicit
+    Dictionary(const int32 capacity, AllocContext&& context) // Universal reference
+        : _allocData{ FORWARD(AllocContext, context) }
+    {
+        const int32 requiredCapacity = Math::NextPow2(capacity);
+        const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
+        _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
+
+        BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
+    }
+
+
+    /// <summary> Assigns the contents of the other dictionary to this one by move. </summary>
+    MAY_DISCARD FORCE_INLINE
+    auto operator=(Dictionary&& other) noexcept -> Dictionary&
+    {
+        if (this != &other)
+        {
+            Reset();
+            MoteToEmpty(MOVE(other));
+        }
+        return *this;
+    }
+
+    /// <summary> Assigns the contents of the other dictionary to this one by copy. </summary>
+    MAY_DISCARD FORCE_INLINE
+    auto operator=(const Dictionary& other) -> Dictionary&
+    {
+        if (this != &other)
+        {
+            Append(other);
+        }
+        return *this;
+    }
+
+
+    /// <summary> Destructor. </summary>
+    ~Dictionary()
+    {
+        Reset();
+    }
+
+
+    // Factorization
+
+    /// <summary> Creates a dictionary with the specified elements. </summary>
+    NO_DISCARD static constexpr
+    auto Of(std::initializer_list<std::pair<Key, Value>> list) -> Dictionary<Key, Value>
+    {
+        const int32 capacity = static_cast<int32>(list.size());
+        Dictionary<Key, Value> result{ capacity };
+
+        for (const auto& pair : list)
+            result.Add(pair.first, pair.second);
+
+        return result;
+    }
+
+
+    // Cursors
+
+PRIVATE:
+    /// <summary>
+    /// Moves the iterator index to the next occupied slot.
+    /// If the end of the collection is reached, the capacity is returned.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE
+    auto SkipToOccupied(const int32 index) const -> int32
+    {
+        for (int32 i = index; i < _capacity; ++i)
+        {
+            if (DATA_OF(const Slot, _allocData)[i].IsOccupied())
+                return i;
+        }
+
+        return _capacity;
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto GetHint(const int32 index) const -> SizeHint
+    {
+        // Ensure that the dictionary is not empty.
+        if (_capacity == 0)
+            return { 0, Nullable<Index>{ 0 }};
+
+        // Count the number of total occupied slots.
+        int32 result = 0;
+
+        // Count the number of occupied slots before the current index.
+        for (int32 i = 0; i <= index; ++i)
+        {
+            if (DATA_OF(const Slot, _allocData)[i].IsOccupied())
+            {
+                // If the current index is occupied, and the result is zero, 
+                // it means that the index is the first occupied slot. (Fast path)
+                if (i == index && result == 0)
+                {
+                    return {
+                        _elementCountCached,
+                        Nullable<Index>{ _elementCountCached }
+                    };
+                }
+
+                ++result;
+            }
+        }
+
+        // Count the number of occupied slots after the current index.
+        for (int32 i = index + 1; i < _capacity; ++i)
+        {
+            if (DATA_OF(const Slot, _allocData)[i].IsOccupied())
+                ++result;
+        }
+
+        return { result, Nullable<Index>{ result } };
+    }
+
+
+public:
+    /// <summary>
+    /// Enumerates over the keys present in the dictionary.
+    /// </summary>
+    /// <remarks>
+    /// Keys must never be modified, especially their hash.
+    /// </remarks>
+    class KeyCursor
+    {
+        const Dictionary* _dictionary;
+        int32             _index;
+
+    public:
+        FORCE_INLINE explicit
+        KeyCursor(const Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ dictionary.SkipToOccupied(0) }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> const Key&
+        {
+            return DATA_OF(const Slot, _dictionary->_allocData)[_index].GetKey();
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() const -> const Key*
+        {
+            return &(DATA_OF(const Slot, _dictionary->_allocData)[_index].GetKey());
+        }
+
+
+        // Iteration
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> SizeHint
+        {
+            return _dictionary->GetHint(_index);
+        }
+
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const noexcept
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++() -> KeyCursor&
+        {
+            ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
+            return *this;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> KeyCursor
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        auto operator==(const KeyCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index == other._index;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator!=(const KeyCursor& other) const -> bool
+        {
+            return !(*this == other);
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator<(const KeyCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index < other._index;
+        }
+    };
+
+    /// <summary>
+    /// Enumerates over the values present in the dictionary, allowing modification.
+    /// </summary>
+    class MutValueCursor
+    {
+        Dictionary* _dictionary;
+        int32       _index;
+
+    public:
+        FORCE_INLINE explicit
+        MutValueCursor(Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ dictionary.SkipToOccupied(0) }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() -> Value&
+        {
+            return DATA_OF(Slot, _dictionary->_allocData)[_index].GetValue();
+        }
+        
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> const Value&
+        {
+            return DATA_OF(const Slot, _dictionary->_allocData)[_index].GetValue();
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() -> Value*
+        {
+            return &(DATA_OF(Slot, _dictionary->_allocData)[_index].GetValue());
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() const -> const Value*
+        {
+            return &(DATA_OF(const Slot, _dictionary->_allocData)[_index].GetValue());
+        }
+
+
+        // Iteration
+        
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> SizeHint
+        {
+            return _dictionary->GetHint(_index);
+        }
+
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++() -> MutValueCursor&
+        {
+            ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
+            return *this;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> MutValueCursor
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        auto operator==(const MutValueCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index == other._index;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator!=(const MutValueCursor& other) const -> bool
+        {
+            return !(*this == other);
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator<(const MutValueCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index < other._index;
+        }
+    };
+
+    /// <summary>
+    /// Enumerates over the values present in the dictionary, allowing only read access.
+    /// </summary>
+    class ConstValueCursor
+    {
+        const Dictionary* _dictionary;
+        int32             _index;
+
+    public:
+        FORCE_INLINE explicit
+        ConstValueCursor(const Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ dictionary.SkipToOccupied(0) }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> const Value&
+        {
+            return DATA_OF(const Slot, _dictionary->_allocData)[_index].GetValue();
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() const -> const Value*
+        {
+            return &(DATA_OF(const Slot, _dictionary->_allocData)[_index].GetValue());
+        }
+
+
+        // Iteration
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> SizeHint
+        {
+            return _dictionary->GetHint();
+        }
+
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++() -> ConstValueCursor&
+        {
+            ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
+            return *this;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> ConstValueCursor
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        auto operator==(const ConstValueCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index == other._index;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator!=(const ConstValueCursor& other) const -> bool
+        {
+            return !(*this == other);
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator<(const ConstValueCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index < other._index;
+        }
+    };
+
+    /// <summary>
+    /// Enumerates over the key-value pairs present in the dictionary.
+    /// </summary>
+    class MutPairCursor
+    {
+        Dictionary* _dictionary;
+        int32       _index;
+
+    public:
+        using MutPair   = Pair<const K*, V*>;
+        using ConstPair = Pair<const K*, const V*>;
+
+        FORCE_INLINE explicit
+        MutPairCursor(Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ dictionary.SkipToOccupied(0) }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() -> MutPair
+        {
+            auto& slot = DATA_OF(Slot, _dictionary->_allocData)[_index];
+            return MutPair{ &slot.GetKey(), &slot.GetValue() };
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> ConstPair
+        {
+            const auto& slot = DATA_OF(const Slot, _dictionary->_allocData)[_index];
+            return ConstPair{ &slot.GetKey(), &slot.GetValue() };
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() -> MutPair
+        {
+            auto& slot = DATA_OF(Slot, _dictionary->_allocData)[_index];
+            return MutPair{ &slot.GetKey(), &slot.GetValue() };
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() const -> ConstPair
+        {
+            const auto& slot = DATA_OF(const Slot, _dictionary->_allocData)[_index];
+            return ConstPair{ &slot.GetKey(), &slot.GetValue() };
+        }
+
+
+        // Iteration
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> SizeHint
+        {
+            return _dictionary->GetHint(_index);
+        }
+
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++() -> MutPairCursor&
+        {
+            ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
+            return *this;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> MutPairCursor
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        auto operator==(const MutPairCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index == other._index;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator!=(const MutPairCursor& other) const -> bool
+        {
+            return !(*this == other);
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator<(const MutPairCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index < other._index;
+        }
+    };
+
+    class ConstPairCursor
+    {
+        const Dictionary* _dictionary;
+        int32             _index;
+
+    public:
+        using ConstPair = Pair<const K*, const V*>;
+
+        FORCE_INLINE explicit
+        ConstPairCursor(const Dictionary& dictionary)
+            : _dictionary{ &dictionary }
+            , _index{ dictionary.SkipToOccupied(0) }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> ConstPair
+        {
+            const auto& slot = DATA_OF(const Slot, _dictionary->_allocData)[_index];
+            return ConstPair{ &slot.GetKey(), &slot.GetValue() };
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() const -> ConstPair
+        {
+            const auto& slot = DATA_OF(const Slot, _dictionary->_allocData)[_index];
+            return ConstPair{ &slot.GetKey(), &slot.GetValue() };
+        }
+
+
+        // Iteration
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> SizeHint
+        {
+            return _dictionary->GetHint(_index);
+        }
+
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
+        {
+            return _index < _dictionary->_capacity;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++() -> ConstPairCursor&
+        {
+            ++_index;
+            _index = _dictionary->SkipToOccupied(_index);
+            return *this;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> ConstPairCursor
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        auto operator==(const ConstPairCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index == other._index;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator!=(const ConstPairCursor& other) const -> bool
+        {
+            return !(*this == other);
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator<(const ConstPairCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
+            return _index < other._index;
+        }
+    };
+
+
+    NO_DISCARD FORCE_INLINE
+    auto Keys() -> KeyCursor
+    {
+        return KeyCursor{ *this };
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto Values() -> MutValueCursor
+    {
+        return MutValueCursor{ *this };
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto Values() const -> ConstValueCursor
+    {
+        return ConstValueCursor{ *this };
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto Pairs() -> MutPairCursor
+    {
+        return MutPairCursor{ *this };
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto Pairs() const -> ConstPairCursor
+    {
+        return ConstPairCursor{ *this };
+    }
+
+
+    // Constraints
+
+    REQUIRE_TYPE_NOT_REFERENCE(Key);
+    REQUIRE_TYPE_NOT_REFERENCE(Value);
+    REQUIRE_TYPE_NOT_CONST(Key);
+    REQUIRE_TYPE_NOT_CONST(Value);
+    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Key);
+    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Value);
+
+    static_assert(
+        AllocHelper::HasBinaryMaskingSupport() == AllocHelper::BinaryMaskingSupportStatus::Supported, 
+        "The allocator must support binary masking."
+    );
+};

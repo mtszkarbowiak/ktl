@@ -1,4 +1,9 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/ktl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #pragma once
 
@@ -56,7 +61,7 @@ public:
 
     /// <summary> Returns the number of elements in the span. </summary>
     NO_DISCARD FORCE_INLINE
-    int32 Count() const
+    auto Count() const -> int32
     {
         return _count;
     }
@@ -68,7 +73,7 @@ public:
     /// If the underlying data is <c>null</c>, the span length is also zero.
     /// </remarks>
     NO_DISCARD FORCE_INLINE
-    T* Data()
+    auto Data() -> T*
     {
         return _data;
     }
@@ -80,7 +85,7 @@ public:
     /// If the underlying data is <c>null</c>, the span length is also zero.
     /// </remarks>
     NO_DISCARD FORCE_INLINE
-    const T* Data() const
+    auto Data() const -> const T*
     {
         return _data;
     }
@@ -98,7 +103,7 @@ public:
     // Element Access
 
     NO_DISCARD FORCE_INLINE
-    bool IsValidIndex(const int32 index) const
+    auto IsValidIndex(const int32 index) const -> bool
     {
         const bool obeysRange = (index >= 0 && index < _count); // Index must be within the span range.
         const bool isNotNull = (_data != nullptr); // Span data must be valid if the size is non-zero, implying that the data is not null.
@@ -107,7 +112,7 @@ public:
 
     /// <summary> Accesses the element at the given index. </summary>
     NO_DISCARD FORCE_INLINE
-    T& operator[](const int32 index)
+    auto operator[](const int32 index) -> T&
     {
         ASSERT_COLLECTION_SAFE_ACCESS(IsValidIndex(index)); // Ensure span is not empty and index is valid
         return _data[index];
@@ -115,7 +120,7 @@ public:
 
     /// <summary> Accesses the element at the given index. </summary>
     NO_DISCARD FORCE_INLINE
-    const T& operator[](const int32 index) const
+    auto operator[](const int32 index) const -> const T&
     {
         ASSERT_COLLECTION_SAFE_ACCESS(IsValidIndex(index)); // Ensure span is not empty and index is valid
         return _data[index];
@@ -129,22 +134,22 @@ public:
     /// This is the most basic iterator which uses raw memory pointers and does not track the iterated collection.
     /// To be used for any collection storing elements linearly in memory.
     /// </remarks>
-    class MutEnumerator
+    class MutCursor
     {
         T* _begin{};
         T* _end{};
 
     public:
         FORCE_INLINE
-        MutEnumerator(T* begin, T* end)
+        MutCursor(T* begin, T* end)
             : _begin{ begin }
             , _end{ end }
         {
             ASSERT_COLLECTION_SAFE_MOD(begin <= end); // Span begin must be before the end.
         }
 
-        FORCE_INLINE
-        explicit MutEnumerator(Span& span)
+        FORCE_INLINE explicit
+        MutCursor(Span& span)
             : _begin{ span.Data() }
             , _end{ span.Data() + span.Count() }
         {
@@ -155,33 +160,36 @@ public:
 
         /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         NO_DISCARD FORCE_INLINE
-        IterHint Hint() const
+        auto Hint() const -> SizeHint
         {
             const int32 remaining = static_cast<int32>(_end - _begin);
-            return { remaining, remaining };
+            return {
+                remaining,
+                Nullable<Index>{remaining}
+            };
         }
 
         
         NO_DISCARD FORCE_INLINE
-        T& operator*()
+        auto operator*() -> T&
         {
             return *_begin;
         }
 
         NO_DISCARD FORCE_INLINE
-        T* operator->()
+        auto operator->() -> T*
         {
             return _begin;
         }
 
         NO_DISCARD FORCE_INLINE
-        const T& operator*() const
+        auto operator*() const -> const T&
         {
             return *_begin;
         }
 
         NO_DISCARD FORCE_INLINE
-        const T* operator->() const
+        auto operator->() const -> const T*
         {
             return _begin;
         }
@@ -198,7 +206,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        MutEnumerator& operator++()
+        auto operator++() -> MutCursor&
         {
             ++_begin;
             return *this;
@@ -206,9 +214,10 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
-        MutEnumerator operator++(int)
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> MutCursor
         {
-            MutEnumerator copy = *this;
+            MutCursor copy = *this;
             ++(*this);
             return copy;
         }
@@ -217,19 +226,19 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        bool operator==(const MutEnumerator& other) const
+        auto operator==(const MutCursor& other) const -> bool
         {
             return _begin == other._begin && _end == other._end;
         }
 
         NO_DISCARD FORCE_INLINE
-        bool operator!=(const MutEnumerator& other) const
+        auto operator!=(const MutCursor& other) const -> bool
         {
             return _begin != other._begin || _end != other._end;
         }
 
         NO_DISCARD FORCE_INLINE
-        bool operator<(const MutEnumerator& other) const
+        auto operator<(const MutCursor& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_end == other._end); // Enumerators must be of the same span to be compared.
             return _begin < other._begin;
@@ -242,14 +251,14 @@ public:
     /// This is the most basic iterator which uses raw memory pointers and does not track the iterated collection.
     /// To be used for any collection storing elements linearly in memory.
     /// </remarks>
-    class ConstEnumerator
+    class ConstCursor
     {
         const T* _begin{};
         const T* _end{};
 
     public:
         FORCE_INLINE
-        ConstEnumerator(const T* begin, const T* end)
+        ConstCursor(const T* begin, const T* end)
             : _begin{ begin }
             , _end{ end }
         {
@@ -257,14 +266,14 @@ public:
         }
 
         FORCE_INLINE explicit
-        ConstEnumerator(const Span& span)
+        ConstCursor(const Span& span)
             : _begin{ span.Data() }
             , _end{ span.Data() + span.Count() }
         {
         }
 
         FORCE_INLINE explicit
-        ConstEnumerator(const MutEnumerator& enumerator)
+        ConstCursor(const MutCursor& enumerator)
             : _begin{ enumerator._begin }
             , _end{ enumerator._end }
         {
@@ -273,14 +282,26 @@ public:
 
         // Access
 
+        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
         NO_DISCARD FORCE_INLINE
-        const T& operator*() const
+        auto Hint() const -> SizeHint
+        {
+            const int32 remaining = static_cast<int32>(_end - _begin);
+            return {
+                remaining,
+                Nullable<Index>{ remaining }
+            };
+        }
+
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> const T&
         {
             return *_begin;
         }
 
         NO_DISCARD FORCE_INLINE
-        const T* operator->() const
+        auto operator->() const -> const T*
         {
             return _begin;
         }
@@ -297,7 +318,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        ConstEnumerator& operator++()
+        auto operator++() -> ConstCursor&
         {
             ++_begin;
             return *this;
@@ -305,9 +326,10 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
-        ConstEnumerator operator++(int)
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> ConstCursor
         {
-            ConstEnumerator copy = *this;
+            ConstCursor copy = *this;
             ++(*this);
             return copy;
         }
@@ -316,19 +338,19 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        bool operator==(const MutEnumerator& other) const
+        auto operator==(const MutCursor& other) const -> bool
         {
             return _begin == other._begin && _end == other._end;
         }
 
         NO_DISCARD FORCE_INLINE
-        bool operator!=(const MutEnumerator& other) const
+        auto operator!=(const MutCursor& other) const -> bool
         {
             return _begin != other._begin || _end != other._end;
         }
 
         NO_DISCARD FORCE_INLINE
-        bool operator<(const MutEnumerator& other) const
+        auto operator<(const MutCursor& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_end == other._end); // Enumerators must be of the same span to be compared.
             return _begin < other._begin;
@@ -338,15 +360,15 @@ public:
 
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    MutEnumerator Values()
+    auto Values() -> MutCursor
     {
-        return MutEnumerator{ *this };
+        return MutCursor{ *this };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    ConstEnumerator Values() const
+    auto Values() const -> ConstCursor
     {
-        return ConstEnumerator{ *this };
+        return ConstCursor{ *this };
     }
 };

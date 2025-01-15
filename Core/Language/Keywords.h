@@ -1,4 +1,9 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/ktl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #pragma once
 
@@ -64,12 +69,14 @@
     #define MAY_DISCARD         [[maybe_unused]]
     #define FALLTHROUGH         [[fallthrough]]
     #define MAYBE_UNUSED        [[maybe_unused]]
+    #define IF_CONSTEXPR        constexpr
 
 #else // C++14 and below
     #define NO_DISCARD
     #define MAY_DISCARD
     #define FALLTHROUGH       
     #define MAYBE_UNUSED
+    #define IF_CONSTEXPR
 
 #endif
 
@@ -77,8 +84,8 @@
 #if CXX20_SUPPORT
     #define CONCEPTS_ENABLED    1
 
-    #define IF_CONSTEXPR        constexpr
     #define CONSTINIT           constinit
+    #define CONSTEVAL           consteval
     #define CONSTEXPR_LAMBDA    constexpr
 
     #define LIKELY_HINT(x)      [[likely]] x
@@ -87,8 +94,8 @@
 #else // C++17 and below
     #define CONCEPTS_ENABLED   0
 
-    #define IF_CONSTEXPR
     #define CONSTINIT           constexpr
+    #define CONSTEVAL           constexpr
     #define CONSTEXPR_LAMBDA    constexpr
 
     #define LIKELY_HINT(x)      LIKELY(x)

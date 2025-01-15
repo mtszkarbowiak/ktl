@@ -1,4 +1,9 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/ktl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #pragma once
 
@@ -20,69 +25,78 @@ template<int32 Size, int32 Alignment = sizeof(void*)>
 class FixedAlloc
 {
 public:
-    constexpr static bool  IsNullable  = false;
-    constexpr static int32 MinCapacity = Size;
-    constexpr static int32 MaxCapacity = Size;
+    static constexpr bool  IsNullable  = false;
+    static constexpr int32 MinCapacity = Size;
+    static constexpr int32 MaxCapacity = Size;
 
     class Data
     {
         alignas(Alignment) byte _data[Size];
 
     public:
-        constexpr Data() = default;
+        FORCE_INLINE constexpr
+        Data() = default;
 
-        constexpr Data(const Data&)
+        FORCE_INLINE constexpr
+        Data(const Data&)
         {
             // Pass
         }
 
-        constexpr Data(Data&&) noexcept
+        FORCE_INLINE constexpr
+        Data(Data&&) noexcept
         {
-            // Pass
+            DEBUG_BREAK; // FixedAlloc must never be moved!
+            // FixedAlloc can never be moved - `MovesItems` is always false.
+            // Although, it must compile to allow run-time polymorphism.
         }
 
-        FORCE_INLINE
-        constexpr bool MovesItems() const
+        FORCE_INLINE constexpr
+        auto MovesItems() const -> bool
         {
             return false;
         }
 
 
-        constexpr Data& operator=(const Data&)
+        MAY_DISCARD FORCE_INLINE constexpr
+        auto operator=(const Data&) -> Data&
         {
             // Pass
             return *this;
         }
 
-        constexpr Data& operator=(Data&&) noexcept
+        MAY_DISCARD FORCE_INLINE constexpr
+        auto operator=(Data&&) noexcept -> Data&
         {
-            // Pass
+            DEBUG_BREAK; // FixedAlloc must never be moved!
+            // FixedAlloc can never be moved - `MovesItems` is always false.
+            // Although, it must compile to allow run-time polymorphism.
             return *this;
         }
 
 
-        FORCE_INLINE
-        constexpr int32 Allocate(const int32 size)
+        NO_DISCARD FORCE_INLINE constexpr
+        auto Allocate(const int32 size) -> int32
         {
             ASSERT_ALLOCATOR_SAFETY(size == Size || size == 0);
             return (size == Size) ? size : 0;
         }
 
-        FORCE_INLINE
-        constexpr void Free()
+        FORCE_INLINE constexpr
+        void Free()
         {
             // Pass
         }
 
 
-        FORCE_INLINE
-        constexpr const byte* Get() const
+        NO_DISCARD FORCE_INLINE constexpr
+        auto Get() const -> const byte*
         {
             return _data;
         }
 
-        FORCE_INLINE
-        constexpr byte* Get()
+        NO_DISCARD FORCE_INLINE constexpr
+        auto Get() -> byte*
         {
             return _data;
         }

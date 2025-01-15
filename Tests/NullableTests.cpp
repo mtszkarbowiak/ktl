@@ -1,9 +1,14 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/mk-stl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #include <gtest/gtest.h>
 
-#include "Collections/Index.h"
 #include "Debugging/LifecycleTracker.h"
+#include "Types/Index.h"
 #include "Types/Nullable.h"
 #include "Types/Numbers.h"
 #include "Types/Ref.h"
@@ -78,6 +83,7 @@ TEST(NullableByFlagTests, ValueAsgn)
     LIFECYCLE_TEST_INTO
     {
         Nullable<TestTracker> nullable;
+        GTEST_ASSERT_EQ(LifecycleCountersInstance.Instances, 0); // The type should not have been initialized!
         GTEST_ASSERT_FALSE(nullable.HasValue());
         nullable.Set(TestTracker{ 69 });
         GTEST_ASSERT_TRUE(nullable.HasValue());

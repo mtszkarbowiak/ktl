@@ -1,4 +1,9 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/mk-stl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #include <gtest/gtest.h>
 
@@ -9,7 +14,7 @@
 
 // Capacity Management
 
-TEST(HashSet_Capacity, Reserve_Call)
+TEST(HashSetCapacity, ReserveOnCall)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, HASH_SETS_DEFAULT_CAPACITY);
@@ -25,7 +30,7 @@ TEST(HashSet_Capacity, Reserve_Call)
     GTEST_ASSERT_FALSE(set.IsAllocated());
 }
 
-TEST(HashSet_Capacity, Reserve_Ctor)
+TEST(HashSetCapacity, ReserveOnCtor)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, HASH_SETS_DEFAULT_CAPACITY);
@@ -40,7 +45,7 @@ TEST(HashSet_Capacity, Reserve_Ctor)
     GTEST_ASSERT_FALSE(set.IsAllocated());
 }
 
-TEST(HashSet_Capacity, Reserve_Add)
+TEST(HashSetCapacity, ReserveOnAdd)
 {
     constexpr int32 MinReservedCapacity = 128;
     GTEST_ASSERT_GE(MinReservedCapacity, HASH_SETS_DEFAULT_CAPACITY);
@@ -58,7 +63,7 @@ TEST(HashSet_Capacity, Reserve_Add)
     GTEST_ASSERT_FALSE(set.IsAllocated());
 }
 
-TEST(HashSet_Capacity, Compact_Free)
+TEST(HashSetCapacity, FreeOnCompact)
 {
     HashSet<int32> set;
     set.Add(69);
@@ -73,13 +78,14 @@ TEST(HashSet_Capacity, Compact_Free)
     GTEST_ASSERT_EQ  (set.Count(), 0);
     GTEST_ASSERT_TRUE(set.IsEmpty());
     GTEST_ASSERT_TRUE(set.IsAllocated());
+
     set.Compact();
 
     GTEST_ASSERT_TRUE (set.IsEmpty());
     GTEST_ASSERT_FALSE(set.IsAllocated());
 }
 
-TEST(HashSet_Capacity, Compact_Reloc)
+TEST(HashSetCapacity, CompactOnReloc)
 {
     constexpr int32 TestCapacity1 = 256;
     constexpr int32 TestCapacity2 = 3;
@@ -107,9 +113,6 @@ TEST(HashSet_Capacity, Compact_Reloc)
 
 // Elements Manipulation
 
-using AllocatorTypes = ::testing::Types<DefaultAlloc, FixedAlloc<256>>;
-using ElementTypes   = ::testing::Types<int32, Index>;
-
 template<typename Element, typename Allocator>
 struct HashSetTestParam
 {
@@ -119,10 +122,10 @@ struct HashSetTestParam
 };
 
 using HashSetTestParams = ::testing::Types<
-    HashSetTestParam<int32, DefaultAlloc>,
-    HashSetTestParam<int32, FixedAlloc<512>>,
-    HashSetTestParam<Index, DefaultAlloc>,
-    HashSetTestParam<Index, FixedAlloc<256>>
+    HashSetTestParam<int32, DefaultAlloc>
+    , HashSetTestParam<int32, FixedAlloc<512>>
+    , HashSetTestParam<Index, DefaultAlloc>
+    , HashSetTestParam<Index, FixedAlloc<256>>
 >;
 
 template<typename Param>
@@ -137,22 +140,18 @@ protected:
 
 TYPED_TEST_SUITE(HashSetFixture, HashSetTestParams);
 
-TYPED_TEST(HashSetFixture, EmptyAfterCtor)
-{
-    typename TypeParam::HashSetType set;
-
-    EXPECT_TRUE(set.IsEmpty());
-    EXPECT_EQ  (set.Count(), 0);
-    EXPECT_EQ  (set.CellCount(), 0);
-
-    EXPECT_FALSE(set.Contains(this->element1));
-    EXPECT_FALSE(set.Contains(this->element2));
-    EXPECT_FALSE(set.Contains(this->element3));
-}
-
 TYPED_TEST(HashSetFixture, ElementsManipulation)
 {
     typename TypeParam::HashSetType set;
+
+
+    // Initial state
+
+    EXPECT_EQ(set.Count(), 0);
+    EXPECT_FALSE(set.Contains(this->element1));
+    EXPECT_FALSE(set.Contains(this->element2));
+    EXPECT_FALSE(set.Contains(this->element3));
+
 
     // Add elements
 
@@ -185,9 +184,9 @@ TYPED_TEST(HashSetFixture, ElementsManipulation)
     // Add elements again
 
     EXPECT_FALSE(set.Contains(this->element2));
-    EXPECT_TRUE (set.Add(this->element2));
+    EXPECT_TRUE(set.Add(this->element2));
     EXPECT_FALSE(set.Add(this->element2));
-    EXPECT_TRUE (set.Contains(this->element2));
+    EXPECT_TRUE(set.Contains(this->element2));
 
     GTEST_ASSERT_EQ(set.Count(), 1);
     GTEST_ASSERT_EQ(set.CellCount(), 4);
@@ -198,4 +197,46 @@ TYPED_TEST(HashSetFixture, ElementsManipulation)
     set.Compact();
     GTEST_ASSERT_EQ(set.Count(), 1);
     GTEST_ASSERT_EQ(set.CellCount(), 1);
-}
+};
+
+
+// Initialization
+
+TEST(HashSetMisc, InitList)
+{
+    const auto set = HashSet<int32>::Of({
+        1, 3, 5
+    });
+
+    GTEST_ASSERT_EQ(set.Count(), 3);
+    GTEST_ASSERT_TRUE(set.Contains(1));
+    GTEST_ASSERT_TRUE(set.Contains(3));
+    GTEST_ASSERT_TRUE(set.Contains(5));
+};
+
+TEST(HashSetMisc, CopyCtor)
+{
+    const HashSet<int32> src = HashSet<int32>::Of({
+        1, 3, 5
+    });
+
+    HashSet<int32> set{ src };
+
+    GTEST_ASSERT_EQ(src.Count(), set.Count());
+    GTEST_ASSERT_TRUE(set.Contains(1));
+    GTEST_ASSERT_TRUE(set.Contains(5));
+};
+
+TEST(HashSetMisc, CopyAsgn)
+{
+    const HashSet<int32> src = HashSet<int32>::Of({
+        1, 3, 5
+    });
+
+    HashSet<int32> set{};
+    set = src;
+
+    GTEST_ASSERT_EQ(src.Count(), set.Count());
+    GTEST_ASSERT_TRUE(set.Contains(1));
+    GTEST_ASSERT_TRUE(set.Contains(5));
+};

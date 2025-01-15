@@ -1,10 +1,15 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/ktl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #pragma once
 
-#include "Index.h"
 #include "Collections/CollectionsUtils.h"
 #include "Collections/LoadFHelper.h"
+#include "Types/Index.h"
 #include "Types/Nullable.h"
 
 /// <summary>
@@ -17,6 +22,7 @@
 /// Must be movable (both constructor and assignment), non-const, and non-reference.
 /// It must support hashing and equality comparison.
 /// If it supports tombstone semantics, it will be used by the collection.
+/// The hash of the element must never change to ensure the integrity of the set.
 /// </typeparam>
 /// <typeparam name="A">
 /// (Optional) The type of the allocator to use.
@@ -26,7 +32,7 @@
 /// (Optional) Class providing hashing function for the stored elements.
 /// </typeparam>
 /// <typeparam name="P">
-/// (Optional) Class providing provides a function that calculates the next probing index.
+/// (Optional) Class providing a function that calculates the next probing index.
 /// </typeparam>
 template<
     typename T,
@@ -46,10 +52,10 @@ public:
 
     using HashWrapper = H;
     using AllocData   = typename A::Data;
-    using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, Growing::Double>;
+    using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, DoubleGrowth>;
     using LoadFHelper = LoadFHelperOf<HASH_SETS_DEFAULT_SLACK_RATIO>;
 
-private:
+PRIVATE:
     AllocData _allocData{};
     int32     _capacity{};           // Number of slots
     int32     _elementCountCached{}; // Number of elements
@@ -61,14 +67,14 @@ private:
 public:
     /// <summary> Checks if the array has an active allocation. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    bool IsAllocated() const
+    auto IsAllocated() const -> bool
     {
         return _capacity > 0;
     }
 
     /// <summary> Number of elements that can be stored without invoking the allocator. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 Capacity() const 
+    auto Capacity() const -> int32
     {
         return _capacity;
     }
@@ -78,14 +84,14 @@ public:
 
     /// <summary> Checks if the array has any elements. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    bool IsEmpty() const
+    auto IsEmpty() const -> bool
     {
         return _elementCountCached == 0;
     }
 
     /// <summary> Number of currently stored elements. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 Count() const
+    auto Count() const -> int32
     {
         return _elementCountCached;
     }
@@ -99,36 +105,39 @@ public:
     /// Some slots may not become occupied unless the collection is rebuilt.
     /// </remarks>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 Slack() const
+    auto Slack() const -> int32
     {
         return _capacity - _cellsCountCached;
     }
 
     /// <summary> Number of cells - slots that store an element or a marker. </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    int32 CellCount() const
+    auto CellCount() const -> int32
     {
         return _cellsCountCached;
     }
 
     /// <summary> Number of cells (not slots) that are empty. </summary>
-    int32 CellSlack() const
+    NO_DISCARD FORCE_INLINE constexpr
+    auto CellSlack() const -> int32
     {
         return _cellsCountCached - _elementCountCached;
     }
 
-    //TODO Explicit load factor
-
 
     // Hashing
 
-private:
+PRIVATE:
     NO_DISCARD FORCE_INLINE
-    bool IsValid() const
+    auto IsValid() const -> bool
     {
         // Nothing to check if the set is empty
-        if (_capacity == 0)
-            return true;
+        if (_capacity == 0) 
+        {
+            return
+                0 == _elementCountCached && 
+                0 == _cellsCountCached;
+        }
 
         // Ensure that the capacity is a power of 2
         if (!Math::IsPow2(_capacity))
@@ -159,17 +168,21 @@ private:
     /// <param name="data"> The data array to search. </param>
     /// <param name="capacity"> The capacity of the data array. </param>
     /// <param name="key"> The key of the element to find. </param>
-    /// <param name="keyCell"> The index of the cell that contains the key. </param>
-    /// <param name="firstFreeSlot"> The index of the first empty slot. </param>
-    static void FindSlot(
+    NO_DISCARD
+    static auto FindSlot(
         const Slot* data,
         const int32 capacity,
-        const Element& key,
-        Nullable<Index>& keyCell,
-        Nullable<Index>& firstFreeSlot
-    )
+        const Element& key
+    ) ->  Bucketing::SearchResult
     {
-        const Index initIndex = HashOf<Element>::GetHash(key) % capacity; //TODO Binary masking
+        ASSERT_COLLECTION_INTEGRITY(data);
+        ASSERT_COLLECTION_INTEGRITY(Math::IsPow2(capacity)); // Make sure the capacity is a power of 2
+
+        Nullable<Index> keyCell;
+        Nullable<Index> firstFreeSlot;
+
+        const int32 capacityBitMask = capacity - 1;
+        const int32 initIndex = H::GetHash(key) & capacityBitMask;
 
         keyCell.Set(initIndex);
         firstFreeSlot.Clear();
@@ -186,7 +199,7 @@ private:
 
                 // No matching cell found, stop search
                 keyCell.Clear();
-                return;
+                return { keyCell, firstFreeSlot };
             }
 
             const Cell& cell = slot.Value();
@@ -194,7 +207,7 @@ private:
             {
                 // Found the key
                 firstFreeSlot.Clear();
-                return;
+                return { keyCell, firstFreeSlot };
             }
 
             // Record the first deleted slot if no empty slot was found yet
@@ -204,13 +217,15 @@ private:
             }
 
             // Move to the next slot using the probing strategy
-            keyCell.Set((initIndex + P::Next(capacity, checkCount)) % capacity); //TODO Binary masking
+            keyCell.Set((initIndex + P::Next(capacity, checkCount)) % capacityBitMask);
             ++checkCount;
         }
 
         // The set is full, or no suitable slot was found
         keyCell.Clear();
         firstFreeSlot.Clear();
+
+        return { keyCell, firstFreeSlot };
     }
 
     void RebuildImpl(const int32 minCapacity)
@@ -247,14 +262,14 @@ private:
                 continue;
 
             // Find a place for the element in the new set.
-            Nullable<Index> keyCell, firstFreeSlot;
-            FindSlot(
+            const Bucketing::SearchResult searchResult = FindSlot(
                 DATA_OF(Slot, newData), 
                 allocatedCapacity, 
-                oldCell.Value(), 
-                keyCell, 
-                firstFreeSlot
+                oldCell.Value()
             );
+
+            const Nullable<::Index>& keyCell = searchResult.FoundObject;
+            const Nullable<::Index>& firstFreeSlot = searchResult.FreeBucket;
 
             // If the key was found, move the element to the new slot.
             if (keyCell.HasValue())
@@ -288,18 +303,19 @@ private:
         }
         else
         {
+            _capacity  = AllocHelper::Allocate(_allocData, requestedCapacity);
+
             BulkOperations::MoveLinearContent<Slot>(
-                DATA_OF(Slot, _allocData),
                 DATA_OF(Slot, newData),
+                DATA_OF(Slot, _allocData),
                 _capacity
             );
             BulkOperations::DestroyLinearContent<Slot>(
-                DATA_OF(Slot, _allocData),
+                DATA_OF(Slot, newData),
                 _capacity
             );
 
-            _allocData = MOVE(newData);
-            _capacity = allocatedCapacity;
+            newData.Free();
         }
 
         // 5. Update the cached counts.
@@ -384,21 +400,19 @@ public:
 
     /// <summary> Checks if the set contains the specified key. </summary>
     NO_DISCARD
-    bool Contains(const Element& key) const
+    auto Contains(const Element& key) const -> bool
     {
         if (_capacity == 0)
             return false;
 
         // Find the cell that contains the key
-        Nullable<Index> keyCell;
-        Nullable<Index> firstFreeSlot;
-        FindSlot(
+        const Bucketing::SearchResult searchResult = FindSlot(
             DATA_OF(const Slot, _allocData),
             _capacity,
-            key, 
-            keyCell, 
-            firstFreeSlot
+            key
         );
+
+        const Nullable<::Index>& keyCell = searchResult.FoundObject;
 
         // If the key was found, return true
         return keyCell.HasValue();
@@ -407,7 +421,7 @@ public:
     /// <summary> Adds the specified element to the set. </summary>
     /// <returns> True if the element was added, false if the element was already in the set. </returns>
     MAY_DISCARD
-    bool Add(Element&& element)
+    auto Add(Element&& element) -> bool
     {
         if (_capacity == 0)
         {
@@ -417,41 +431,34 @@ public:
         }
 
         // Find the cell that contains the key
-        Nullable<Index> keyCell;
-        Nullable<Index> firstFreeSlot;
-        FindSlot(
+        Bucketing::SearchResult searchResult = FindSlot(
             DATA_OF(const Slot, _allocData),
             _capacity, 
-            element, 
-            keyCell, 
-            firstFreeSlot
+            element
         );
 
         // If the key was found, return
-        if (keyCell.HasValue())
+        if (searchResult.FoundObject.HasValue())
             return false;
 
         // If there is no free slot, rebuild the set
-        if (firstFreeSlot.IsEmpty())
+        if (searchResult.FreeBucket.IsEmpty())
         {
             RebuildImpl(_elementCountCached + 1);
-            FindSlot(
+            searchResult = FindSlot(
                 DATA_OF(const Slot, _allocData),
                 _capacity, 
-                element, 
-                keyCell, 
-                firstFreeSlot
+                element
             );
 
             // Note: This implementation is different than the original.
             // Instead of checking the slack ratio, it rebuilds the set when there is no free slot.
-            //TODO Review the implementation
         }
 
-        ASSERT(firstFreeSlot.HasValue()); // There must be a free slot
+        ASSERT(searchResult.FreeBucket.HasValue()); // There must be a free slot
 
         // Add the element to the set
-        Slot* slot = DATA_OF(Slot, _allocData) + firstFreeSlot.Value();
+        Slot* slot = DATA_OF(Slot, _allocData) + searchResult.FreeBucket.Value();
         slot->Set(Cell{ MOVE(element) });
 
         ++_elementCountCached;
@@ -463,30 +470,27 @@ public:
     /// <summary> Adds the specified element to the set. </summary>
     /// <returns> True if the element was added, false if the element was already in the set. </returns>
     MAY_DISCARD FORCE_INLINE
-    bool Add(const Element& element)
+    auto Add(const Element& element) -> bool
     {
-        return Add(MOVE(Element{ element })); //TODO Consider using forwarding reference.
-        // Why do I need to explicitly select the move?
+        return Add(MOVE(Element{ element })); // Maybe a forwarding reference in the future? Or emplacement?
     }
 
     /// <summary> Removes the specified element from the set. </summary>
     /// <returns> True if the element was removed, false if the element was not in the set. </returns>
     MAY_DISCARD
-    bool Remove(const Element& key)
+    auto Remove(const Element& key) -> bool
     {
         if (_capacity == 0)
             return false;
 
         // Find the cell that contains the key
-        Nullable<Index> keyCell;
-        Nullable<Index> firstFreeSlot;
-        FindSlot(
+        const Bucketing::SearchResult searchResult = FindSlot(
             DATA_OF(const Slot, _allocData),
             _capacity,
-            key, 
-            keyCell, 
-            firstFreeSlot
+            key
         );
+
+        const Nullable<::Index>& keyCell = searchResult.FoundObject;
 
         // If the key was not found, return
         if (!keyCell.HasValue())
@@ -532,7 +536,42 @@ protected:
         if (other._capacity == 0 || other._elementCountCached == 0)
             return;
 
-        //TODO
+        if (other._allocData.MovesItems())
+        {
+            _allocData = MOVE(other._allocData);
+            _capacity = other._capacity;
+            _elementCountCached = other._elementCountCached;
+            _cellsCountCached = other._cellsCountCached;
+
+            // The items have been moved with the allocator.
+            // The capacity must be reset manually.
+
+            other._capacity = 0;
+            other._elementCountCached = 0;
+            other._cellsCountCached = 0;
+        }
+        else
+        {
+            BulkOperations::MoveLinearContent<Slot>(
+                DATA_OF(Slot, other._allocData),
+                DATA_OF(Slot, _allocData),
+                other._capacity
+            );
+            BulkOperations::DestroyLinearContent<Slot>(
+                DATA_OF(Slot, other._allocData),
+                other._capacity
+            );
+
+            // It could be considered rebuilding the dictionary on move.
+
+            _capacity = other._capacity;
+            _elementCountCached = other._elementCountCached;
+            _cellsCountCached = other._cellsCountCached;
+            other._allocData.Free();
+            other._capacity = 0;
+            other._elementCountCached = 0;
+            other._cellsCountCached = 0;
+        }
     }
 
     void CopyToEmpty(const Slot* source, const int32 count)
@@ -570,7 +609,7 @@ public:
     FORCE_INLINE
     HashSet(HashSet&& other) noexcept
     {
-        MoveFrom(MOVE(other));
+        MoteToEmpty(MOVE(other));
     }
 
     /// <summary> Initializes a set by copying another set. </summary>
@@ -590,6 +629,8 @@ public:
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
+
+        BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
     }
 
     /// <summary> Initializes an empty hash set with an active allocation of the specified capacity and context. </summary>
@@ -600,11 +641,13 @@ public:
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
+
+        BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
     }
 
 
     MAY_DISCARD FORCE_INLINE
-    HashSet& operator=(HashSet&& other) noexcept
+    auto operator=(HashSet&& other) noexcept -> HashSet&
     {
         if (this != &other)
         {
@@ -615,7 +658,7 @@ public:
     }
 
     MAY_DISCARD FORCE_INLINE
-    HashSet& operator=(const HashSet& other)
+    auto operator=(const HashSet& other) -> HashSet&
     {
         if (this != &other)
         {
@@ -633,15 +676,153 @@ public:
     }
 
 
+    // Factorization
+
+    /// <summary> Creates a has set with the specified elements. </summary>
+    NO_DISCARD static constexpr
+    auto Of(std::initializer_list<Element> list) -> HashSet
+    {
+        const int32 capacity = static_cast<int32>(list.size());
+        HashSet set{ capacity };
+
+        for (const Element& element : list)
+            set.Add(element);
+
+        return set;
+    }
+
+
+    // Cursors
+
+PRIVATE:
+    /// <summary>
+    /// Moves the iterator index to the next occupied slot.
+    /// If the end of the collection is reached, the capacity is returned.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE
+    auto SkipToOccupied(int32 index) const -> int32
+    {
+        for (; index < _capacity; ++index)
+        {
+            const Slot& slot = DATA_OF(const Slot, _allocData)[index];
+
+            // If there is no cell, skip the slot.
+            if (slot.IsEmpty())
+                continue;
+
+            // If the cell is empty, skip the slot.
+            if (slot.Value().HasValue())
+                return index;
+        }
+        return _capacity;
+    }
+
+
+public:
+    /// <summary> Cursor for iterating over the elements of the set. </summary>
+    /// <remarks> <c>HashSet</c> does not have a read-write cursor. </remarks>
+    class ConstValueCursor
+    {
+        const HashSet* _set;
+        int32          _index;
+
+
+    public:
+        FORCE_INLINE explicit
+        ConstValueCursor(const HashSet& set)
+            : _set{ &set }
+            , _index{ set.SkipToOccupied(0) }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> const Element&
+        {
+            return DATA_OF(const Slot, _set->_allocData)[_index].Value().Value();
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() const -> const Element*
+        {
+            return &(DATA_OF(const Slot, _set->_allocData)[_index].Value().Value());
+        }
+
+
+        // Iteration
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> SizeHint
+        {
+            // In the future, this could be optimized to return the actual number of elements.
+            // It will be done, once generalized hash collection utilities are introduced.
+            return { 0, Nullable<::Index>{ _set->_elementCountCached } };
+        }
+
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
+        {
+            return _index < _set->_capacity;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+            auto operator++() -> ConstValueCursor&
+        {
+            ++_index;
+            _index = _set->SkipToOccupied(_index);
+            return *this;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> ConstValueCursor
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        auto operator==(const ConstValueCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._set) == &_set);
+            return _index == other._index;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator!=(const ConstValueCursor& other) const -> bool
+        {
+            return !(*this == other);
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator<(const ConstValueCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._set) == &_set);
+            return _index < other._index;
+        }
+    };
+
+
+    NO_DISCARD FORCE_INLINE
+    auto Values() const -> ConstValueCursor
+    {
+        return ConstValueCursor{ *this };
+    }
+
+
     // Constraints
 
-    static_assert(AllocHelper::HasBinaryMaskingSupport(), "The allocator must support binary masking.");
+    REQUIRE_TYPE_NOT_REFERENCE(Element);
+    REQUIRE_TYPE_NOT_CONST(Element);
+    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Element);
 
-    static_assert(!std::is_reference<Element>                ::value, "Type must not be a reference type.");
-    static_assert(!std::is_const<Element>                    ::value, "Type must not be a const-qualified type.");
-
-    static_assert(std::is_move_constructible<Element>        ::value, "Type must be move-constructible.");
-    static_assert(std::is_destructible<Element>              ::value, "Type must be destructible.");
-    static_assert(std::is_nothrow_move_constructible<Element>::value, "Type must be nothrow move-constructible.");
-    static_assert(std::is_nothrow_destructible<Element>      ::value, "Type must be nothrow destructible.");
+    static_assert(
+        AllocHelper::HasBinaryMaskingSupport() == AllocHelper::BinaryMaskingSupportStatus::Supported,
+        "The allocator must support binary masking."
+    );
 };

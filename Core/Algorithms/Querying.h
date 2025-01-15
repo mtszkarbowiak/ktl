@@ -1,202 +1,256 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/ktl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #pragma once
 
 #include "Language/Keywords.h"
 #include "Language/Templates.h"
 #include "Types/Numbers.h"
+#include "Types/IterHint.h"
 
 namespace Querying
 {
-    // Evaluation Queries
+    // Mapping
 
-    /// <summary>
-    /// Counts the number of elements in the enumerator.
-    /// </summary>
-    template<typename Enumerator>
-    auto static Count(Enumerator&& enumerator) -> int32
-    {
-        int32 count = 0;
-        for (; enumerator; ++enumerator)
-            count += 1;
-        return count;
-    }
-
-
-    // Transformation Queries
-
-    struct ToCount {}; // Only a tag to indicate the query.
-
-
-    template<typename Selector>
+    /// <summary> Tag used to indicate that the query should map the elements. </summary>
+    /// <typeparam name="P"> Type of the projection function. </typeparam>
+    template<typename P>
     struct Select final
     {
-        Selector selector;
+        P Projection{};
 
+        FORCE_INLINE
         Select() = default;
 
-        explicit Select(Selector selector)
-            : selector{ selector }
+        FORCE_INLINE explicit
+        Select(P projection) // Reference?
+            : Projection{ projection }
         {
         }
     };
 
-    template<typename Filter>
-    struct Where final
+    /// <summary> Maps the elements of the collection using the specified projection. </summary>
+    /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
+    /// <typeparam name="P"> Type of the projection function. </typeparam>
+    template<typename C, typename P>
+    class SelectCursor final
     {
-        Filter filter;
-
-        Where() = default;
-
-        explicit Where(Filter filter)
-            : filter{ filter }
-        {
-        }
-    };
-
-    template<typename Producer, typename Selector>
-    class SelectEnumerator final
-    {
-        Producer _producer; // It must not be a reference, as it would be invalidated.
-        Selector _selector;
+        C _cursor;
+        P _projection;
 
     public:
-        explicit SelectEnumerator(
-            Producer&& producer, 
-            Selector&& selector)
-            : _producer{ MOVE(producer) }
-            , _selector{ MOVE(selector) }
+        using ElementType = decltype(_projection.operator()(*_cursor));
+        
+        FORCE_INLINE explicit
+        SelectCursor(
+            C&& cursor,
+            P&& projection)
+            : _cursor{ MOVE(cursor) }
+            , _projection{ MOVE(projection) }
         {
         }
 
-        explicit SelectEnumerator(
-            Producer&& producer, 
-            Select<Selector> selector)
-            : _producer{ MOVE(producer) }
-            , _selector{ MOVE(selector.selector) }
+        FORCE_INLINE explicit
+        SelectCursor(
+            C&& producer,
+            Select<P> select)
+            : _cursor{ MOVE(producer) }
+            , _projection{ MOVE(select.Projection) }
         {
         }
 
-        FORCE_INLINE
-        explicit operator bool() const noexcept
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
         {
-            return static_cast<bool>(_producer);
+            return static_cast<bool>(_cursor);
         }
 
-        FORCE_INLINE
-        SelectEnumerator& operator++()
+        MAY_DISCARD FORCE_INLINE
+        auto operator++() -> SelectCursor&
         {
-            ++_producer;
+            ++_cursor;
             return *this;
         }
 
-        FORCE_INLINE
-        SelectEnumerator& operator++(int)
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> SelectCursor&
         {
             auto copy = *this;
             ++*this;
             return copy;
         }
 
-        FORCE_INLINE
-        auto operator*()
+        NO_DISCARD FORCE_INLINE
+        auto operator*() -> ElementType
         {
-            return _selector(*_producer);
+            return _projection.operator()(*_cursor);
+        }
+
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> SizeHint
+        {
+            // SelectCursor does not change the number of elements.
+            return _cursor.Hint();
         }
     };
 
-
-    template<typename Producer, typename Predicate>
-    class WhereEnumerator final
+    /// <summary> Maps the elements of the collection using the specified projection. </summary>
+    /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
+    /// <typeparam name="P"> Type of the projection function. </typeparam>
+    template<typename _C, typename _P>
+    NO_DISCARD FORCE_INLINE 
+    auto operator|(_C&& cursor, Select<_P>&& tag) -> SelectCursor<_C, _P>
     {
-        Producer _producer; // Must not be a reference to avoid invalidation.
-        Predicate _predicate;
+        return SelectCursor<_C, _P>(
+            FORWARD(_C, cursor),
+            MOVE(tag)
+        );
+    }
+
+
+
+    // Filtering
+
+    /// <summary> Tag used to indicate that the query should filter the elements. </summary>
+    /// <typeparam name="P"> Type of the predicate function. </typeparam>
+    template<typename P>
+    struct Where final
+    {
+        P Predicate{};
+
+        FORCE_INLINE
+        Where() = default;
+
+        FORCE_INLINE explicit
+        Where(P predicate)
+            : Predicate{ predicate }
+        {
+        }
+    };
+
+    /// <summary> Filters the elements of the collection using the specified predicate. </summary>
+    /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
+    /// <typeparam name="P"> Type of the predicate function. </typeparam>
+    template<typename C, typename P>
+    class WhereCursor final
+    {
+        C _cursor;
+        P _predicate;
 
         // Helper to advance to the next valid element.
+        FORCE_INLINE
         void SkipInvalid()
         {
-            while (_producer && !_predicate(*_producer))
+            while (_cursor && !_predicate(*_cursor))
             {
-                ++_producer;
+                ++_cursor;
             }
         }
 
     public:
-        explicit WhereEnumerator(Producer&& producer, Predicate&& predicate)
-            : _producer{ MOVE(producer) }
+        using ElementType = decltype(*_cursor);
+
+        FORCE_INLINE explicit
+        WhereCursor(C&& cursor, P&& predicate)
+            : _cursor{ MOVE(cursor) }
             , _predicate{ MOVE(predicate) }
         {
             SkipInvalid(); // Ensure we start on a valid element.
         }
 
-        explicit WhereEnumerator(Producer&& producer, Where<Predicate> where)
-            : _producer{ MOVE(producer) }
-            , _predicate{ MOVE(where.filter) }
+        FORCE_INLINE explicit
+        WhereCursor(C&& cursor, Where<P> where)
+            : _cursor{ MOVE(cursor) }
+            , _predicate{ MOVE(where.Predicate) }
         {
             SkipInvalid(); // Ensure we start on a valid element.
         }
 
-        FORCE_INLINE
-        explicit operator bool() const noexcept
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
         {
-            return static_cast<bool>(_producer); // Valid if the producer is valid.
+            return static_cast<bool>(_cursor); // Valid if the producer is valid.
         }
 
-        FORCE_INLINE
-        WhereEnumerator& operator++()
+        MAY_DISCARD FORCE_INLINE
+        auto operator++() -> WhereCursor&
         {
-            ++_producer;
+            ++_cursor;
             SkipInvalid();
             return *this;
         }
 
-        FORCE_INLINE
-        WhereEnumerator operator++(int)
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> WhereCursor
         {
             auto copy = *this;
             ++*this;
             return copy;
         }
 
-        FORCE_INLINE
-        decltype(auto) operator*()
+        NO_DISCARD FORCE_INLINE
+        auto operator*() -> ElementType
         {
-            return *_producer; // Return the current element.
+            return *_cursor;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> SizeHint
+        {
+            // WhereCursor may reduce the number of elements.
+            // Yet currently, there is no way to know how many elements will be skipped.
+            // In the future an advanced hint system could be implemented.
+            return _cursor.Hint();
         }
     };
 
-
-
-    template<typename Producer, typename Selector>
-    auto operator|(Producer&& producer, Select<Selector> selector)
+    /// <summary> Filters the elements of the collection using the specified predicate. </summary>
+    /// <typeparam name="_C"> Type of the cursor pointing to the elements. </typeparam>
+    /// <typeparam name="P"> Type of the predicate function. </typeparam>
+    template<typename _C, typename P>
+    NO_DISCARD FORCE_INLINE
+    auto operator|(_C&& cursor, Where<P>&& where) -> WhereCursor<_C, P>
     {
-        return SelectEnumerator<Producer, Selector>(
-            FORWARD(Producer, producer), //TODO This should be r-value, never l-value.
-            MOVE(selector)
-        );
-    }
-
-    template<typename Producer, typename Predicate>
-    auto operator|(Producer&& producer, Where<Predicate> where)
-    {
-        return WhereEnumerator<Producer, Predicate>(
-            FORWARD(Producer, producer), //TODO This should be r-value, never l-value.
+        return WhereCursor<_C, P>(
+            FORWARD(_C, cursor),
             MOVE(where)
         );
     }
 
 
-    template<typename Producer>
-    auto operator|(Producer&& producer, ToCount)
+    // Evaluation
+
+    /// <summary> Tag used to indicate that the query should count the elements. </summary>
+    struct ToCount
     {
-        return Count(FORWARD(Producer, producer));
+        // Empty
+    };
+
+    /// <summary> Counts the number of elements in the collection. </summary>
+    /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
+    template<typename _C> // Universal reference
+    NO_DISCARD FORCE_INLINE
+    auto static Count(_C&& cursor) -> int32
+    {
+        int32 count = 0;
+        for (; cursor; ++cursor)
+            count += 1;
+        return count;
     }
 
-    //TODO Implement First with Array<T> 
-    //TODO Implement Last with Ring<T>
-    //TODO Implement Skip with int32
-    //TODO Implement GroupBy with Dictionary<TKey, Array<TValue>>
-    //TODO Implement OrderBy with Array<T>
-    //TODO Implement Reverse with Array<T>
-    //TODO Implement Distinct with HashSet<T>
+    /// <summary> Counts the number of elements in the collection. </summary>
+    /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
+    template<typename _C>
+    NO_DISCARD FORCE_INLINE
+    auto operator|(_C&& cursor, ToCount) -> int32
+    {
+        return Count(FORWARD(_C, cursor));
+    }
+
+    //TODO(mtszkarbowiak) Implement ToContains, ToAny, ToAll, ToFirst, ToLast, ToSkip
 }

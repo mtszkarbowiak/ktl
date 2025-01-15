@@ -1,4 +1,9 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/ktl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #pragma once
 
@@ -15,9 +20,9 @@
 class HeapAlloc
 {
 public:
-    constexpr static bool  IsNullable  = true;
-    constexpr static int32 MinCapacity = 1;
-    constexpr static int32 MaxCapacity = INT32_MAX;
+    static constexpr bool  IsNullable  = true;
+    static constexpr int32 MinCapacity = 1;
+    static constexpr int32 MaxCapacity = INT32_MAX;
 
     class Data
     {
@@ -39,7 +44,7 @@ public:
         }
 
         FORCE_INLINE
-        bool MovesItems() const
+        auto MovesItems() const -> bool
         {
             return true;
         }
@@ -52,14 +57,15 @@ public:
             other._ptr = nullptr;
         }
 
+        FORCE_INLINE
         ~Data()
         {
             ASSERT_ALLOCATOR_SAFETY(_ptr == nullptr);
         }
 
 
-        FORCE_INLINE
-        Data& operator=(const Data&)
+        MAY_DISCARD FORCE_INLINE
+        auto operator=(const Data&) -> Data&
         {
             Free();
 
@@ -67,8 +73,8 @@ public:
             return *this;
         }
 
-        FORCE_INLINE
-        Data& operator=(Data&& other) noexcept
+        MAY_DISCARD FORCE_INLINE
+        auto operator=(Data&& other) noexcept -> Data&
         {
             if (this != &other)
             {
@@ -85,8 +91,8 @@ public:
         }
 
 
-        FORCE_INLINE
-        int32 Allocate(const int32 size)
+        NO_DISCARD FORCE_INLINE
+        auto Allocate(const int32 size) -> int32
         {
             ASSERT_ALLOCATOR_SAFETY(_ptr == nullptr);
 
@@ -104,14 +110,14 @@ public:
         }
 
 
-        FORCE_INLINE
-        const byte* Get() const
+        NO_DISCARD FORCE_INLINE
+        auto Get() const -> const byte*
         {
             return _ptr;
         }
 
-        FORCE_INLINE
-        byte* Get()
+        NO_DISCARD FORCE_INLINE
+        auto Get() -> byte*
         {
             return _ptr;
         }

@@ -1,16 +1,25 @@
-// Created by Mateusz Karbowiak 2024
+// GameDev Template Library - Created by Mateusz Karbowiak 2024-25
+// Repository: https://github.com/mtszkarbowiak/ktl/
+//
+// This project is licensed under the MIT License, which allows you to use, modify, distribute,
+// and sublicense the code as long as the original license is included in derivative works.
+// See the LICENSE file for more details.
 
 #pragma once
 
 #include "Allocators/HeapAlloc.h"
 #include "Collections/AllocHelper.h"
+#include "Language/Communism.h"
+#include "Language/Constraints.h"
 #include "Language/Templates.h"
 #include "Language/TypeInfo.h"
 #include "Math/Arithmetic.h"
 #include "Math/Growing.h"
 #include "Math/Hashing.h"
 #include "Math/Probing.h"
+#include "Types/Index.h"
 #include "Types/IterHint.h"
+#include "Types/Nullable.h"
 #include "Types/Span.h"
 
 
@@ -53,12 +62,11 @@ namespace Bucketing
 {
     /// <summary>
     /// Helper object for searching for a bucket in a hash-based collection.
-    /// -1 means the object was not found.
     /// </summary>
-    struct BucketSearchResult final
+    struct SearchResult final
     {
-        int32 FoundObject;
-        int32 FreeBucket;
+        Nullable<Index> FoundObject;
+        Nullable<Index> FreeBucket;
     };
 
     /// <summary>
@@ -86,7 +94,7 @@ namespace Bucketing
 
 class BulkOperations
 {
-private:
+PRIVATE:
     template<typename Element>
     FORCE_INLINE
     static std::enable_if_t<!TIsCStyle<Element>::Value, void>
