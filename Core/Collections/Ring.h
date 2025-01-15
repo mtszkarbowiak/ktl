@@ -243,7 +243,7 @@ public:
         }
 
         // Test required capacity against the current capacity.
-        const int32 requiredCapacity = AllocHelper::InitCapacity(_countCached); //TODO Review.
+        const int32 requiredCapacity = AllocHelper::InitCapacity(_countCached);
 
         if (_capacity <= requiredCapacity)
             return;

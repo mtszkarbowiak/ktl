@@ -104,7 +104,7 @@ namespace Querying
     /// <typeparam name="P"> Type of the projection function. </typeparam>
     template<typename _C, typename _P>
     NO_DISCARD FORCE_INLINE 
-    auto operator|(_C&& cursor, Select<_P> tag) -> SelectCursor<_C, _P>
+    auto operator|(_C&& cursor, Select<_P>&& tag) -> SelectCursor<_C, _P>
     {
         return SelectCursor<_C, _P>(
             FORWARD(_C, cursor),
@@ -214,10 +214,10 @@ namespace Querying
     /// <typeparam name="P"> Type of the predicate function. </typeparam>
     template<typename _C, typename P>
     NO_DISCARD FORCE_INLINE
-    auto operator|(_C&& cursor, Where<P> where) -> WhereCursor<_C, P>
+    auto operator|(_C&& cursor, Where<P>&& where) -> WhereCursor<_C, P>
     {
         return WhereCursor<_C, P>(
-            FORWARD(_C, cursor), //TODO This should be r-value, never l-value.
+            FORWARD(_C, cursor),
             MOVE(where)
         );
     }

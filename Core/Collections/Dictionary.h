@@ -343,7 +343,7 @@ PRIVATE:
             return false;
 
         // Iterate over all slots and recount the elements
-        int32 actualValidElements = 0, actualCells = 0; //TODO Naming ambiguity of `Element`.
+        int32 actualValidElements = 0, actualCells = 0;
         for (int32 i = 0; i < _capacity; ++i)
         {
             const Slot& slot = DATA_OF(Slot, _allocData)[i];
@@ -413,8 +413,6 @@ PRIVATE:
 
         // If everything failed, return double null to indicate that the search was unsuccessful.
         return {};
-
-        //TODO Maybe this method is generalizable?
     }
 
     void RebuildImpl(const int32 miCapacitySlots)
@@ -779,7 +777,7 @@ public:
     FORCE_INLINE constexpr
     Dictionary(const Dictionary& other)
     {
-        //TODO
+        DEBUG_BREAK; //TODO(mtszkarbowiak) Implement Dictionary::Dictionary(const Dictionary&)=
     }
 
     /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
@@ -825,7 +823,7 @@ public:
     {
         if (this != &other)
         {
-            //TODO
+            DEBUG_BREAK; //TODO(mtszkarbowiak) Implement Dictionary::operator=(const Dictionary&)
         }
         return *this;
     }

@@ -165,7 +165,7 @@ public:
     /// Attempts to reduce the capacity to the number of stored elements, without losing any elements.
     /// If the array is empty, the allocation will be freed.
     /// </summary>
-    void Compact() //TODO Test this method.
+    void Compact() //TODO(mtszkarbowiak) Test Test BitArray::Compact
     {
         if (_bitCount == 0)
         {

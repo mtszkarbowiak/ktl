@@ -88,4 +88,4 @@ public:
     }
 };
 
-//TODO Add minimal capacity for each growth strategy
+//TODO(mtszkarbowiak) Add minimal capacity for each growth strategy

@@ -178,7 +178,7 @@ PRIVATE:
         Nullable<Index>& firstFreeSlot
     )
     {
-        const Index initIndex = H::GetHash(key) % capacity; //TODO Binary masking
+        const Index initIndex = H::GetHash(key) % capacity; //TODO(mtszkarbowiak) Binary masking for HashSets
 
         keyCell.Set(initIndex);
         firstFreeSlot.Clear();
@@ -213,15 +213,13 @@ PRIVATE:
             }
 
             // Move to the next slot using the probing strategy
-            keyCell.Set((initIndex + P::Next(capacity, checkCount)) % capacity); //TODO Binary masking
+            keyCell.Set((initIndex + P::Next(capacity, checkCount)) % capacity); //TODO(mtszkarbowiak) Binary masking for HashSets
             ++checkCount;
         }
 
         // The set is full, or no suitable slot was found
         keyCell.Clear();
         firstFreeSlot.Clear();
-
-        //TODO Consider splitting the function into: FindSlot and LookupSlot
     }
 
     void RebuildImpl(const int32 minCapacity)
@@ -457,7 +455,6 @@ public:
 
             // Note: This implementation is different than the original.
             // Instead of checking the slack ratio, it rebuilds the set when there is no free slot.
-            //TODO Review the implementation
         }
 
         ASSERT(firstFreeSlot.HasValue()); // There must be a free slot
@@ -477,7 +474,7 @@ public:
     MAY_DISCARD FORCE_INLINE
     auto Add(const Element& element) -> bool
     {
-        return Add(MOVE(Element{ element })); //TODO Consider using forwarding reference.
+        return Add(MOVE(Element{ element })); // Maybe a forwarding reference in the future? Or emplacement?
     }
 
     /// <summary> Removes the specified element from the set. </summary>
@@ -543,7 +540,7 @@ protected:
         if (other._capacity == 0 || other._elementCountCached == 0)
             return;
 
-        //TODO
+        //TODO(mtszkarbowiak) Implement HashSet::MoveToEmpty(HashSet&& other)
     }
 
     void CopyToEmpty(const Slot* source, const int32 count)

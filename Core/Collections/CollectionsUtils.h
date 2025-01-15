@@ -67,8 +67,6 @@ namespace Bucketing
     {
         Nullable<Index> FoundObject;
         Nullable<Index> FreeBucket;
-
-        //TODO Maybe instead of nullables, use factory methods and accessors.
     };
 
     /// <summary>
