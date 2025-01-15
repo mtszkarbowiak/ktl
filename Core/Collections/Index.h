@@ -59,7 +59,7 @@ public:
 
     friend TombstoneNullable<Index>;
 
-private:
+PRIVATE:
     /// <summary>
     /// Creates a tombstone of an index.
     /// Do not use this constructor directly, use <c>Nullable</c> instead.

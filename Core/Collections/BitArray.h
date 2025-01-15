@@ -45,7 +45,7 @@ public:
     using AllocData   = typename A::Data;
     using AllocHelper = AllocHelperOf<Block, A, ARRAY_DEFAULT_CAPACITY, G>;
 
-private:
+PRIVATE:
     AllocData _allocData{};
     int32     _blockCapacity{};
     int32     _bitCount{};
@@ -475,7 +475,7 @@ public:
 
     // Collection Lifecycle - Overriding Content
 
-private:
+PRIVATE:
     void MoveToEmpty(BitArray&& other) noexcept
     {
         ASSERT_COLLECTION_SAFE_MOD(_bitCount == 0 && _blockCapacity == 0); // BitArray must be empty, but the collection must be initialized!

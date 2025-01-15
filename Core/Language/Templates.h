@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Types/Numbers.h"
+#include "Language/Communism.h"
 
 #include <algorithm>
 

@@ -10,6 +10,7 @@
 #include "Allocators/HeapAlloc.h"
 #include "Collections/AllocHelper.h"
 #include "Collections/Index.h"
+#include "Language/Communism.h"
 #include "Language/Templates.h"
 #include "Language/TypeInfo.h"
 #include "Math/Arithmetic.h"
@@ -94,7 +95,7 @@ namespace Bucketing
 
 class BulkOperations
 {
-private:
+PRIVATE:
     template<typename Element>
     FORCE_INLINE
     static std::enable_if_t<!TIsCStyle<Element>::Value, void>

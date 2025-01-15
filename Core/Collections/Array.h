@@ -54,7 +54,7 @@ public:
     using MutCursor   = typename Span<Element>::MutCursor;
     using ConstCursor = typename Span<Element>::ConstCursor;
 
-private:
+PRIVATE:
     AllocData _allocData{};
     int32     _capacity{};
     int32     _count{};

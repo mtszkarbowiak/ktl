@@ -37,7 +37,7 @@ class Nullable<T, false>
 public:
     using Element = T;
 
-private:
+PRIVATE:
     union
     {
         Element _value;
@@ -128,7 +128,7 @@ public:
 
     friend Nullable<Nullable, true>;
 
-private:
+PRIVATE:
     NO_DISCARD FORCE_INLINE
     auto IsTombstone() const -> bool
     {
@@ -292,7 +292,7 @@ class Nullable<T, true>
 public:
     using Element = T;
 
-private:
+PRIVATE:
     Element _value{ TombstoneDepth{ 1 } };
 
 
@@ -362,7 +362,7 @@ public:
 
     friend Nullable<Nullable, true>;
 
-private:
+PRIVATE:
     NO_DISCARD FORCE_INLINE
     auto IsTombstone() const -> bool
     {

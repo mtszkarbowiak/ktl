@@ -55,7 +55,7 @@ public:
     using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, Growing::Double>;
     using LoadFHelper = LoadFHelperOf<HASH_SETS_DEFAULT_SLACK_RATIO>;
 
-private:
+PRIVATE:
     AllocData _allocData{};
     int32     _capacity{};           // Number of slots
     int32     _elementCountCached{}; // Number of elements
@@ -129,7 +129,7 @@ public:
 
     // Hashing
 
-private:
+PRIVATE:
     NO_DISCARD FORCE_INLINE
     auto IsValid() const -> bool
     {

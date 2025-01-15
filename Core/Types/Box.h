@@ -35,7 +35,7 @@ struct Box
     using Element   = T;
     using AllocData = typename A::Data;
 
-private:
+PRIVATE:
     AllocData _allocData{};
 
 

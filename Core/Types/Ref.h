@@ -20,7 +20,7 @@ class Ref
 public:
     using Element = T;
 
-private:
+PRIVATE:
     Element* _value;
     
 
@@ -74,7 +74,7 @@ public:
 
     friend TombstoneNullable<Ref>;
 
-private:
+PRIVATE:
     FORCE_INLINE explicit
     Ref(MAYBE_UNUSED TombstoneDepth tombstoneTag) noexcept
         : _value{ nullptr }

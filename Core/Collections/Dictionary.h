@@ -257,7 +257,7 @@ public:
     using AllocHelper = AllocHelperOf<Element, A, HASH_SETS_DEFAULT_CAPACITY, Growing::Double>;
     using LoadFHelper = LoadFHelperOf<HASH_SETS_DEFAULT_SLACK_RATIO>;
 
-private:
+PRIVATE:
     AllocData _allocData{};
     int32     _capacity{};           // Number of slots
     int32     _elementCountCached{}; // Number of elements
@@ -326,7 +326,7 @@ public:
     }
 
 
-private:
+PRIVATE:
     NO_DISCARD FORCE_INLINE
     auto IsValid() const -> bool
     {
@@ -855,7 +855,7 @@ public:
 
     // Cursors
 
-private:
+PRIVATE:
     /// <summary>
     /// Moves the iterator index to the next occupied slot.
     /// If the end of the collection is reached, the capacity is returned.
