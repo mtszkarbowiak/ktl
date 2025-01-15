@@ -7,12 +7,30 @@
 
 #include <gtest/gtest.h>
 
-#include "Collections/Dictionary.h"
-#include "Debugging/LifecycleTracker.h"
 #include "Algorithms/Querying.h"
+#include "Collections/Dictionary.h"
+#include "Collections/HashSet.h"
+#include "Debugging/LifecycleTracker.h"
 #include "Math/Stastics.h"
 
-TEST(DictionaryEnumerators, Empty)
+TEST(HashSetCursors, Empty)
+{
+    HashSet<int32> set;
+    GTEST_ASSERT_EQ(set.Values().Hint().Min, 0);
+    GTEST_ASSERT_EQ(set.Values().Hint().Max.Value(), 0);
+}
+
+TEST(HashSetCursors, Count)
+{
+    HashSet<int32> set;
+    set.Add(1);
+    set.Add(3);
+    set.Add(5);
+
+    GTEST_ASSERT_EQ(Querying::Count(set.Values()), 3);
+}
+
+TEST(DictionaryCursors, Empty)
 {
     Dictionary<int32, int32> dict;
     GTEST_ASSERT_EQ(dict.Values().Hint().Min, 0);
@@ -26,7 +44,7 @@ TEST(DictionaryEnumerators, Empty)
     GTEST_ASSERT_EQ(Querying::Count(dict.Keys()), 0);
 }
 
-TEST(DictionaryEnumerators, Hint)
+TEST(DictionaryCursors, Hint)
 {
     Dictionary<int32, int32> dict;
     dict.Add(3, 0);
@@ -44,7 +62,7 @@ TEST(DictionaryEnumerators, Hint)
     GTEST_ASSERT_EQ(dict.Pairs().Hint().Max.Value(), 3);
 }
 
-TEST(DictionaryEnumerators, Count)
+TEST(DictionaryCursors, Count)
 {
     using namespace Querying;
 
@@ -66,7 +84,7 @@ TEST(DictionaryEnumerators, Count)
     GTEST_ASSERT_EQ(countPairs, 3);
 }
 
-TEST(DictionaryEnumerators, Sum)
+TEST(DictionaryCursors, Sum)
 {
     using namespace Querying;
     using namespace Statistics;

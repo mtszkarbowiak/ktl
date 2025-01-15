@@ -694,7 +694,125 @@ public:
 
     // Cursors
 
-    //TODO(mtszkarbowiak) Implement HashSet cursors
+PRIVATE:
+    /// <summary>
+    /// Moves the iterator index to the next occupied slot.
+    /// If the end of the collection is reached, the capacity is returned.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE
+    auto SkipToOccupied(int32 index) const -> int32
+    {
+        for (; index < _capacity; ++index)
+        {
+            const Slot& slot = DATA_OF(const Slot, _allocData)[index];
+
+            // If there is no cell, skip the slot.
+            if (slot.IsEmpty())
+                continue;
+
+            // If the cell is empty, skip the slot.
+            if (slot.Value().HasValue())
+                return index;
+        }
+        return _capacity;
+    }
+
+
+public:
+    /// <summary> Cursor for iterating over the elements of the set. </summary>
+    /// <remarks> <c>HashSet</c> does not have a read-write cursor. </remarks>
+    class ConstValueCursor
+    {
+        const HashSet* _set;
+        int32          _index;
+
+
+    public:
+        FORCE_INLINE explicit
+        ConstValueCursor(const HashSet& set)
+            : _set{ &set }
+            , _index{ set.SkipToOccupied(0) }
+        {
+        }
+
+
+        // Access
+
+        NO_DISCARD FORCE_INLINE
+        auto operator*() const -> const Element&
+        {
+            return DATA_OF(const Slot, _set->_allocData)[_index].Value().Value();
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator->() const -> const Element*
+        {
+            return &(DATA_OF(const Slot, _set->_allocData)[_index].Value().Value());
+        }
+
+
+        // Iteration
+
+        NO_DISCARD FORCE_INLINE
+        auto Hint() const -> SizeHint
+        {
+            // In the future, this could be optimized to return the actual number of elements.
+            // It will be done, once generalized hash collection utilities are introduced.
+            return { 0, Nullable<::Index>{ _set->_elementCountCached } };
+        }
+
+        NO_DISCARD FORCE_INLINE explicit
+        operator bool() const
+        {
+            return _index < _set->_capacity;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+            auto operator++() -> ConstValueCursor&
+        {
+            ++_index;
+            _index = _set->SkipToOccupied(_index);
+            return *this;
+        }
+
+        MAY_DISCARD FORCE_INLINE
+        auto operator++(int) -> ConstValueCursor
+        {
+            auto copy = *this;
+            ++*this;
+            return copy;
+        }
+
+
+        // Identity
+
+        NO_DISCARD FORCE_INLINE
+        auto operator==(const ConstValueCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._set) == &_set);
+            return _index == other._index;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator!=(const ConstValueCursor& other) const -> bool
+        {
+            return !(*this == other);
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto operator<(const ConstValueCursor& other) const -> bool
+        {
+            ASSERT_ITERATOR_SAFETY(&(other._set) == &_set);
+            return _index < other._index;
+        }
+    };
+
+
+    NO_DISCARD FORCE_INLINE
+    auto Values() const -> ConstValueCursor
+    {
+        return ConstValueCursor{ *this };
+    }
 
 
     // Constraints
