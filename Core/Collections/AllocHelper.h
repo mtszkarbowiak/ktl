@@ -9,14 +9,12 @@
 
 #include "Math/Arithmetic.h"
 
-
 /// <summary> Returns the pointer to the data of the specified type. </summary>
 /// <remarks> In the future, this macro may also be used to add additional checks or operations. </remarks>
 #define DATA_OF(element_type, alloc) reinterpret_cast<element_type*>((alloc).Get())
 
 /// <summary> Makes sure that the pointer is correctly aligned for the specified type. </summary>
 #define ASSERT_CORRECT_ALIGNMENT(type, ptr) ASSERT(reinterpret_cast<uintptr_t>(ptr) % alignof(type) == 0)
-
 
 /// <summary>
 /// Utility class to help manage the state of allocation in a collection.

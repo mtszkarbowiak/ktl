@@ -9,7 +9,6 @@
 
 #include "Collections/CollectionsUtils.h"
 
-
 /// <summary>
 /// A container for dynamically resizable arrays of elements,
 /// stored in a single contiguous block of memory.
