@@ -82,11 +82,13 @@ namespace Statistics
     /// </remarks>
     template<typename _C>
     NO_DISCARD   
-    auto Average(_C&& cursor) -> decltype(*cursor)
+    auto Average(_C&& cursor) -> std::decay_t<decltype(*cursor)>
     {
         ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(cursor)); // Enumerator must not be empty.
 
-        auto sum{ *cursor };
+        using ValueType = std::decay_t<decltype(*cursor)>;
+
+        ValueType sum{ *cursor };
         int32 count = 1;
         ++cursor;
 
