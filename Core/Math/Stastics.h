@@ -167,41 +167,42 @@ namespace Statistics
         return rss;
     }
 
-    
+
+    template<typename T = float>
     struct ConfusionMatrix
     {
-        float TruePositive;
-        float TrueNegative;
-        float FalsePositive;
-        float FalseNegative;
+        T TruePositive;
+        T TrueNegative;
+        T FalsePositive;
+        T FalseNegative;
 
 
         NO_DISCARD FORCE_INLINE constexpr
-        auto Sum() const -> float
+        auto Sum() const -> T
         {
             return TruePositive + TrueNegative + FalsePositive + FalseNegative;
         }
 
         NO_DISCARD FORCE_INLINE constexpr
-        auto Accuracy() const -> float
+        auto Accuracy() const -> T
         {
             return (TruePositive + TrueNegative) / Sum();
         }
 
         NO_DISCARD FORCE_INLINE constexpr
-        auto Precision() const -> float
+        auto Precision() const -> T
         {
             return TruePositive / (TruePositive + FalsePositive);
         }
 
         NO_DISCARD FORCE_INLINE constexpr
-        auto Recall() const -> float
+        auto Recall() const -> T
         {
             return TruePositive / (TruePositive + FalseNegative);
         }
 
         NO_DISCARD FORCE_INLINE constexpr
-        auto F1() const -> float
+        auto F1() const -> T
         {
             const auto precision = Precision();
             const auto recall = Recall();
