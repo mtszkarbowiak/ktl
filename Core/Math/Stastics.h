@@ -56,17 +56,15 @@ namespace Statistics
     /// <summary>
     /// Sums all elements of the cursor.
     /// </summary>
-    /// <remarks>
-    /// If the enumerator is empty, the result is the default value of the element type.
-    /// Check for emptiness before calling this method if the default value is not the desired result.
-    /// </remarks>
+    /// <param name="cursor"> The cursor to sum. If empty, identity (default ctor) is returned. </param>
     template<typename _C>
     NO_DISCARD
     auto Sum(_C&& cursor) -> std::decay_t<decltype(*cursor)>
     {
+        // Note: The type must decay (remove reference and const) to avoid returning a reference to a temporary.
         using ValueType = std::decay_t<decltype(*cursor)>;
-        ValueType sum{};
 
+        ValueType sum{};
         for (; cursor; ++cursor)
             sum += *cursor;
 
@@ -76,16 +74,14 @@ namespace Statistics
     /// <summary>
     /// Averages all elements of the cursor.
     /// </summary>
-    /// <remarks>
-    /// If the enumerator is empty, the result is the default value of the element type.
-    /// Check for emptiness before calling this method if the default value is not the desired result.
-    /// </remarks>
+    /// <param name="cursor"> The cursor to average. Must not be empty. </param>
     template<typename _C>
     NO_DISCARD   
     auto Average(_C&& cursor) -> std::decay_t<decltype(*cursor)>
     {
         ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(cursor)); // Enumerator must not be empty.
 
+        // Note: The type must decay (remove reference and const) to avoid returning a reference to a temporary.
         using ValueType = std::decay_t<decltype(*cursor)>;
 
         ValueType sum{ *cursor };
@@ -134,9 +130,9 @@ namespace Statistics
 
     template<typename _C>
     NO_DISCARD
-    auto operator|(_C&& producer, ToAverage)
+    auto operator|(_C&& cursor, ToAverage)
     {
-        return Average(FORWARD(_C, producer));
+        return Average(FORWARD(_C, cursor));
     }
 
 
