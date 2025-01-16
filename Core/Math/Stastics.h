@@ -12,38 +12,40 @@
 namespace Statistics 
 {
     /// <summary>
-    /// Averages all elements in the enumerator.
+    /// Averages all elements of the cursor.
     /// </summary>
     /// <remarks> Calling this method on an empty enumerator is UB. </remarks>
-    template<typename Enumerator>
-    auto static Min(Enumerator&& enumerator)
+    template<typename _C>
+    NO_DISCARD
+    auto Min(_C&& cursor)
     {
-        ASSERT_COLLECTION_SAFE_ACCESS((enumerator)); // Enumerator must not be empty.
+        ASSERT_COLLECTION_SAFE_ACCESS((cursor)); // Enumerator must not be empty.
 
-        auto* min = &*enumerator;
+        auto* min = &*cursor;
 
-        for (; enumerator; ++enumerator) {
-            if (*enumerator < *min)
-                min = &*enumerator;
+        for (; cursor; ++cursor) {
+            if (*cursor < *min)
+                min = &*cursor;
         }
 
         return *min;
     }
 
     /// <summary>
-    /// Averages all elements in the enumerator.
+    /// Averages all elements of the cursor.
     /// </summary>
-    /// <remarks> Calling this method on an empty enumerator is UB. </remarks>
-    template<typename Enumerator>
-    auto static Max(Enumerator&& enumerator)
+    /// <remarks> Calling this method on an empty cursor is UB. </remarks>
+    template<typename _C>
+    NO_DISCARD
+    auto Max(_C&& cursor)
     {
-        ASSERT_COLLECTION_SAFE_ACCESS((enumerator)); // Enumerator must not be empty.
+        ASSERT_COLLECTION_SAFE_ACCESS((cursor)); // Enumerator must not be empty.
 
-        auto* max = &*enumerator;
+        auto* max = &*cursor;
 
-        for (; enumerator; ++enumerator) {
-            if (*max < *enumerator)
-                max = &*enumerator;
+        for (; cursor; ++cursor) {
+            if (*max < *cursor)
+                max = &*cursor;
         }
 
         return *max;
@@ -51,45 +53,47 @@ namespace Statistics
 
 
     /// <summary>
-    /// Sums all elements in the enumerator.
+    /// Sums all elements of the cursor.
     /// </summary>
     /// <remarks>
     /// If the enumerator is empty, the result is the default value of the element type.
     /// Check for emptiness before calling this method if the default value is not the desired result.
     /// </remarks>
-    template<typename Enumerator>
-    auto static Sum(Enumerator&& enumerator)
+    template<typename _C>
+    NO_DISCARD
+    auto Sum(_C&& cursor)
     {
-        ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(enumerator)); // Enumerator must not be empty.
+        ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(cursor)); // Enumerator must not be empty.
 
-        auto sum{ *enumerator };
-        ++enumerator;
+        auto sum{ *cursor };
+        ++cursor;
 
-        for (; enumerator; ++enumerator)
-            sum += *enumerator;
+        for (; cursor; ++cursor)
+            sum += *cursor;
 
         return sum;
     }
 
     /// <summary>
-    /// Averages all elements in the enumerator.
+    /// Averages all elements of the cursor.
     /// </summary>
     /// <remarks>
     /// If the enumerator is empty, the result is the default value of the element type.
     /// Check for emptiness before calling this method if the default value is not the desired result.
     /// </remarks>
-    template<typename Enumerator>
-    auto static Average(Enumerator&& enumerator)
+    template<typename _C>
+    NO_DISCARD   
+    auto Average(_C&& cursor)
     {
-        ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(enumerator)); // Enumerator must not be empty.
+        ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(cursor)); // Enumerator must not be empty.
 
-        auto sum{ *enumerator };
+        auto sum{ *cursor };
         int32 count = 1;
-        ++enumerator;
+        ++cursor;
 
-        for (; enumerator; ++enumerator)
+        for (; cursor; ++cursor)
         {
-            sum += *enumerator;
+            sum += *cursor;
             count += 1;
         }
 
@@ -106,57 +110,61 @@ namespace Statistics
     struct ToAverage {};
 
 
-    template<typename Producer>
-    auto operator|(Producer&& producer, ToMin)
+    template<typename _C>
+    NO_DISCARD
+    auto operator|(_C&& cursor, ToMin)
     {
-        return Min(FORWARD(Producer, producer));
+        return Min(FORWARD(_C, cursor));
     }
 
-    template<typename Producer>
-    auto operator|(Producer&& producer, ToMax)
+    template<typename _C>
+    NO_DISCARD
+    auto operator|(_C&& cursor, ToMax)
     {
-        return Max(FORWARD(Producer, producer));
+        return Max(FORWARD(_C, cursor));
     }
 
-    template<typename Producer>
-    auto operator|(Producer&& producer, ToSum)
+    template<typename _C>
+    NO_DISCARD
+    auto operator|(_C&& cursor, ToSum)
     {
-        return Sum(FORWARD(Producer, producer));
+        return Sum(FORWARD(_C, cursor));
     }
 
-    template<typename Producer>
-    auto operator|(Producer&& producer, ToAverage)
+    template<typename _C>
+    NO_DISCARD
+    auto operator|(_C&& producer, ToAverage)
     {
-        return Average(FORWARD(Producer, producer));
+        return Average(FORWARD(_C, producer));
     }
 
 
     /// <summary> Calculates Residual Sum of Squares. </summary>
-    template<typename EnumeratorA, typename EnumeratorB>
-   
-    static auto Rss(
-        EnumeratorA&& enumeratorA,
-        EnumeratorB&& enumeratorB
+    template<typename _CA, typename _CB>
+    NO_DISCARD
+    auto Rss(
+        _CA&& cursorA,
+        _CB&& cursorB
     )
     {
-        using Number = decltype(*enumeratorA);
+        using Number = decltype(*cursorA);
 
         auto rss = Number{};
 
-        while (enumeratorA)
+        while (cursorA)
         {
-            ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(enumeratorB));
+            ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(cursorB));
 
-            const Number& a = *enumeratorA;
-            const Number& b = *enumeratorB;
+            const Number& a = *cursorA;
+            const Number& b = *cursorB;
 
             const auto residual        = b - a;
             const auto residualSquared = residual * residual;
 
             rss += residualSquared;
 
-            ++enumeratorA;
-            ++enumeratorB;
+            ++cursorA;
+            ++cursorB;
         }
 
         return rss;
@@ -171,32 +179,32 @@ namespace Statistics
         float FalseNegative;
 
 
-       
-        constexpr float Sum() const
+        NO_DISCARD FORCE_INLINE constexpr
+        auto Sum() const -> float
         {
             return TruePositive + TrueNegative + FalsePositive + FalseNegative;
         }
 
-       
-        constexpr float Accuracy() const
+        NO_DISCARD FORCE_INLINE constexpr
+        auto Accuracy() const -> float
         {
             return (TruePositive + TrueNegative) / Sum();
         }
 
-       
-        constexpr float Precision() const
+        NO_DISCARD FORCE_INLINE constexpr
+        auto Precision() const -> float
         {
             return TruePositive / (TruePositive + FalsePositive);
         }
 
-       
-        constexpr float Recall() const
+        NO_DISCARD FORCE_INLINE constexpr
+        auto Recall() const -> float
         {
             return TruePositive / (TruePositive + FalseNegative);
         }
 
-       
-        constexpr float F1() const
+        NO_DISCARD FORCE_INLINE constexpr
+        auto F1() const -> float
         {
             const auto precision = Precision();
             const auto recall = Recall();
