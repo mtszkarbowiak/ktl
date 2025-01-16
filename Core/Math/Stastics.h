@@ -12,14 +12,14 @@
 namespace Statistics 
 {
     /// <summary>
-    /// Averages all elements of the cursor.
+    /// Returns a pointer to the smallest element in the cursor.
     /// </summary>
-    /// <remarks> Calling this method on an empty enumerator is UB. </remarks>
     template<typename _C>
     NO_DISCARD
-    auto Min(_C&& cursor)
+    auto Min(_C&& cursor) -> typename std::remove_reference<decltype(&*cursor)>::type
     {
-        ASSERT_COLLECTION_SAFE_ACCESS((cursor)); // Enumerator must not be empty.
+        if (!cursor)
+            return nullptr;
 
         auto* min = &*cursor;
 
@@ -28,27 +28,28 @@ namespace Statistics
                 min = &*cursor;
         }
 
-        return *min;
+        return min;
     }
 
+
     /// <summary>
-    /// Averages all elements of the cursor.
+    /// Returns a pointer to the biggest element in the cursor.
     /// </summary>
-    /// <remarks> Calling this method on an empty cursor is UB. </remarks>
     template<typename _C>
     NO_DISCARD
-    auto Max(_C&& cursor)
+    auto Max(_C&& cursor) -> typename std::remove_reference<decltype(&*cursor)>::type
     {
-        ASSERT_COLLECTION_SAFE_ACCESS((cursor)); // Enumerator must not be empty.
+        if (!cursor)
+            return nullptr;
 
-        auto* max = &*cursor;
+        auto* min = &*cursor;
 
         for (; cursor; ++cursor) {
-            if (*max < *cursor)
-                max = &*cursor;
+            if (*cursor > *min)
+                min = &*cursor;
         }
 
-        return *max;
+        return min;
     }
 
 
@@ -61,12 +62,10 @@ namespace Statistics
     /// </remarks>
     template<typename _C>
     NO_DISCARD
-    auto Sum(_C&& cursor)
+    auto Sum(_C&& cursor) -> std::decay_t<decltype(*cursor)>
     {
-        ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(cursor)); // Enumerator must not be empty.
-
-        auto sum{ *cursor };
-        ++cursor;
+        using ValueType = std::decay_t<decltype(*cursor)>;
+        ValueType sum{};
 
         for (; cursor; ++cursor)
             sum += *cursor;
@@ -83,7 +82,7 @@ namespace Statistics
     /// </remarks>
     template<typename _C>
     NO_DISCARD   
-    auto Average(_C&& cursor)
+    auto Average(_C&& cursor) -> decltype(*cursor)
     {
         ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(cursor)); // Enumerator must not be empty.
 
