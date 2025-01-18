@@ -52,7 +52,11 @@ The KTL library is guided by a clear set of objectives aimed at delivering a val
 # Planned
 
 - **Benchmarks**
-- Type safety measures: `SafeBool`, `SafeInt`, etc.
+- General Types
+	- Type safety measures: `SafeBool`, `SafeInt`, etc.
+	- Error handling: `Result`, `Error`, `Try`.
+	- Variant
+	- Concepts
 - Collections
 	- `ChunkedArray` - Array of arrays for very large collections.
 	- `ChunkedRing` - Ring of arrays for very large collections.
