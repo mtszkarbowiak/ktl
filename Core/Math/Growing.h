@@ -20,9 +20,10 @@ public:
     NO_DISCARD static FORCE_INLINE
     auto Grow(const int32 capacity) -> int32
     {
-        ASSERT_COLLECTION_SAFE_MOD(capacity >= 2); // The collection must have at least 2 elements.
         return capacity + (capacity >> 1);
     }
+
+    static constexpr int32 MinCapacity = 2;
 };
 
 /// <summary>
@@ -37,6 +38,8 @@ public:
     {
         return capacity << 1;
     }
+
+    static constexpr int32 MinCapacity = 2;
 };
 
 /// <summary>
@@ -50,11 +53,12 @@ public:
     NO_DISCARD static FORCE_INLINE
     auto Grow(const int32 capacity) -> int32
     {
-        ASSERT_COLLECTION_SAFE_MOD(capacity >= 2); // The collection must have at least 2 elements.
         return capacity < Threshold
             ? capacity << 1
             : capacity + (capacity >> 1);
     }
+
+    static constexpr int32 MinCapacity = 2;
 };
 
 /// <summary>
@@ -67,9 +71,10 @@ public:
     NO_DISCARD static FORCE_INLINE
     auto Grow(const int32 capacity) -> int32
     {
-        ASSERT_COLLECTION_SAFE_MOD(capacity >= 4); // The collection must have at least 4 elements.
         return capacity + (capacity >> 2);
     }
+
+    static constexpr int32 MinCapacity = 4;
 };
 
 /// <summary>
@@ -84,8 +89,8 @@ public:
     NO_DISCARD static FORCE_INLINE
     auto Grow(const int32 capacity) -> int32
     {
-        return BalancedGrowth<64>::Grow(capacity);
+        return BalancedGrowth<>::Grow(capacity);
     }
-};
 
-//TODO(mtszkarbowiak) Add minimal capacity for each growth strategy
+    static constexpr int32 MinCapacity = BalancedGrowth<>::MinCapacity;
+};

@@ -65,7 +65,7 @@ public:
     /// Calculates the next capacity for empty collection.
     /// If there is no more capacity assertion will be triggered.
     /// </summary>
-    NO_DISCARD static
+    NO_DISCARD static constexpr
     auto InitCapacity(const int32 minCapacity) -> int32
     {
         const int32 requiredCapacity = Math::Max(minCapacity, DefaultElements);
@@ -80,7 +80,7 @@ public:
     /// <param name="oldCapacity"> Current capacity of the collection. </param>
     /// <param name="minCapacity"> Minimal capacity that the collection should have. </param>
     /// <returns> The new capacity, which the collection should request from the allocator. </returns>
-    NO_DISCARD static
+    NO_DISCARD static constexpr
     auto NextCapacity(const int32 oldCapacity, const int32 minCapacity) -> int32
     {
         // This method returns next capacity and assumes there already is an active allocation.
@@ -149,6 +149,8 @@ public:
     }
 
 
+    // Binary Masking Support
+
     enum class BinaryMaskingSupportStatus { Supported, InvalidMinimum, InvalidMaximum, };
 
     /// <summary>
@@ -175,6 +177,14 @@ public:
         // the capacity may be capped by the allocator. Therefore, we must guarantee that the limits
         // of the allocator do also comply with the pow-2 constraint.
     }
+
+
+    // Growth Policy Support
+
+    static_assert(
+        InitCapacity(1) >= Growth::MinCapacity,
+        "The default capacity must be at least as big as the minimal capacity of the growth policy."
+    );
 };
 
 //TODO(mtszkarbowiak) Add support for `contexpr` allocators.
