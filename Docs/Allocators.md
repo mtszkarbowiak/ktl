@@ -111,7 +111,7 @@ while(...)
 // ~MyAlloc()
 ```
 
-Note that allocation data does not retain information about the allocated space. After allocation, the collection is responsible for maintaining this information.
+Note that **allocation data does not retain information about the allocated space**. After allocation, the collection is responsible for maintaining this information.
 
 
 ## Basic Allocators
