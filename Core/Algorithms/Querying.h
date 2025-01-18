@@ -14,6 +14,8 @@
 
 namespace Querying
 {
+    // Utility Cursors
+
     // Mapping
 
     /// <summary> Tag used to indicate that the query should map the elements. </summary>
@@ -223,7 +225,10 @@ namespace Querying
     }
 
 
+
     // Evaluation
+
+    // Count
 
     /// <summary> Tag used to indicate that the query should count the elements. </summary>
     struct ToCount
@@ -235,7 +240,7 @@ namespace Querying
     /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
     template<typename _C> // Universal reference
     NO_DISCARD FORCE_INLINE
-    auto static Count(_C&& cursor) -> int32
+    auto Count(_C&& cursor) -> int32
     {
         int32 count = 0;
         for (; cursor; ++cursor)
@@ -252,5 +257,207 @@ namespace Querying
         return Count(FORWARD(_C, cursor));
     }
 
-    //TODO(mtszkarbowiak) Implement ToContains, ToAny, ToAll, ToFirst, ToLast, ToSkip
+
+    // Containment (by pointer)
+
+    /// <summary> Tag used to indicate that the query should check if the collection contains the specified value. </summary>
+    template<typename T>
+    struct ToContainsPtr final
+    {
+        const T* Value;
+
+        FORCE_INLINE explicit
+        ToContainsPtr(const T& value)
+            : Value{ &value }
+        {
+        }
+    };
+
+    /// <summary> Checks if the collection contains the specified value. </summary>
+    template<typename _C, typename T>
+    NO_DISCARD FORCE_INLINE
+    auto ContainsPtr(_C&& cursor, const T& value) -> bool
+    {
+        for (; cursor; ++cursor)
+        {
+            if (*cursor == value)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary> Checks if the collection contains the specified value. </summary>
+    template<typename _C, typename T>
+    NO_DISCARD FORCE_INLINE
+    auto operator|(_C&& cursor, ToContainsPtr<T>&& contains) -> bool
+    {
+        return Contains(FORWARD(_C, cursor), *contains.Value);
+    }
+
+
+    // Containment (by value)
+
+    /// <summary> Tag used to indicate that the query should check if the collection contains the specified value. </summary>
+    template<typename T>
+    struct ToContains final
+    {
+        T Value;
+
+        FORCE_INLINE explicit
+        ToContains(T&& value)
+            : Value{ MOVE(value) }
+        {
+        }
+    };
+
+    /// <summary> Checks if the collection contains the specified value. </summary>
+    template<typename _C, typename T>
+    NO_DISCARD FORCE_INLINE
+    auto Contains(_C&& cursor, T&& value) -> bool
+    {
+        for (; cursor; ++cursor)
+        {
+            if (*cursor == value)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary> Checks if the collection contains the specified value. </summary>
+    template<typename _C, typename T>
+    NO_DISCARD FORCE_INLINE
+    auto operator|(_C&& cursor, ToContains<T>&& contains) -> bool
+    {
+        return Contains(FORWARD(_C, cursor), MOVE(contains.Value));
+    }
+
+
+    // Any
+
+    /// <summary> Tag used to indicate that the query should check if any element satisfies the predicate. </summary>
+    template<typename P>
+    struct ToAny final
+    {
+        P Predicate;
+
+        FORCE_INLINE explicit
+        ToAny(P&& predicate)
+            : Predicate{ MOVE(predicate) }
+        {
+        }
+    };
+
+    /// <summary> Checks if any element satisfies the predicate. </summary>
+    template<typename _C, typename P>
+    NO_DISCARD FORCE_INLINE
+    auto Any(_C&& cursor, P&& predicate) -> bool
+    {
+        for (; cursor; ++cursor)
+        {
+            const bool result = predicate(*cursor);
+            if (result)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary> Checks if any element satisfies the predicate. </summary>
+    template<typename _C, typename P>
+    auto operator|(_C&& cursor, ToAny<P>&& any) -> bool
+    {
+        return Any(FORWARD(_C, cursor), MOVE(any.Predicate));
+    }
+
+
+    // All
+
+    /// <summary> Tag used to indicate that the query should check if all elements satisfy the predicate. </summary>
+    template<typename P>
+    struct ToAll final
+    {
+        P Predicate;
+
+        FORCE_INLINE explicit
+        ToAll(P&& predicate)
+            : Predicate{ MOVE(predicate) }
+        {
+        }
+    };
+
+    /// <summary> Checks if all elements satisfy the predicate. </summary>
+    template<typename _C, typename P>
+    NO_DISCARD FORCE_INLINE
+    auto All(_C&& cursor, P&& predicate) -> bool
+    {
+        for (; cursor; ++cursor)
+        {
+            const bool result = predicate(*cursor);
+            if (!result)
+                return false;
+        }
+        return true;
+    }
+
+    /// <summary> Checks if all elements satisfy the predicate. </summary>
+    template<typename _C, typename P>
+    NO_DISCARD FORCE_INLINE
+    auto operator|(_C&& cursor, ToAll<P>&& all) -> bool
+    {
+        return All(FORWARD(_C, cursor), MOVE(all.Predicate));
+    }
+
+
+    // First
+
+    /// <summary> Tag used to indicate that the query should return a pointer to the first element. </summary>
+    struct ToFirst final
+    {
+        // Empty
+    };
+
+    /// <summary> Returns a pointer to the first element. </summary>
+    template<typename _C>
+    NO_DISCARD FORCE_INLINE
+    auto First(_C&& cursor) -> decltype(&*cursor)
+    {
+        return (cursor) ? &*cursor : nullptr;
+    }
+
+    /// <summary> Returns a pointer to the first element. </summary>
+    template<typename _C>
+    NO_DISCARD FORCE_INLINE
+    auto operator|(_C&& cursor, ToFirst) -> decltype(&*cursor)
+    {
+        return First(FORWARD(_C, cursor));
+    }
+
+
+    // Last
+
+    /// <summary> Tag used to indicate that the query should return a pointer to the last element. </summary>
+    struct ToLast final
+    {
+        // Empty
+    };
+
+    /// <summary> Returns a pointer to the last element. </summary>
+    template<typename _C>
+    NO_DISCARD FORCE_INLINE
+    auto Last(_C&& cursor) -> decltype(&*cursor)
+    {
+        using ElementType = typename std::remove_reference<decltype(*cursor)>::type;
+
+        ElementType* last = nullptr;
+        for (; cursor; ++cursor)
+            last = &*cursor;
+        return last;
+    }
+
+    /// <summary> Returns a pointer to the last element. </summary>
+    template<typename _C>
+    NO_DISCARD FORCE_INLINE
+    auto operator|(_C&& cursor, ToLast) -> decltype(&*cursor)
+    {
+        return Last(FORWARD(_C, cursor));
+    }
 }
