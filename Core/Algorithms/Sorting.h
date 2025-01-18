@@ -14,6 +14,38 @@
 class Sorting
 {
 public:
+    /// <summary>
+    /// Sorts the elements by repeatedly selecting the minimum element from the unsorted part
+    /// and moving it to the beginning.
+    /// </summary>
+    template<typename T>
+    static void InsertionSort(T* begin, T* end)
+    {
+        for (T* i = begin + 1; i < end; ++i)
+        {
+            T* j = i;
+            while (j > begin && *(j - 1) > *j)
+            {
+                ::Swap<T>(*(j - 1), *j);
+                --j;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sorts the elements by repeatedly selecting the minimum element from the unsorted part
+    /// and moving it to the beginning.
+    /// </summary>
+    template<typename T>
+    static void InsertionSort(Span<T> span)
+    {
+        InsertionSort(
+            span.Data(),
+            span.Data() + span.Count()
+        );
+    }
+
+
     /// <summary> 
     /// Strategy of selecting the pivot element for the partitioning in QuickSort. 
     /// </summary>
@@ -127,6 +159,10 @@ PRIVATE:
 
 
 public:
+    /// <summary>
+    /// Sorts the elements by recursively partitioning the array into two parts,
+    /// each storing elements less than and greater than the pivot.
+    /// </summary>
     template<typename T>
     static void QuickSort(T* begin, T* end, const PivotMode pivotMode = PivotMode::Middle)
     {
@@ -139,6 +175,10 @@ public:
         }
     }
 
+    /// <summary>
+    /// Sorts the elements by recursively partitioning the array into two parts,
+    /// each storing elements less than and greater than the pivot.
+    /// </summary>
     template<typename T>
     static void QuickSort(Span<T> span)
     {
