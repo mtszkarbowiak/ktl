@@ -120,6 +120,6 @@ The project uses the following tools:
 
 # License
 
-Created by Mateusz Karbowiak 2024
+Created by Mateusz Karbowiak 2024-25.
 
 The project is available under the [MIT License](LICENSE.md).
