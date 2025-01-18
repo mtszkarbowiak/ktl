@@ -1,8 +1,7 @@
 # KTL
 
-> Note: This library is a work-in-progress. Originally, it was intended only as a proof-of-concept.
-
 Welcome to Mateusz Karbowiak's Template Library (KTL) for C++!
+
 
 # History
 
@@ -74,6 +73,14 @@ The KTL library is guided by a clear set of objectives aimed at delivering a val
 		- Statistics: `Variance`/`StandardDeviation`, `Median`.
 
 > Check out the milestones for more details.
+
+
+# Specs
+
+- Language: C++14, C++17, C++20
+- Compilers: MSVC, GCC, Clang
+- Platforms: Windows, Linux
+- 64 bits
 
 
 # Contributing
