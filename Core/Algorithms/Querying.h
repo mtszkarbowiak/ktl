@@ -291,7 +291,7 @@ namespace Querying
     NO_DISCARD FORCE_INLINE
     auto operator|(_C&& cursor, ToContainsPtr<T>&& contains) -> bool
     {
-        return Contains(FORWARD(_C, cursor), *contains.Value);
+        return ContainsPtr(FORWARD(_C, cursor), *contains.Value);
     }
 
 
