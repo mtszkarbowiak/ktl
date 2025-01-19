@@ -86,7 +86,7 @@ target_include_directories(Tests PRIVATE
 
 # Add the Core include directory for the Tests target
 target_include_directories(Tests PRIVATE
-    ${PROJECT_SOURCE_DIR}/Core
+    ${PROJECT_SOURCE_DIR}/Include
 )
 
 
