@@ -3,7 +3,6 @@
 > This document outlines the coding practices applied within codebase of [KTL](https://github.com/mtszkarbowiak/mk-stl).
 
 
-
 ### Base
 
 The foundation of these guidelines is the [Goole C++ Style Guide](https://google.github.io/styleguide/cppguide.html). This guide provides high-quality, well-tested rules with examples and the reasoning behind each recommandation. Topics covered include exceptions, linkage, inheritance, operator overloading, etc.

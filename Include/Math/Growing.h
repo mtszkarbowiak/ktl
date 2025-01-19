@@ -9,6 +9,7 @@
 
 #include "Types/Numbers.h"
 #include "Language/Keywords.h"
+#include "Language/Yolo.h"
 
 /// <summary>
 /// Multiplies the capacity by 1.5.
@@ -18,11 +19,12 @@ class NaturalGrowth final
 {
 public:
     NO_DISCARD static FORCE_INLINE
-    auto Grow(const int32 capacity) -> int32
+    auto Grow(const int32 capacity) NOEXCEPT_Y -> int32
     {
-        ASSERT_COLLECTION_SAFE_MOD(capacity >= 2); // The collection must have at least 2 elements.
         return capacity + (capacity >> 1);
     }
+
+    static constexpr int32 MinCapacity = 2;
 };
 
 /// <summary>
@@ -33,10 +35,12 @@ class DoubleGrowth final
 {
 public:
     NO_DISCARD static FORCE_INLINE
-    auto Grow(const int32 capacity) -> int32
+    auto Grow(const int32 capacity) NOEXCEPT_Y -> int32
     {
         return capacity << 1;
     }
+
+    static constexpr int32 MinCapacity = 2;
 };
 
 /// <summary>
@@ -48,13 +52,14 @@ class BalancedGrowth final
 {
 public:
     NO_DISCARD static FORCE_INLINE
-    auto Grow(const int32 capacity) -> int32
+    auto Grow(const int32 capacity) NOEXCEPT_Y -> int32
     {
-        ASSERT_COLLECTION_SAFE_MOD(capacity >= 2); // The collection must have at least 2 elements.
         return capacity < Threshold
             ? capacity << 1
             : capacity + (capacity >> 1);
     }
+
+    static constexpr int32 MinCapacity = 2;
 };
 
 /// <summary>
@@ -65,11 +70,12 @@ class RelaxedGrowth final
 {
 public:
     NO_DISCARD static FORCE_INLINE
-    auto Grow(const int32 capacity) -> int32
+    auto Grow(const int32 capacity) NOEXCEPT_Y -> int32
     {
-        ASSERT_COLLECTION_SAFE_MOD(capacity >= 4); // The collection must have at least 4 elements.
         return capacity + (capacity >> 2);
     }
+
+    static constexpr int32 MinCapacity = 4;
 };
 
 /// <summary>
@@ -82,10 +88,10 @@ public:
     /// Default growth strategy, to be used when the strategy is not important.
     /// </summary>
     NO_DISCARD static FORCE_INLINE
-    auto Grow(const int32 capacity) -> int32
+    auto Grow(const int32 capacity) NOEXCEPT_Y -> int32
     {
-        return BalancedGrowth<64>::Grow(capacity);
+        return BalancedGrowth<>::Grow(capacity);
     }
-};
 
-//TODO(mtszkarbowiak) Add minimal capacity for each growth strategy
+    static constexpr int32 MinCapacity = BalancedGrowth<>::MinCapacity;
+};

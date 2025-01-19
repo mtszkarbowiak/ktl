@@ -41,7 +41,7 @@ TEST(QueryCount, RingFixed)
 }
 
 
-TEST(QuerySelect, Array)
+TEST(QueryTransformation, ArraySelect)
 {
     using namespace Querying;
     using namespace Statistics;
@@ -63,7 +63,7 @@ TEST(QuerySelect, Array)
     );
 }
 
-TEST(QueryWhere, Array)
+TEST(QueryTransformation, ArrayWhere)
 {
     using namespace Querying;
     using namespace Statistics;
@@ -84,7 +84,7 @@ TEST(QueryWhere, Array)
     );
 }
 
-TEST(QuerySelectWhere, Array)
+TEST(QueryTransformation, ArraySelectWhere)
 {
     using namespace Querying;
     using namespace Statistics;
@@ -116,7 +116,7 @@ TEST(QuerySelectWhere, Array)
 }
 
 
-TEST(QueryToArray, Array)
+TEST(QueryEvaluation, ArrayToArray)
 {
     using namespace Querying;
     using namespace Statistics;
@@ -134,4 +134,40 @@ TEST(QueryToArray, Array)
     GTEST_ASSERT_EQ(result.Count(), 2);
     GTEST_ASSERT_EQ(result[0], 4);
     GTEST_ASSERT_EQ(result[1], 8);
+}
+
+TEST(QueryEvaluation, ArrayToContains)
+{
+    using namespace Querying;
+    using namespace Statistics;
+    const auto array = Array<int32>::Of({ 1, 2, 3, 4, 5 });
+
+    const auto result1 = array.Values()
+        | ToContains<int32>(3);
+    EXPECT_TRUE(result1);
+
+    const int32 value = 4;
+    const auto result2 = array.Values()
+        | ToContainsPtr<int32>(value);
+    EXPECT_TRUE(result2);
+}
+
+TEST(QueryEvaluation, ArrayToFirst)
+{
+    using namespace Querying;
+    using namespace Statistics;
+    const auto array = Array<int32>::Of({ 1, 2, 3, 4, 5 });
+    const auto result = array.Values()
+        | ToFirst();
+    EXPECT_EQ(*result, 1);
+}
+
+TEST(QueryEvaluation, ArrayToLast)
+{
+    using namespace Querying;
+    using namespace Statistics;
+    const auto array = Array<int32>::Of({ 1, 2, 3, 4, 5 });
+    const auto result = array.Values()
+        | ToLast();
+    EXPECT_EQ(*result, 5);
 }

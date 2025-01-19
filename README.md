@@ -1,117 +1,110 @@
-# GameDev Fundamentals Library
+# KTL
 
-> Note: This library is very work-in-progress. Originally, it was supposed to be only a proof-of-concept. Features and stability currently take priority over performance. When the library has all the features, specific benchmarks will be added.
-
-> Note: For examples of usage, see the test directory: [collections](Tests/RingTests.cpp), [queries](Tests/QueryingTests.cpp), etc.
-
-## I. State of Features
-
-Types:
-
-- [ ] `SafeBool`, `SafeInt` - Types preventing common mistakes: implicit conversions, arithmetic overflows, etc.
-- [ ] `Nullable` - Type for optional values.
-- [ ] `Result` - Type for returning errors.
-
-Collections:
-
-- [x] `Box` - Single value container.
-- [x] `Array` - Dynamic array, stack.
-- [x] `Ring` - Circular buffer, double-ended queue.
-- [ ] `Dictionary` - Unordered hash table.
-- [ ] `HashSet` - Unordered set.
-- [x] `BitArray` - Specialized array for bits.
-- [ ] `ChunkedArray` - Array of arrays for very large collections.
-
-Allocators:
-
-- [x] `HeapAlloc` - Standard allocator for dynamic memory.
-- [ ] `PolymorphicAlloc` - Allocator that can use other allocators as backups.
-- [x] `InlinedAlloc` - Pseudo-allocator for stack-allocated objects and more.
-- [ ] `BumpAlloc` - Fast allocator for temporary memory.
-- [ ] `BumpConcurrentAlloc` - Thread-safe version of `BumpAlloc`.
-- [ ] `PoolAlloc` - Allocator for fixed-size objects.
-- [ ] `PoolConcurrentAlloc` - Thread-safe version of `PoolAlloc`.
-
-Algorithms
-
-- [ ] `Math` - Math algorithms.
-- [ ] `Sort` - Sorting algorithms.
-- [ ] `Search` - Searching algorithms.
-- [ ] `Hash` - Hashing algorithms.
+Welcome to Mateusz Karbowiak's Template Library (KTL) for C++!
 
 
-## II. Objectives
+# History
 
-- **Game Development**: The library is designed to be used in a game development environment where performance is a critical concern. As the primary source of performance issues in games is memory management, the library provides a set of data structures and algorithms that are designed to be efficient and flexible in terms of memory usage.
-- **Compatibility with [Flax Engine](https://github.com/FlaxEngine/FlaxEngine)**: The library was originally created as a replacement for the Flax Engine's core library. Making improvements required changing the design on the conceptual level thus it deviated too much for drop-in replacement.
+The KTL library began as a personal project during my time working with the Flax game engine. While Flax offers incredible features like a stunning renderer, I encountered limitations in its core library that disrupted my workflow. Recognizing the opportunity for improvement, I started making modifications. However, the scope of these changes quickly outgrew the original intent. What started as a proof of concept grew into a full-fledged library that could benefit a wider audience.
 
+I quickly realized the potential of this library to streamline my work across multiple projects. An unexpected benefit of this endeavor was its versatility. The library is now adaptable for use in my own projects, whether they involve Flax, Unreal, Unity, or even non-gaming applications. It serves as a centralized solution to meet my diverse needs.
 
-## III. Key Assumptions
-
-1. **Performance Priority**: The library is designed to be used in a game development environment where performance is a critical concern. It is assumed that handling memory correctly is the cornerstone of performance.
-2. **C++14**: The library is written in for C++ 14. Using higher versions may enable additional features, but compatibility with Flax requires C++ 14.
-3. **Memory Management**: The library is designed to be used in a game development environment where memory management is a critical concern. The library provides a set of data structures and algorithms that are designed to be efficient and flexible in terms of memory usage.
-4. **Exception Handling**: The library does not use exceptions for error handling. Making the code handle them correctly enforces very strict rules and performance overhead. They can be used only for critical unrecoverable errors.
-5. **Memory Limits**: Allocations are limited to 4GB. This is a reasonable limit for most game development scenarios. Thus, the library uses 32-bit integers for memory sizes. Pointers remain 64-bit.
-6. **Move Semantics**: The library extensively uses move semantics to avoid unnecessary copying of objects. This is especially important for large objects such as arrays and dictionaries. A macro to block implicit copying is considered.
-7. **No RTTI**: The library does not use RTTI. (Further explanation required)
-8. **No Inheritance**: The library does not use inheritance. It creates a lot of problems, best described by the author of the STL itself, Alexander Stepanov. (Further explanation required)
-9. **Allocators Universality**: Collections must be able to accept **all** types of allocators.
+Beyond its practical applications, the KTL library is a testament to my passion for C++ and my commitment to pushing the boundaries of what's possible with the language. I currently develop this library in my free time and hope it proves useful to others as well. Feedback is always welcome!
 
 
-## IV. Design Principles
+# Goals
 
-### 1. General
+The KTL library is guided by a clear set of objectives aimed at delivering a valuable product and meeting high standards of quality:
 
-- 1.1. The library uses different types of assertions groupped by asserted logic, so the programmer can balance between safety and performance.
-- 1.2. The library puts a strong emphasis on performance, thus it may use practices that are not recommended in general programming. To counter this, the library provides a set of assertions and tests that can be enabled or disabled based on the build configuration.
-- 1.3. The library should give as much information as possible about potential error, be it in compile-time or runtime.
+- **Enhancing Productivity**: Provide a robust, intuitive, and efficient library that simplifies workflows across multiple use cases.
+- **Versatility**: Ensure the library is adaptable for use in various projects, including game development, simulations, and other applications.
+- **Performance**: Leverage advanced C++ techniques to deliver high-performance solutions that meet the demands of modern applications.
+- **Encourage Collaboration**: Take active steps to engage with the community and encourage collaboration.
+- **Real-World Applications**: Continuously refine the library by integrating it into my own private projects, using them as a testing ground for new features and improvements.
+- **Innovate**: Explore new ideas and concepts to push the boundaries of what's possible with C++.
 
-### 2. Allocation Policy and Data
 
-Allocation policy is a class storing general traits of an allocation, it includes data, context, etc. Allocation data serves as a binding between the allocation context and the allocated memory block.
+# Features
 
-- 2.1. Allocation data may represent maximum one contiguous memory block.
-- 2.2. Allocation policy takes responsibility for alignment.
-- 2.3. The destructor does not release the memory block.
-- 2.4. Allocation data is not agnostic of the stored type. This disables `constexpr` but allows for tricks with the type system.
-- 2.5. Accessing allocated block takes place through a method `Get() -> byte*`.
-- 2.6. Allocation failures are signaled by returning a null pointer and zero size.
-- 2.7. State of the allcation data may change only: on initialization, on allocation, on deallocation.
-- 2.8. Allocation policy may declare the minimum and maximum size of allocatable memory blocks. Requesting a size outside this range is an error.
-- 2.9. The size of the allocated block is determined during allocation but is not retained afterward.
-- 2.10. All allocations data must have a default constructor, even if it puts the object in an invalid state.
-- 2.11. Copying allocation data duplicates the binding, not the memory block.
-- 2.12. Moving allocation data transfers the binding, with the possibility of *dragging* the items (moving the owner without invoking move operators), based on collection policy.
-- 2.13. Copying and moving allocation must never take place when allocation is active.
-- 2.14. Allocation data must share information about dragging with a pure method `MovesItems() -> bool`.
+- General Types
+	- `Box` - Single indirect value container.
+	- `Nullable` - Type for optional values.
+	- `Ref` - Non-owning pointer to a single element.
+	- `Span` - Non-owning pointer to a range of elements.
+- Collections
+	- `Array` - Dynamic array, stack.
+	- `Ring` - Circular buffer, double-ended queue.
+	- `Dictionary` - Unordered hash table.
+	- `HashSet` - Unordered set.
+	- `BitArray` - Specialized array for bits.
+- Allocators
+	- `HeapAlloc` - Standard allocator for dynamic memory.
+	- `FixedAlloc` - Pseudo-allocator for stack-allocated objects and more.
+	- `BumpAlloc` - Fast allocator for temporary memory.
+- Algorithms
+	- Sorting algorithms: `QuickSort`, `InsertionSort`.
+	- Queries
+		- Transformations: `Select`, `Where`.
+		- Collectors: `ToArray`.
+		- Statistics: `Sum`, `Average`, `Min`, `Max`.
 
-### 3. Collection
 
-Collections manage object lifetimes and manage required memory through allocation policies.
+# Planned
 
-- 3.1. Collections may assume that every object is no-throw movable but need not to be copyable.
-- 3.2. Collections may not assume that the object is default constructible.
-- 3.3. Collections should provide API to manage the memory block, especially reserving and compacting.
-- 3.4. Collections should use fast operations for C-style objects (no constructors, destructors, etc.).
-- 3.5. ~~Every collection must use doubling strategy for resizing. This allows for heavy optimizations regarding hashing, iterating, etc. which involve modulo of capacity.~~
-- 3.6. Collections may define default capacity i.e. minimal capacity of the collection.
-- 3.7. Default capacity must obey constraints of the allocation policy.
-- 3.8. Collections must be ready to accept different hash types.
+- **Benchmarks**
+- General Types
+	- Type safety measures: `SafeBool`, `SafeInt`, etc.
+	- Error handling: `Result`, `Error`, `Try`.
+	- Variant
+	- Concepts
+- Collections
+	- `ChunkedArray` - Array of arrays for very large collections.
+	- `ChunkedRing` - Ring of arrays for very large collections.
+	- `Heap` - Priority queue.
+- Allocators
+	- `PolymorphicAlloc` - Allocator that can use other allocators as backups.
+	- `BumpConcurrentAlloc` - Thread-safe version of `BumpAlloc`.
+	- `SlabAlloc` - Allocator for fixed-size objects.
+	- `SlabConcurrentAlloc` - Thread-safe version of `SlabAlloc`.
+	- `TlsAlloc` - Thread-local storage allocator.
+	- `NumaAlloc` - NUMA-aware allocator.
+- Algorithms
+	- Hashing: `MurmurHash`, `CityHash`.
+	- Sorting: `TimSort`, `RadixSort`.
+	- Queries
+		- Aggregations: `GroupBy`, `Join`.
+		- Set operations: `Union`, `Intersect`, `Except`.
+		- Statistics: `Variance`/`StandardDeviation`, `Median`.
 
-### 4. Iterators
+> Check out the milestones for more details.
 
-- 4.1. Collections provide two types of iterators: STL-style and enumerators (C#-style).
-- 4.2. Enumerators are NOT re-enterant, making them significantly simpler to implement, [and more importantly, to use](https://www.youtube.com/watch?v=49ZYW4gHBIQ&t=3414s) than [ranges](https://en.cppreference.com/w/cpp/ranges). This also makes them more similar to LINQ in C# (or Rust iterators).
-- 4.3. STL-style iterators must obey the STL iterator concept to enable STL algorithms.
-- 4.4. Enumerators provide simple API: `operator(bool)` for end condition, `operator++()` for moving to the next element and `operator*()` for accessing the current element.
-- 4.5. Enumerators provide an enumeration space hints, so more advanced queries can predict number of elements: `Hint() -> struct IterHint{ Min; Max; }`. This reduces the need for dynamic memory allocation.
 
-## V. Acknowledgements
+# Specs
 
-Created by Mateusz Karbowiak 2024
+- Language: C++14, C++17, C++20
+- Compilers: MSVC, GCC, Clang
+- Platforms: Windows, Linux
+- 64 bits
 
-The project is available under the [MIT License](LICENSE.md).
+
+# Contributing
+
+At this stage, my primary focus is on laying a strong foundation for KTL by designing the core architecture, planning features, and refining concepts. During this initial production phase, I am not seeking contributions to the implementation itself.
+
+However, I welcome ideas, suggestions, and constructive feedback that can help shape the library’s direction. Once the library reaches a more mature stage, I plan to provide clear contribution guidelines, including coding standards, issue tracking, and precise instructions on how to get involved. Stay tuned!
+
+
+# Documentation
+
+- [Style](Docs/Style.md)
+- [Memory Management](Docs/Allocators.md)
+- [Tombstones](Docs/Tombstones.md)
+- [Queries](Docs/Queries.md)
+
+> More documentation is coming soon!
+
+
+# References
 
 The library is inspired by the following projects: 
 
@@ -123,3 +116,10 @@ The project uses the following tools:
 
 - [CMake](https://cmake.org/)
 - [Google Test](https://github.com/google/googletest)
+
+
+# License
+
+Created by Mateusz Karbowiak 2024-25.
+
+The project is available under the [MIT License](LICENSE.md).

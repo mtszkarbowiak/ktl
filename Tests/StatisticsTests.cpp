@@ -21,8 +21,8 @@ TEST(StatisticsTests, DescribeArray)
     
     GTEST_ASSERT_EQ(    Sum(array.Values()), 6);
     GTEST_ASSERT_EQ(Average(array.Values()), 2);
-    GTEST_ASSERT_EQ(    Min(array.Values()), 1);
-    GTEST_ASSERT_EQ(    Max(array.Values()), 3);
+    GTEST_ASSERT_EQ(   *Min(array.Values()), 1);
+    GTEST_ASSERT_EQ(   *Max(array.Values()), 3);
 }
 
 TEST(StatisticsTests, DescribeRing)
@@ -33,8 +33,8 @@ TEST(StatisticsTests, DescribeRing)
 
     GTEST_ASSERT_EQ(    Sum(ring.Values()), 6);
     GTEST_ASSERT_EQ(Average(ring.Values()), 2);
-    GTEST_ASSERT_EQ(    Min(ring.Values()), 1);
-    GTEST_ASSERT_EQ(    Max(ring.Values()), 3);
+    GTEST_ASSERT_EQ(   *Min(ring.Values()), 1);
+    GTEST_ASSERT_EQ(   *Max(ring.Values()), 3);
 }
 
 

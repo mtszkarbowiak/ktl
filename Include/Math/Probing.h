@@ -22,7 +22,7 @@ class LinearProbing
 
 public:
     NO_DISCARD static FORCE_INLINE
-    int32 Next(const int32 size, const int32 numChecks)
+    auto Next(const int32 size, const int32 numChecks) -> int32
     {
         return numChecks;
     }
@@ -37,7 +37,7 @@ class QuadraticProbing
 {
 public:
     NO_DISCARD static FORCE_INLINE
-    int32 Next(const int32 size, const int32 numChecks)
+    auto Next(const int32 size, const int32 numChecks) -> int32
     {
         return numChecks * numChecks;
     }
@@ -62,7 +62,7 @@ class JumpProbing
 
 public:
     NO_DISCARD static FORCE_INLINE
-    int32 Next(const int32 size, const int32 numChecks)
+    auto Next(const int32 size, const int32 numChecks) -> int32
     {
         return numChecks < N
             ? numChecks

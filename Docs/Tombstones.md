@@ -1,6 +1,6 @@
 # Tombstone Semantics
 
-> - This document outlines the coding practices applied within codebase of [KTL](https://github.com/mtszkarbowiak/mk-stl).
+> This document outlines the coding practices applied within codebase of [KTL](https://github.com/mtszkarbowiak/mk-stl).
 
 
 ## Intro

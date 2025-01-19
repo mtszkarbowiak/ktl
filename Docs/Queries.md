@@ -7,7 +7,7 @@
 
 The primary method of processing data can be described as sequential. Consequently, all major programming languages provide tools to simplify such operations:
 
-| Language  | Equivalent | Equivalent        | Interface        | 
+| Language  | Lib        | Equivalent        | Interface        | 
 |-----------|------------|-------------------|------------------|
 | Java      | Streams    | `Iterator<T>`     | `Stream<T>`      |
 | C#        | LINQ       | `IEnumerator<T>`  | `IEnumerable<T>` |

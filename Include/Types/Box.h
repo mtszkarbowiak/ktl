@@ -10,6 +10,7 @@
 #include "Allocators/HeapAlloc.h"
 #include "Collections/AllocHelper.h"
 #include "Language/Templates.h"
+#include "Language/Yolo.h"
 
 /// <summary>
 /// Stores one (or zero) element using a custom allocator.
@@ -134,7 +135,7 @@ public:
 
     /// <summary> Initializes an empty box. </summary>
     FORCE_INLINE constexpr
-    Box() noexcept = default;
+    Box() NOEXCEPT_S = default;
 
     
     /// <summary> Copying a box is not allowed. </summary>
@@ -144,7 +145,7 @@ public:
 
     /// <summary> Moves the contents of the other box into this one. </summary>
     FORCE_INLINE
-    Box(Box&& other) noexcept
+    Box(Box&& other) NOEXCEPT_S
     {
         if (!other.IsEmpty()) 
         {
@@ -168,7 +169,7 @@ public:
 
     /// <summary> Resets the box and moves the contents of the other box into this one. </summary>
     MAY_DISCARD FORCE_INLINE
-    auto operator=(Box&& other) noexcept -> Box&
+    auto operator=(Box&& other) NOEXCEPT_S -> Box&
     {
         if (this == &other)
         {

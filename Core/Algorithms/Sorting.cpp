@@ -5,7 +5,7 @@
 // and sublicense the code as long as the original license is included in derivative works.
 // See the LICENSE file for more details.
 
-#include "Sorting.h"
+#include "Algorithms/Sorting.h"
 
 // Currently this file is a placeholder for future implementations of sorting algorithms.
 // It is left to trigger the compilation of the core library.

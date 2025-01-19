@@ -7,6 +7,9 @@
 
 #pragma once
 
+#include "Debugging/Assertions.h"
+#include "Language/Keywords.h"
+#include "Types/IterHint.h"
 #include "Types/Numbers.h"
 
 /// <summary>
