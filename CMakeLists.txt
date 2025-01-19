@@ -64,7 +64,9 @@ file(GLOB_RECURSE TEST_SOURCES "${TESTS_DIR}/*.cpp")
 add_library(Core STATIC ${CORE_SOURCES})
 
 # Set include directories for the Core library
-target_include_directories(Core PUBLIC ${CORE_DIR}/include)
+target_include_directories(Core PUBLIC 
+    ${PROJECT_SOURCE_DIR}/Include
+)
 
 
 # -----------------------------------------------------------------------------
@@ -79,7 +81,6 @@ target_link_libraries(Tests PRIVATE Core gtest gtest_main)
 
 # Include directories for Tests
 target_include_directories(Tests PRIVATE 
-    ${CORE_DIR}/include               # Core headers
     ${gtest_SOURCE_DIR}/include       # GoogleTest headers
     ${gtest_BINARY_DIR}/include       # GoogleTest build output (if needed)
 )

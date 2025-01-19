@@ -7,6 +7,9 @@
 
 #pragma once
 
+#include <type_traits>
+#include <cstddef>
+
 
 /// <summary>
 /// Type trait indicating whether a type is a C-style type.
