@@ -16,10 +16,10 @@
     #define YOLO_NOEXCEPT_MODE 0
 #endif
 
-#if YOLO_MODE
-    #define NOEXCEPT_YOLO  noexcept
+#if YOLO_NOEXCEPT_MODE
+    #define NOEXCEPT_Y  noexcept
 #else
-    #define NOEXCEPT_YOLO
+    #define NOEXCEPT_Y
 #endif
 
 // --- Safe Mode ---
@@ -32,7 +32,7 @@
 #endif
 
 #if SAFE_NOEXCEPT_MODE
-    #define NOEXCEPT_SAFE
+    #define NOEXCEPT_S
 #else
-    #define NOEXCEPT_SAFE noexcept
+    #define NOEXCEPT_S noexcept
 #endif
