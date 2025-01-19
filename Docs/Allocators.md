@@ -153,19 +153,4 @@ template<
 class AllocHelperOf;
 ```
 
-This class offers various tools for managing allocations. Review it before implementing your own capacity management functions.
-
-
-## Capacity
-
-Using allocators requires a meticulous approach to capacity management. Capacity is influenced by constraints derived from both the collection and the allocator. Its calculation adheres to a specific convention:
-
-- **Required**: The minimum capacity necessary to store the number of elements the collection aims to allocate.
-- **Requested**: The capacity requested by the collection, which may exceed the required capacity to meet a collection-specific minimum, known as the default capacity.
-- **Default**: A predefined, non-zero minimum capacity specific to the collection type. This boosts the number of elements for collections that are inefficient at low capacities, such as hash-based collections.
-- **Allocated**: The size of the memory block that the allocator ultimately decides to allocate. This may exceed the requested capacity.
-- **Used**: The effective size of the memory block utilized by the collection. This value can never exceed the allocated capacity.
-
-This system allows allocators to optimize memory usage by allocating additional space to minimize reallocations or even avoid future allocation failures that might occur due to insufficient memory.
-
-> In the future, an example with specific numerical values may be added for better illustration.
+This class offers various tools for managing allocations. Review it before implementing your own capacity management functions. For more information about capacity, see the [Capacity](Capacity.md) document.
