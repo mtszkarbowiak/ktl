@@ -8,6 +8,8 @@
 #pragma once
 
 #include "Types/Numbers.h"
+#include "Language/Keywords.h"
+#include "Language/Yolo.h"
 
 /// <summary>
 /// Default hash acquisition for a type. It uses the <c>GetHash</c> method of the type.
@@ -18,7 +20,7 @@ template<typename T>
 struct HashOf
 {
     NO_DISCARD static FORCE_INLINE
-    auto GetHash(const T& key)
+    auto GetHash(const T& key) NOEXCEPT_Y -> uint32
     {
         return key.GetHash();
     }
@@ -28,7 +30,7 @@ template<>
 struct HashOf<int32>
 {
     NO_DISCARD static FORCE_INLINE
-    auto GetHash(const int32 key) -> uint32
+    auto GetHash(const int32 key) NOEXCEPT_Y -> uint32
     {
         return static_cast<uint32>(key);
     }
@@ -38,7 +40,7 @@ template<>
 struct HashOf<uint32>
 {
     NO_DISCARD static FORCE_INLINE
-    auto GetHash(const uint32 key) -> uint32
+    auto GetHash(const uint32 key) NOEXCEPT_Y -> uint32
     {
         return key;
     }
@@ -48,7 +50,7 @@ template<>
 struct HashOf<int16>
 {
     NO_DISCARD static FORCE_INLINE
-    auto GetHash(const int16 key) -> uint32
+    auto GetHash(const int16 key) NOEXCEPT_Y -> uint32
     {
         return static_cast<uint32>(key);
     }
@@ -58,7 +60,7 @@ template<>
 struct HashOf<uint16>
 {
     NO_DISCARD static FORCE_INLINE
-    auto GetHash(const uint16 key) -> uint32
+    auto GetHash(const uint16 key) NOEXCEPT_Y -> uint32
     {
         return static_cast<uint32>(key);
     }
@@ -68,7 +70,7 @@ template<>
 struct HashOf<int8>
 {
     NO_DISCARD static FORCE_INLINE
-    auto GetHash(const int8 key) -> uint32
+    auto GetHash(const int8 key) NOEXCEPT_Y -> uint32
     {
         return static_cast<uint32>(key);
     }
@@ -78,7 +80,7 @@ template<>
 struct HashOf<uint8>
 {
     NO_DISCARD static FORCE_INLINE
-    auto GetHash(const uint8 key) -> uint32
+    auto GetHash(const uint8 key) NOEXCEPT_Y -> uint32
     {
         return key;
     }

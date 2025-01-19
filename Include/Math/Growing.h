@@ -9,6 +9,7 @@
 
 #include "Types/Numbers.h"
 #include "Language/Keywords.h"
+#include "Language/Yolo.h"
 
 /// <summary>
 /// Multiplies the capacity by 1.5.
@@ -18,7 +19,7 @@ class NaturalGrowth final
 {
 public:
     NO_DISCARD static FORCE_INLINE
-    auto Grow(const int32 capacity) -> int32
+    auto Grow(const int32 capacity) NOEXCEPT_Y -> int32
     {
         return capacity + (capacity >> 1);
     }
@@ -34,7 +35,7 @@ class DoubleGrowth final
 {
 public:
     NO_DISCARD static FORCE_INLINE
-    auto Grow(const int32 capacity) -> int32
+    auto Grow(const int32 capacity) NOEXCEPT_Y -> int32
     {
         return capacity << 1;
     }
@@ -51,7 +52,7 @@ class BalancedGrowth final
 {
 public:
     NO_DISCARD static FORCE_INLINE
-    auto Grow(const int32 capacity) -> int32
+    auto Grow(const int32 capacity) NOEXCEPT_Y -> int32
     {
         return capacity < Threshold
             ? capacity << 1
@@ -69,7 +70,7 @@ class RelaxedGrowth final
 {
 public:
     NO_DISCARD static FORCE_INLINE
-    auto Grow(const int32 capacity) -> int32
+    auto Grow(const int32 capacity) NOEXCEPT_Y -> int32
     {
         return capacity + (capacity >> 2);
     }
@@ -87,7 +88,7 @@ public:
     /// Default growth strategy, to be used when the strategy is not important.
     /// </summary>
     NO_DISCARD static FORCE_INLINE
-    auto Grow(const int32 capacity) -> int32
+    auto Grow(const int32 capacity) NOEXCEPT_Y -> int32
     {
         return BalancedGrowth<>::Grow(capacity);
     }
