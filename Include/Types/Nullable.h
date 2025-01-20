@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "Debugging/Assertions.h"
 #include "Language/Keywords.h"
 #include "Language/Templates.h"
 
