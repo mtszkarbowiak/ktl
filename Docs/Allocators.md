@@ -94,7 +94,7 @@ class MyAlloc
 };
 ```
 
-> **Note**: The method was called `CanMove`, but renamed to `MovesItems`. This name is more descriptive, as move could also refer to the binding itself. Such move would requre a different method, called `MovesBinding`. For now it is not needed, as all implemented allocators return the same result for both methods.
+> The method was originally called `CanMove` but has been renamed to `MovesItems`. This new name is more descriptive, as *move* could also refer to the binding itself. Such a move would require a different method, called `MovesBinding`. For now, this method is not needed, as all implemented allocators return the same result for both methods.
 
 ## Lifecycle
 
