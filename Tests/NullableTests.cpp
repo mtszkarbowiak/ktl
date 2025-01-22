@@ -69,6 +69,25 @@ TEST(NullableByTombstoneTests, ValueCtor_ValueAsgn)
 }
 
 
+TEST(NullableByFlagTests, ValueClearing)
+{
+    Nullable<int32> nullable;
+    nullable.Set(69);
+    GTEST_ASSERT_TRUE(nullable.HasValue());
+    nullable.Clear();
+    GTEST_ASSERT_FALSE(nullable.HasValue());
+}
+
+TEST(NullableByTombstone, ValueClearing)
+{
+    Nullable<Index> nullable;
+    nullable.Set(69);
+    GTEST_ASSERT_TRUE(nullable.HasValue());
+    nullable.Clear();
+    GTEST_ASSERT_FALSE(nullable.HasValue());
+}
+
+
 TEST(NullableByFlagTests, ValueCtor)
 {
     LIFECYCLE_TEST_INTO
@@ -124,7 +143,6 @@ namespace SentinelNullables
     static_assert(sizeof(Nullable2) == sizeof(Nullable0), "");
 }
 
-
 TEST(NullableNested, NestedSentinel_Double)
 {
     using namespace SentinelNullables;
@@ -143,7 +161,6 @@ TEST(NullableNested, NestedSentinel_Double)
     GTEST_ASSERT_EQ(nullableA.Value().HasValue(), true);
     GTEST_ASSERT_EQ(nullableA.Value().Value(), 69);
 }
-
 
 TEST(NullableNested, NestedSentinel_Triple)
 {
@@ -170,6 +187,7 @@ TEST(NullableNested, NestedSentinel_Triple)
     GTEST_ASSERT_EQ(nullableA.Value().Value().Value(), 69);
 }
 
+
 namespace TombstoneNullables
 {
     // using Nullable0 = Index; // Index has a tombstone.
@@ -179,7 +197,6 @@ namespace TombstoneNullables
     static_assert(sizeof(Nullable1) == sizeof(Index), "");
     static_assert(sizeof(Nullable2) == sizeof(Index), "");
 }
-
 
 TEST(NullableNested, NestedTombstone_Double)
 {

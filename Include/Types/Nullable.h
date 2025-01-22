@@ -120,7 +120,7 @@ public:
         if (HasValue())
         {
             _value.~Element();
-            _nullLevel = 0;
+            _nullLevel = 1;
         }
     }
 
