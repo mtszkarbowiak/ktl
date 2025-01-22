@@ -9,8 +9,8 @@
 
 #include "Debugging/Assertions.h"
 #include "Language/Keywords.h"
-#include "Types/IterHint.h"
 #include "Types/Numbers.h"
+#include "Types/SizeHint.h"
 
 /// <summary>
 /// Non-owning view of a contiguous sequence of elements.
