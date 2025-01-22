@@ -216,3 +216,20 @@ TEST(NullableNested, NestedTombstone_Double)
     GTEST_ASSERT_EQ(nullableA.Value().HasValue(), true);
     GTEST_ASSERT_EQ(nullableA.Value().Value(), Index{ 69 });
 }
+
+
+TEST(NullableUtilities, BoolConversion)
+{
+    Nullable<int32> nullableA;
+    Nullable<Index> nullableB;
+    GTEST_ASSERT_FALSE(static_cast<bool>(nullableA));
+    GTEST_ASSERT_FALSE(static_cast<bool>(nullableB));
+    nullableA.Set(69);
+    nullableB.Set({ 69 });
+    GTEST_ASSERT_TRUE(static_cast<bool>(nullableA));
+    GTEST_ASSERT_TRUE(static_cast<bool>(nullableB));
+    nullableA.Clear(); // BUG! Non-tombstone nullable here does not clear the value!
+    nullableB.Clear();
+    GTEST_ASSERT_FALSE(static_cast<bool>(nullableA));
+    GTEST_ASSERT_FALSE(static_cast<bool>(nullableB));
+}

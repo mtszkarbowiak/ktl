@@ -235,6 +235,18 @@ public:
     }
 
 
+    // Conversion
+
+    /// <summary>
+    /// Converts the nullable to boolean indicating whether the nullable has a value.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE explicit
+    operator bool() const
+    {
+        return HasValue();
+    }
+
+
     // Utility
 
     NO_DISCARD FORCE_INLINE
@@ -447,6 +459,18 @@ public:
     ~Nullable()
     {
         Clear();
+    }
+
+
+    // Conversion
+
+    /// <summary>
+    /// Converts the nullable to boolean indicating whether the nullable has a value.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE explicit
+    operator bool() const
+    {
+        return HasValue();
     }
 
 
