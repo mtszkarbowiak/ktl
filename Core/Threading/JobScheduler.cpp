@@ -7,8 +7,6 @@
 
 #include "Threading/JobScheduler.h"
 
-#include "Algorithms/Querying.h"
-
 JobScheduler::JobScheduler(const int32 workers)
     : _threads{ workers }
 {
