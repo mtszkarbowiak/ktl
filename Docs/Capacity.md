@@ -28,3 +28,8 @@ Capacities can be categorized in several ways, depending on the context. Here ar
 - **Default**: A predefined, non-zero minimum capacity specific to the collection type. This boosts the number of elements for collections that are inefficient at low capacities, such as hash-based collections.
 - **Allocated**: The size of the memory block that the allocator ultimately decides to allocate. This may exceed the requested capacity.
 - **Used**: The effective size of the memory block utilized by the collection. This value can never exceed the allocated capacity.
+
+
+# Rationale
+
+The decision to completely disable precisely changing the capacity is motived by the fact that changes of capacity are expensive: both transferring data and allocating new memory. Capacity is de facto agreement between collection and allocator - Allocator has the best knowledge about how much memory can be allocated cheaply and collection knows how much memory it needs. This is why collection can only request minimal capacity and ask to potentially shrink capacity.

@@ -52,9 +52,17 @@ my_namespace::MyClass::MethodResult my_namespace::MyClass::MyMethod(); // Normal
 auto my_namespace::MyClass::MyMethod() -> MethodResult; // Trailing is shorter here!
 ```
 
-3. **Programmers Familiarity** - While it is a valid argument that most programmers are more accustomed to normal return types, this familiarity is superficial. Trailing return types offer advantages that justify the initial learning curve.
+3. **Inlined Result Type Declaration** - This argument is valid. The technique is rarely used though.
 
-4. **IDE Familiarity** - Some IDEs may not support trailing return types as well as normal return types. However, this is a temporary issue, as IDEs are constantly updated to support modern C++ features.
+```cpp
+enum class OperationStatus { SuccessFailued } ExecuteOperation(); // Legal
+
+// auto ExecuteOperation() -> enum class OperationStatus { SuccessFailued }; // Illegal
+```
+
+4. **Programmers Familiarity** - While it is a valid argument that most programmers are more accustomed to normal return types, this familiarity is superficial. Trailing return types offer advantages that justify the initial learning curve.
+
+5. **IDE Familiarity** - Some IDEs may not support trailing return types as well as normal return types. However, this is a temporary issue, as IDEs are constantly updated to support modern C++ features.
 
 
 ### Other Advantages of Trailing Return Types
