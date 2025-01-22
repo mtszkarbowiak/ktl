@@ -398,3 +398,18 @@ TEST(DictionaryMisc, CopyAsgn)
     GTEST_ASSERT_TRUE(dict.Contains(1));
     GTEST_ASSERT_TRUE(dict.Contains(5));
 };
+
+TEST(DictionaryMisc, KeyManipulation)
+{
+    Dictionary<int32, int32> src = Dictionary<int32, int32>::Of({
+        { 1, 2 },
+        { 3, 4 },
+        { 5, 6 }
+    });
+
+    src.ModifyKey(3, [](int32& key)
+        {
+            key = 3; // Actually, do nothing. Just to test the lambda.
+        }
+    );
+};

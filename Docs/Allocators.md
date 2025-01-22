@@ -94,6 +94,8 @@ class MyAlloc
 };
 ```
 
+> The method was originally called `CanMove` but has been renamed to `MovesItems`. This new name is more descriptive, as *move* could also refer to the binding itself. Such a move would require a different method, called `MovesBinding`. For now, this method is not needed, as all implemented allocators return the same result for both methods.
+
 ## Lifecycle
 
 The allocation lifecycle is closely tied to the lifecycle of the data object. A single binding represents one allocation; thus, requesting allocation twice without deallocation in between is illegal. Deallocation must occur before destruction or reassignment. This lifecycle can also be represented as an [automaton](Images/AllocDataAutomata.svg).

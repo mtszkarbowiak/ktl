@@ -19,8 +19,8 @@
 #include "Math/Hashing.h"
 #include "Math/Probing.h"
 #include "Types/Index.h"
-#include "Types/IterHint.h"
 #include "Types/Nullable.h"
+#include "Types/SizeHint.h"
 #include "Types/Span.h"
 
 

@@ -10,7 +10,7 @@
 #include "Language/Keywords.h"
 #include "Language/Templates.h"
 #include "Types/Numbers.h"
-#include "Types/IterHint.h"
+#include "Types/SizeHint.h"
 
 namespace Querying
 {
