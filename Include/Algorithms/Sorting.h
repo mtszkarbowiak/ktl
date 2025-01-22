@@ -187,12 +187,4 @@ public:
             span.Data() + span.Count()
         );
     }
-
-
-
-    //template<typename T>
-    //static void TimSort(T* begin, T* end)
-    //{
-    //    //TODO TimSort
-    //}
 };
