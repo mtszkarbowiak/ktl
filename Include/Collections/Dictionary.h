@@ -707,6 +707,45 @@ public:
         return &(DATA_OF(Slot, _allocData)[result.FoundObject.Value()].GetValue());
     }
 
+    /// <summary>
+    /// Returns a reference to the value associated with the specified key.
+    /// The key must be present in the dictionary. Otherwise, the behavior is undefined.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE
+    auto At(const Key& key) -> Value&
+    {
+        ASSERT(_capacity > 0);
+
+        const Bucketing::SearchResult result = FindSlot(
+            DATA_OF(Slot, _allocData),
+            _capacity,
+            key
+        );
+
+        ASSERT(result.FoundObject.HasValue());
+        return DATA_OF(Slot, _allocData)[result.FoundObject.Value()].GetValue();
+    }
+
+    /// <summary>
+    /// Returns a reference to the value associated with the specified key.
+    /// The key must be present in the dictionary. Otherwise, the behavior is undefined.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE
+    auto At(const Key& key) const -> const Value&
+    {
+        ASSERT(_capacity > 0);
+
+        const Bucketing::SearchResult result = FindSlot(
+            DATA_OF(Slot, _allocData),
+            _capacity,
+            key
+        );
+
+        ASSERT(result.FoundObject.HasValue());
+        return DATA_OF(Slot, _allocData)[result.FoundObject.Value()].GetValue();
+    }
+
+
     // Utility
 
     /// <summary> Adds all key-value pairs from the other dictionary to this one. </summary>
