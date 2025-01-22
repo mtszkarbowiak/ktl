@@ -28,6 +28,7 @@ public:
 
     auto Dispatch(JobOperation&& jobOperation) -> JobLabel;
     void WaitAll();
+    void Wait(JobLabel label);
 
     JobScheduler(const JobScheduler&) = delete;
     JobScheduler(JobScheduler&&) = delete;

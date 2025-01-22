@@ -7,6 +7,8 @@
 
 #include "Threading/JobScheduler.h"
 
+#include "Algorithms/Querying.h"
+
 JobScheduler::JobScheduler(const int32 workers)
     : _threads{ workers }
 {
@@ -110,4 +112,31 @@ void JobScheduler::WaitAll()
             runningJobs = _jobs.queue.Count();
         }
     }
+}
+
+void JobScheduler::Wait(const JobLabel label)
+{
+	bool jobRunning = true;
+    do
+    {
+        {
+			jobRunning = false; // Reset the flag.
+            std::unique_lock<std::mutex> lock{ _jobs.mutex };
+            for (auto jobCursor = _jobs.queue.Values(); jobCursor; ++jobCursor)
+            {
+                if (jobCursor->label == label)
+                {
+                    jobRunning = true;
+                    break;
+                }
+            }
+        }
+
+        if (jobRunning)
+        {
+            std::unique_lock<std::mutex> lock{ _noMoreJobs.mutex };
+            _noMoreJobs.signal.wait(lock);
+        }
+    }
+    while (jobRunning);
 }
