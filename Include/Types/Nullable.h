@@ -114,6 +114,23 @@ public:
         }
     }
 
+    /// <summary> Overwrites the value with the specified ony by emplace (ctor only). </summary>
+    template<typename... Args>
+    void Emplace(Args&&... args)
+    {
+        if (HasValue())
+        {
+            _value.~Element();
+            new (&_value) Element{ FORWARD(Args, args)... };
+        }
+        else
+        {
+            new (&_value) Element{ FORWARD(Args, args)... };
+            _nullLevel = 0;
+        }
+    }
+
+
     /// <summary> Resets the value to null. </summary>
     void Clear()
     {
@@ -361,6 +378,18 @@ public:
     void Set(const Element& value)
     {
         _value = value; // Should overwrite the tombstone. (or should it?)
+    }
+
+    /// <summary> Overwrites the value with the specified ony by emplace (ctor only). </summary>
+    /// <remarks>
+    /// If you want to assign null, use <c>Clear()</c>.
+    /// Never pass the tombstone depth directly.
+    /// </remarks>
+    template<typename... Args>
+    void Emplace(Args&&... args)
+    {
+        _value.~Element();
+        new (&_value) Element{ FORWARD(Args, args)... };
     }
 
     /// <summary> Resets the value to null. </summary>

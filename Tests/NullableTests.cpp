@@ -233,3 +233,16 @@ TEST(NullableUtilities, BoolConversion)
     GTEST_ASSERT_FALSE(static_cast<bool>(nullableA));
     GTEST_ASSERT_FALSE(static_cast<bool>(nullableB));
 }
+
+TEST(NullableUtilities, ValueEmplacement)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Nullable<TestTracker> nullable;
+        nullable.Emplace(69);
+        GTEST_ASSERT_TRUE(nullable.HasValue());
+        GTEST_ASSERT_EQ(nullable.Value().Value, 69);
+    }
+    LIFECYCLE_TEST_OUT
+    LIFECYCLE_TEST_DIFF(1); // Only one instance should be created. Without temporary.
+}
