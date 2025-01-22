@@ -707,6 +707,78 @@ public:
         return &(DATA_OF(Slot, _allocData)[result.FoundObject.Value()].GetValue());
     }
 
+    /// <summary>
+    /// Returns a reference to the value associated with the specified key.
+    /// The key must be present in the dictionary. Otherwise, the behavior is undefined.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE
+    auto At(const Key& key) -> Value&
+    {
+        ASSERT(_capacity > 0);
+
+        const Bucketing::SearchResult result = FindSlot(
+            DATA_OF(Slot, _allocData),
+            _capacity,
+            key
+        );
+
+        ASSERT(result.FoundObject.HasValue());
+        return DATA_OF(Slot, _allocData)[result.FoundObject.Value()].GetValue();
+    }
+
+    /// <summary>
+    /// Returns a reference to the value associated with the specified key.
+    /// The key must be present in the dictionary. Otherwise, the behavior is undefined.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE
+    auto At(const Key& key) const -> const Value&
+    {
+        ASSERT(_capacity > 0);
+
+        const Bucketing::SearchResult result = FindSlot(
+            DATA_OF(Slot, _allocData),
+            _capacity,
+            key
+        );
+
+        ASSERT(result.FoundObject.HasValue());
+        return DATA_OF(Slot, _allocData)[result.FoundObject.Value()].GetValue();
+    }
+
+    /// <summary>
+    /// Modifies the key using given function.
+    /// This method is used for development, as it checks if the hash of the key changes.
+    /// Of course, the hash of the key must never change to ensure the integrity of the map.
+    /// </summary>
+    /// <remarks>
+    /// Be careful about aliasing the key, as it may cause undefined behavior.
+    /// </remarks>
+    ///
+    /// <param name="key"> Key to modify. Be careful about aliasing.</param>
+    /// <param name="modFunc"> Function that modifies the key. Takes a l-val reference as a parameter. </param>
+    template<typename F>
+    void ModifyKey(const Key& key, F&& modFunc)
+    {
+        // The key needs to be find again, as there is not guarantee that the incoming key is the same as the stored one.
+
+        const Bucketing::SearchResult result = FindSlot(
+            DATA_OF(Slot, _allocData),
+            _capacity,
+            key
+        );
+
+        if (result.FoundObject.IsEmpty())
+            return; // The key is not in the dictionary.
+
+        Key& key2 = DATA_OF(Slot, _allocData)[result.FoundObject.Value()].GetKey();
+
+        const auto hashBefore = H::GetHash(key2);
+        modFunc(key2);
+        const auto hashAfter = H::GetHash(key2);
+        ASSERT(hashBefore == hashAfter); // The hash of the key must never change to ensure the integrity of the map.
+    }
+
+
     // Utility
 
     /// <summary> Adds all key-value pairs from the other dictionary to this one. </summary>

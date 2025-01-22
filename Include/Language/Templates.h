@@ -9,6 +9,7 @@
 
 #include "Types/Numbers.h"
 #include "Language/Communism.h"
+#include "Language/Keywords.h"
 
 #include <algorithm>
 
@@ -124,3 +125,22 @@ struct GetMaxTombstoneDepth
 {
     enum { Value = 0 };
 };
+
+
+// Null-Check
+
+template<typename T>
+NO_DISCARD FORCE_INLINE
+auto Ptr2Ref(const T* ptr) -> const T&
+{
+    ASSERT(ptr != nullptr);
+    return *ptr;
+}
+
+template<typename T>
+NO_DISCARD FORCE_INLINE
+auto Ptr2Ref(T* ptr) -> T&
+{
+    ASSERT(ptr != nullptr);
+    return *ptr;
+}

@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "Debugging/Assertions.h"
 #include "Language/Keywords.h"
 #include "Language/Templates.h"
 
@@ -113,13 +114,30 @@ public:
         }
     }
 
+    /// <summary> Overwrites the value with the specified ony by emplace (ctor only). </summary>
+    template<typename... Args>
+    void Emplace(Args&&... args)
+    {
+        if (HasValue())
+        {
+            _value.~Element();
+            new (&_value) Element{ FORWARD(Args, args)... };
+        }
+        else
+        {
+            new (&_value) Element{ FORWARD(Args, args)... };
+            _nullLevel = 0;
+        }
+    }
+
+
     /// <summary> Resets the value to null. </summary>
     void Clear()
     {
         if (HasValue())
         {
             _value.~Element();
-            _nullLevel = 0;
+            _nullLevel = 1;
         }
     }
 
@@ -231,6 +249,18 @@ public:
     ~Nullable()
     {
         Clear();
+    }
+
+
+    // Conversion
+
+    /// <summary>
+    /// Converts the nullable to boolean indicating whether the nullable has a value.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE explicit
+    operator bool() const
+    {
+        return HasValue();
     }
 
 
@@ -350,6 +380,18 @@ public:
         _value = value; // Should overwrite the tombstone. (or should it?)
     }
 
+    /// <summary> Overwrites the value with the specified ony by emplace (ctor only). </summary>
+    /// <remarks>
+    /// If you want to assign null, use <c>Clear()</c>.
+    /// Never pass the tombstone depth directly.
+    /// </remarks>
+    template<typename... Args>
+    void Emplace(Args&&... args)
+    {
+        _value.~Element();
+        new (&_value) Element{ FORWARD(Args, args)... };
+    }
+
     /// <summary> Resets the value to null. </summary>
     FORCE_INLINE
     void Clear()
@@ -446,6 +488,18 @@ public:
     ~Nullable()
     {
         Clear();
+    }
+
+
+    // Conversion
+
+    /// <summary>
+    /// Converts the nullable to boolean indicating whether the nullable has a value.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE explicit
+    operator bool() const
+    {
+        return HasValue();
     }
 
 
