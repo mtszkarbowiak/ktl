@@ -24,6 +24,12 @@ struct TIdentity
 };
 
 /// <summary>
+/// Not-callable function that returns the type it is given.
+/// </summary>
+template<typename T>
+auto Declval() noexcept -> T;
+
+/// <summary>
 /// Type to trigger evaluation of SFINAE expressions.
 /// </summary>
 template<typename T>

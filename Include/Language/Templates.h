@@ -57,7 +57,7 @@ namespace SwapInternal // ADL Barrier
     };
 
     template<typename T>
-    struct THasSwap<T, VoidT<decltype(std::declval<T>().Swap(std::declval<T&>()))>>
+    struct THasSwap<T, VoidT<decltype(Declval<T>().Swap(Declval<T&>()))>>
     {
         static constexpr bool Value = true;
     };
