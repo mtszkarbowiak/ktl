@@ -1502,8 +1502,8 @@ public:
     REQUIRE_TYPE_NOT_REFERENCE(Value);
     REQUIRE_TYPE_NOT_CONST(Key);
     REQUIRE_TYPE_NOT_CONST(Value);
-    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Key);
-    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Value);
+    REQUIRE_TYPE_MOVEABLE(Key);
+    REQUIRE_TYPE_MOVEABLE(Value);
 
     static_assert(
         AllocHelper::HasBinaryMaskingSupport() == AllocHelper::BinaryMaskingSupportStatus::Supported, 

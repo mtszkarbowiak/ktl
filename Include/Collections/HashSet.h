@@ -819,7 +819,7 @@ public:
 
     REQUIRE_TYPE_NOT_REFERENCE(Element);
     REQUIRE_TYPE_NOT_CONST(Element);
-    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Element);
+    REQUIRE_TYPE_MOVEABLE(Element);
 
     static_assert(
         AllocHelper::HasBinaryMaskingSupport() == AllocHelper::BinaryMaskingSupportStatus::Supported,

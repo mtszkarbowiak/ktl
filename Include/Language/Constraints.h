@@ -7,10 +7,7 @@
 
 #pragma once
 
-#include <type_traits> //TODO(mtszkarbowiak): Remove this include.
-
 #include "Language/TypeTraits.h"
-
 
 #define REQUIRE_TYPE_NOT_CONST(T) \
     static_assert(!TIsConstV<T>, "Type must not be const.")
@@ -24,7 +21,5 @@
 #define REQUIRE_TYPE_NOT_ARRAY(T) \
     static_assert(!TIsArrayV<T>, "Type must not be an array.")
 
-#define REQUIRE_TYPE_MOVEABLE_NOEXCEPT(T) \
-    static_assert( \
-        std::is_nothrow_move_constructible<T>::value && std::is_nothrow_move_assignable<T>::value, \
-        "Type must be nothrow move constructible and assignable.")
+#define REQUIRE_TYPE_MOVEABLE(T) \
+    static_assert(TIsMoveableV<T>, "Type must be moveable.")
