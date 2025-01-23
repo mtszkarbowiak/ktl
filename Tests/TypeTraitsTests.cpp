@@ -45,6 +45,14 @@ static_assert(TIsFuncV<int(int)>   == true,  "TIsFunc test failed");
 static_assert(std::is_same_v<TRemoveRef<int&>::Type, int>,        "TRemoveRef test failed");
 static_assert(std::is_same_v<TRemovePtr<int*>::Type, int>,        "TRemovePointer test failed");
 static_assert(std::is_same_v<TRemoveConst<const int>::Type, int>, "TRemoveConst test failed");
-static_assert(std::is_same_v<TDecay<int[5]>::Type, int*>,         "TDecay test failed");
 static_assert(std::is_same_v<TAddLValRef<int>::Type, int&>,       "TAddLValRef test failed");
 static_assert(std::is_same_v<TAddConst<int>::Type, const int>,    "TAddConst test failed");
+
+static_assert(std::is_same_v<TDecay<int>::Type, int>,                "TDecay test failed");
+static_assert(std::is_same_v<TDecay<int&>::Type, int>,               "TDecay test failed");
+static_assert(std::is_same_v<TDecay<const int>::Type, int>,          "TDecay test failed");
+static_assert(std::is_same_v<TDecay<volatile int>::Type, int>,       "TDecay test failed");
+static_assert(std::is_same_v<TDecay<const volatile int>::Type, int>, "TDecay test failed");
+static_assert(std::is_same_v<TDecay<int[]>::Type, int*>,             "TDecay test failed");
+static_assert(std::is_same_v<TDecay<int[10]>::Type, int*>,           "TDecay test failed");
+static_assert(std::is_same_v<TDecay<int(int)>::Type, int(*)(int)>,   "TDecay test failed");

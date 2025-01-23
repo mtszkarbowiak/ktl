@@ -329,6 +329,12 @@ struct TIsArray<T[N]>
 };
 
 template<typename T>
+struct TIsArray<T[]>
+{
+    static constexpr bool Value = true;
+};
+
+template<typename T>
 static constexpr bool TIsArrayV = TIsArray<T>::Value;
 
 
@@ -473,12 +479,12 @@ struct TDecay
 {
 private:
     using RawType = typename TRemoveCV<typename TRemoveRef<T>::Type>::Type;
-    
+
 public:
-    using Type = TConditional<
-        TIsArray<T>::Value,
-        TRemoveExtent<RawType>*,
-        RawType
+    using Type = TConditionalT<
+        TIsArrayV<RawType>,
+        TRemoveExtentT<RawType>*,
+        TConditionalT<TIsFuncV<RawType>, RawType*, RawType>
     >;
 };
 
