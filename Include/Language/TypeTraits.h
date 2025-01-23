@@ -535,6 +535,18 @@ template<typename T>
 using TRemoveCVT = typename TRemoveCV<T>::Type;
 
 
+// Remove Const, Volatile, and Reference
+
+template<typename T>
+struct TRemoveCVRef
+{
+    using Type = TRemoveCVT<TRemoveRefT<T>>;
+};
+
+template<typename T>
+using TRemoveCVRefT = typename TRemoveCVRef<T>::Type;
+
+
 // Remove Extent
 
 template<typename T>

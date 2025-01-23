@@ -370,7 +370,7 @@ public:
     auto PushBack(U&& element) -> Element&
     {
         static_assert(
-            std::is_same<typename std::decay<U>::type, Element>::value,
+            TIsSameV<TRemoveCVRefT<U>, Element>,
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
@@ -412,7 +412,7 @@ public:
     auto PushFront(U&& element) -> Element&
     {
         static_assert(
-            std::is_same<typename std::decay<U>::type, Element>::value,
+            TIsSameV<TRemoveCVRefT<U>, Element>,
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 

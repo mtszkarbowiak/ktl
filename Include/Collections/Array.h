@@ -246,7 +246,7 @@ public:
     auto Add(U&& element) -> Element&
     {
         static_assert(
-            std::is_same<typename std::decay<U>::type, Element>::value,
+            TIsSameV<TRemoveCVRefT<U>, Element>,
             "Add requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
