@@ -61,8 +61,21 @@ static_assert(std::is_same_v<TDecay<int(int)>::Type, int(*)(int)>,   "TDecay tes
 
 // --- Tests for Compiler Intrinsics ---
 enum class SomeEnum{ A, B, };
-static_assert(TIsEnumV<SomeEnum>,    "TIsEnum test failed");
-static_assert(!TIsEnumV<int>,        "TIsEnum test failed");
 struct SomeStruct { int i; };
-static_assert(TIsPODV<SomeStruct>,   "TIsPOD test failed");
-static_assert(!TIsPODV<Array<int>>,  "TIsPOD test failed");
+
+static_assert(TIsEnumV<SomeEnum>,   "TIsEnum test failed");
+static_assert(!TIsEnumV<int>,       "TIsEnum test failed");
+static_assert(TIsPODV<SomeStruct>,  "TIsPOD test failed");
+static_assert(!TIsPODV<Array<int>>, "TIsPOD test failed");
+
+static_assert(THasTrivialCtorV<SomeStruct>,  "TIsTriviallyConstructible test failed");
+static_assert(THasTrivialCtorV<SomeEnum>,    "TIsTriviallyConstructible test failed");
+static_assert(!THasTrivialCtorV<Array<int>>, "TIsTriviallyConstructible test failed");
+
+static_assert(THasTrivialDtorV<SomeStruct>,   "TIsTriviallyDestructible test failed");
+static_assert(THasTrivialDtorV<SomeEnum>,     "TIsTriviallyDestructible test failed");
+static_assert(!THasTrivialDtorV<Array<int>>,  "TIsTriviallyDestructible test failed");
+
+static_assert(THasTrivialCopyV<SomeStruct>,       "TIsTriviallyCopyable test failed");
+static_assert(THasTrivialCopyV<SomeEnum>,         "TIsTriviallyCopyable test failed");
+static_assert(!THasTrivialCopyV<Array<int>>,      "TIsTriviallyCopyable test failed");

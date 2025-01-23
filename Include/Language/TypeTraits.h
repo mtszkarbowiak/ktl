@@ -614,6 +614,8 @@ using TAddConstT = typename TAddConst<T>::Type;
 
 // --- Compiler Intrinsics ---
 
+// Enum Check
+
 template<typename T>
 struct TIsEnum
 {
@@ -623,6 +625,9 @@ struct TIsEnum
 template<typename T>
 static constexpr bool TIsEnumV = TIsEnum<T>::Value;
 
+
+// Plain Old Data Check
+
 template<typename T>
 struct TIsPOD
 {
@@ -631,3 +636,51 @@ struct TIsPOD
 
 template<typename T>
 static constexpr bool TIsPODV = TIsPOD<T>::Value;
+
+
+// Trivially Constructible Check
+
+template<typename T>
+struct THasTrivialCtor
+{
+#if defined(__clang__) && __clang_major__ >= 15
+    enum { Value = __is_trivially_constructible(T) };
+#else
+    enum { Value = __has_trivial_constructor(T) };
+#endif
+};
+
+template<typename T>
+static constexpr bool THasTrivialCtorV = THasTrivialCtor<T>::Value;
+
+
+// Trivially Copyable Check
+
+template<typename T>
+struct THasTrivialCopy
+{
+#if defined(__clang__) && __clang_major__ >= 15
+    enum { Value = __is_trivially_copyable(T) };
+#else
+    enum { Value = __has_trivial_copy(T) };
+#endif
+};
+
+template<typename T>
+static constexpr bool THasTrivialCopyV = THasTrivialCopy<T>::Value;
+
+
+// Trivially Destructible Check
+
+template<typename T>
+struct THasTrivialDtor
+{
+#if defined(__clang__) && __clang_major__ >= 15
+    enum { Value = __is_trivially_destructible(T) };
+#else
+    enum { Value = __has_trivial_destructor(T) };
+#endif
+};
+
+template<typename T>
+static constexpr bool THasTrivialDtorV = THasTrivialDtor<T>::Value;
