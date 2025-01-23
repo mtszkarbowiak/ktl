@@ -22,6 +22,8 @@
 #include "Types/SizeHint.h"
 #include "Types/Span.h"
 
+#include <initializer_list>
+
 
 /// <summary>
 /// Default memory allocator. To be used when no specific allocator is required.

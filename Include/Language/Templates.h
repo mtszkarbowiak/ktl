@@ -12,10 +12,6 @@
 #include "Language/Keywords.h"
 #include "Language/TypeTraits.h"
 
-#include <algorithm>
-
-
-
 // Move Semantics
 
 template<typename T>
@@ -80,11 +76,6 @@ namespace SwapInternal // ADL Barrier
     template<typename T>
     auto SwapImpl(T& a, T& b) noexcept -> TDisableIfT<THasSwapFunctionV<T>, void>
     {
-        static_assert(
-            std::is_nothrow_move_constructible<T>::value,
-            "Type must be nothrow move constructible."
-        );
-
         T temp = MOVE(a);
         a = MOVE(b);
         b = MOVE(temp);

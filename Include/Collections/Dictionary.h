@@ -927,13 +927,13 @@ public:
 
     /// <summary> Creates a dictionary with the specified elements. </summary>
     NO_DISCARD static constexpr
-    auto Of(std::initializer_list<std::pair<Key, Value>> list) -> Dictionary<Key, Value>
+    auto Of(std::initializer_list<Pair<Key, Value>> list) -> Dictionary<Key, Value>
     {
         const int32 capacity = static_cast<int32>(list.size());
         Dictionary<Key, Value> result{ capacity };
 
         for (const auto& pair : list)
-            result.Add(pair.first, pair.second);
+            result.Add(pair.Key, pair.Value);
 
         return result;
     }
