@@ -45,10 +45,7 @@ public:
     template<typename T>
     static void InsertionSort(Span<T> span)
     {
-        InsertionSort(
-            span.Data(),
-            span.Data() + span.Count()
-        );
+        InsertionSort(span.begin(), span.end());
     }
 
 
@@ -108,10 +105,7 @@ public:
     static FORCE_INLINE
     void MergeSort(Span<T> span)
     {
-        MergeSort(
-            span.Data(),
-            span.Data() + span.Count()
-        );
+        MergeSort(span.begin(), span.end());
     }
 
 
@@ -146,10 +140,7 @@ public:
     static FORCE_INLINE
     void TimSort(Span<T> span)
     {
-        TimSort(
-            span.Data(),
-            span.Data() + span.Count()
-        );
+        TimSort(span.begin(), span.end());
     }
 
 
@@ -291,9 +282,6 @@ public:
     template<typename T>
     static void QuickSort(Span<T> span)
     {
-        QuickSort(
-            span.Data(), 
-            span.Data() + span.Count()
-        );
+        QuickSort(span.begin(), span.end());
     }
 };

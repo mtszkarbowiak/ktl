@@ -132,6 +132,49 @@ public:
 
     // Iterators
 
+    /// <summary> STL-style begin iterator. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto begin() -> T*
+    {
+        return _data;
+    }
+
+    /// <summary> STL-style begin iterator. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto begin() const -> const T*
+    {
+        return _data;
+    }
+
+    /// <summary> STL-style begin iterator. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto cbegin() const -> const T*
+    {
+        return _data;
+    }
+
+    /// <summary> STL-style end iterator. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto end() -> T*
+    {
+        return _data + _count;
+    }
+
+    /// <summary> STL-style end iterator. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto end() const -> const T*
+    {
+        return _data + _count;
+    }
+
+    /// <summary> STL-style end iterator. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto cend() const -> const T*
+    {
+        return _data + _count;
+    }
+
+
     /// <summary> Creates a mutable-element enumerator for the span. </summary>
     /// <remarks>
     /// This is the most basic iterator which uses raw memory pointers and does not track the iterated collection.
@@ -247,7 +290,6 @@ public:
             return _begin < other._begin;
         }
     };
-
 
     /// <summary> Creates a const-element enumerator for the span. </summary>
     /// <remarks>
