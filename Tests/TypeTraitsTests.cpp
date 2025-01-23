@@ -12,13 +12,13 @@
 #include <type_traits> // Use standard library type traits for comparison.
 
 // --- Tests for Identity ---
-static_assert(std::is_same_v<TIdentity<int>::Type, int>, "TIdentity test failed");
+static_assert(std::is_same<TIdentity<int>::Type, int>::value, "TIdentity test failed");
 
 // --- Tests for Flow Control ---
-static_assert(std::is_same_v<TConditionalT<true, int, float>, int>,    "TConditional test failed");
-static_assert(std::is_same_v<TConditionalT<false, int, float>, float>, "TConditional test failed");
-static_assert(std::is_same_v<TEnableIf<true, int>::Type, int>,         "TEnableIf test failed");
-static_assert(std::is_same_v<TDisableIf<false, int>::Type, int>,       "TDisableIf test failed");
+static_assert(std::is_same<TConditionalT<true, int, float>, int>::value,    "TConditional test failed");
+static_assert(std::is_same<TConditionalT<false, int, float>, float>::value, "TConditional test failed");
+static_assert(std::is_same<TEnableIf<true, int>::Type, int>::value,         "TEnableIf test failed");
+static_assert(std::is_same<TDisableIf<false, int>::Type, int>::value,       "TDisableIf test failed");
 
 // --- Tests for Logic ---
 struct TrueTrait  { static constexpr bool Value = true; };
@@ -44,20 +44,20 @@ static_assert(TIsPtrV<int*>        == true,  "TIsPtr test failed");
 static_assert(TIsFuncV<int(int)>   == true,  "TIsFunc test failed");
 
 // --- Tests for Type Modifiers ---
-static_assert(std::is_same_v<TRemoveRef<int&>::Type, int>,        "TRemoveRef test failed");
-static_assert(std::is_same_v<TRemovePtr<int*>::Type, int>,        "TRemovePointer test failed");
-static_assert(std::is_same_v<TRemoveConst<const int>::Type, int>, "TRemoveConst test failed");
-static_assert(std::is_same_v<TAddLValRef<int>::Type, int&>,       "TAddLValRef test failed");
-static_assert(std::is_same_v<TAddConst<int>::Type, const int>,    "TAddConst test failed");
+static_assert(std::is_same<TRemoveRef<int&>::Type, int>::value,        "TRemoveRef test failed");
+static_assert(std::is_same<TRemovePtr<int*>::Type, int>::value,        "TRemovePointer test failed");
+static_assert(std::is_same<TRemoveConst<const int>::Type, int>::value, "TRemoveConst test failed");
+static_assert(std::is_same<TAddLValRef<int>::Type, int&>::value,       "TAddLValRef test failed");
+static_assert(std::is_same<TAddConst<int>::Type, const int>::value,    "TAddConst test failed");
 
-static_assert(std::is_same_v<TDecay<int>::Type, int>,                "TDecay test failed");
-static_assert(std::is_same_v<TDecay<int&>::Type, int>,               "TDecay test failed");
-static_assert(std::is_same_v<TDecay<const int>::Type, int>,          "TDecay test failed");
-static_assert(std::is_same_v<TDecay<volatile int>::Type, int>,       "TDecay test failed");
-static_assert(std::is_same_v<TDecay<const volatile int>::Type, int>, "TDecay test failed");
-static_assert(std::is_same_v<TDecay<int[]>::Type, int*>,             "TDecay test failed");
-static_assert(std::is_same_v<TDecay<int[10]>::Type, int*>,           "TDecay test failed");
-static_assert(std::is_same_v<TDecay<int(int)>::Type, int(*)(int)>,   "TDecay test failed");
+static_assert(std::is_same<TDecay<int>::Type, int>::value,                "TDecay test failed");
+static_assert(std::is_same<TDecay<int&>::Type, int>::value,               "TDecay test failed");
+static_assert(std::is_same<TDecay<const int>::Type, int>::value,          "TDecay test failed");
+static_assert(std::is_same<TDecay<volatile int>::Type, int>::value,       "TDecay test failed");
+static_assert(std::is_same<TDecay<const volatile int>::Type, int>::value, "TDecay test failed");
+static_assert(std::is_same<TDecay<int[]>::Type, int*>::value,             "TDecay test failed");
+static_assert(std::is_same<TDecay<int[10]>::Type, int*>::value,           "TDecay test failed");
+static_assert(std::is_same<TDecay<int(int)>::Type, int(*)(int)>::value,   "TDecay test failed");
 
 // --- Tests for Compiler Intrinsics ---
 enum class SomeEnum{ A, B, };
