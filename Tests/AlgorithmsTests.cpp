@@ -15,7 +15,7 @@ TEST(Algorithms, QuickSort)
     Array<int32> array = Array<int32>::Of({ 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 });
     const Array<int32> expected = Array<int32>::Of({ 1, 1, 2, 3, 3, 4, 5, 5, 5, 6, 9 });
 
-    Sorting::QuickSort(array.AsSpan());
+    QuickSort<int32>::Sort(array.AsSpan());
 
     for (int32 i = 0; i < array.Count(); ++i)
     {
@@ -28,7 +28,7 @@ TEST(Algorithms, InsertionSort)
     Array<int32> array = Array<int32>::Of({ 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 });
     const Array<int32> expected = Array<int32>::Of({ 1, 1, 2, 3, 3, 4, 5, 5, 5, 6, 9 });
 
-    Sorting::InsertionSort(array.AsSpan());
+    InsertionSort<int32>::Sort(array.AsSpan());
 
     for (int32 i = 0; i < array.Count(); ++i)
     {
@@ -40,7 +40,7 @@ TEST(Algorithms, MergeSort)
 {
     Array<int32> array = Array<int32>::Of({ 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 });
     const Array<int32> expected = Array<int32>::Of({ 1, 1, 2, 3, 3, 4, 5, 5, 5, 6, 9 });
-    Sorting::MergeSort(array.AsSpan());
+    MergeSort<int32>::Sort(array.AsSpan());
     for (int32 i = 0; i < array.Count(); ++i)
     {
         EXPECT_EQ(array[i], expected[i]);
@@ -51,7 +51,7 @@ TEST(Algorithms, TimSort)
 {
     Array<int32> array = Array<int32>::Of({ 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 });
     const Array<int32> expected = Array<int32>::Of({ 1, 1, 2, 3, 3, 4, 5, 5, 5, 6, 9 });
-    Sorting::TimSort(array.AsSpan());
+    TimSort<int32>::Sort(array.AsSpan());
     for (int32 i = 0; i < array.Count(); ++i)
     {
         EXPECT_EQ(array[i], expected[i]);
