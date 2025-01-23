@@ -13,6 +13,8 @@
 
 class Sorting
 {
+    // Insertion Sort
+
 public:
     /// <summary>
     /// Sorts the elements by repeatedly selecting the minimum element from the unsorted part
@@ -21,13 +23,16 @@ public:
     template<typename T>
     static void InsertionSort(T* begin, T* end)
     {
-        for (T* i = begin + 1; i < end; ++i)
+        for (T* current = begin + 1; current < end; ++current)
         {
-            T* j = i;
-            while (j > begin && *(j - 1) > *j)
+            T* insertTarget = current;
+            while (
+                (insertTarget > begin) && // Ensure we don't go out of bounds.
+                (*(insertTarget - 1) > *insertTarget) // Compare with the previous element.
+            )
             {
-                ::Swap<T>(*(j - 1), *j);
-                --j;
+                ::Swap<T>(*(insertTarget - 1), *insertTarget);
+                --insertTarget;
             }
         }
     }
@@ -45,6 +50,8 @@ public:
         );
     }
 
+
+    // Quick Sort
 
     /// <summary> 
     /// Strategy of selecting the pivot element for the partitioning in QuickSort. 
