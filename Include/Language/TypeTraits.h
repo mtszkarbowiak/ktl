@@ -212,6 +212,42 @@ template<typename T1, typename T2>
 static constexpr bool TIsSameV = TIsSame<T1, T2>::Value;
 
 
+// Const Check
+
+template<typename T>
+struct TIsConst
+{
+    static constexpr bool Value = false;
+};
+
+template<typename T>
+struct TIsConst<const T>
+{
+    static constexpr bool Value = true;
+};
+
+template<typename T>
+static constexpr bool TIsConstV = TIsConst<T>::Value;
+
+
+// Volatile Check
+
+template<typename T>
+struct TIsVolatile
+{
+    static constexpr bool Value = false;
+};
+
+template<typename T>
+struct TIsVolatile<volatile T>
+{
+    static constexpr bool Value = true;
+};
+
+template<typename T>
+static constexpr bool TIsVolatileV = TIsVolatile<T>::Value;
+
+
 // L-Value Reference Check
 
 template<typename T>
@@ -336,6 +372,42 @@ struct TIsArray<T[]>
 
 template<typename T>
 static constexpr bool TIsArrayV = TIsArray<T>::Value;
+
+
+// Void Check
+
+template<typename T>
+struct TIsVoid
+{
+    static constexpr bool Value = false;
+};
+
+template<>
+struct TIsVoid<void>
+{
+    static constexpr bool Value = true;
+};
+
+template<>
+struct TIsVoid<const void>
+{
+    static constexpr bool Value = true;
+};
+
+template<>
+struct TIsVoid<volatile void>
+{
+    static constexpr bool Value = true;
+};
+
+template<>
+struct TIsVoid<const volatile void>
+{
+    static constexpr bool Value = true;
+};
+
+template<typename T>
+static constexpr bool TIsVoidV = TIsVoid<T>::Value;
 
 
 // --- Type Modifiers ---
