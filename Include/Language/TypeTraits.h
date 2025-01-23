@@ -8,7 +8,6 @@
 #pragma once
 
 #include "Language/Communism.h"
-#include "Language/Yolo.h"
 
 #include <cstddef>
 
@@ -25,6 +24,13 @@ struct TIdentity
 };
 
 /// <summary>
+/// Type to trigger evaluation of SFINAE expressions.
+/// </summary>
+template<typename T>
+using VoidT = void;
+
+
+/// <summary>
 /// Type trait that always returns <c>true</c>.
 /// </summary>
 struct TTrueType
@@ -39,7 +45,6 @@ struct TFalseType
 {
     static constexpr bool Value = false;
 };
-
 
 // --- Flow Control ---
 // Flow control type traits are used to conditionally select between two types.

@@ -10,12 +10,10 @@
 #include "Types/Numbers.h"
 #include "Language/Communism.h"
 #include "Language/Keywords.h"
+#include "Language/TypeTraits.h"
 
 #include <algorithm>
 
-
-template<typename T>
-using VoidT = void;
 
 
 // Move Semantics
