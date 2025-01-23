@@ -173,7 +173,7 @@ PRIVATE:
         const Slot* data,
         const int32 capacity,
         const Element& key
-    ) ->  Bucketing::SearchResult
+    ) ->  HashSlotSearchResult
     {
         ASSERT_COLLECTION_INTEGRITY(data);
         ASSERT_COLLECTION_INTEGRITY(Math::IsPow2(capacity)); // Make sure the capacity is a power of 2
@@ -262,7 +262,7 @@ PRIVATE:
                 continue;
 
             // Find a place for the element in the new set.
-            const Bucketing::SearchResult searchResult = FindSlot(
+            const HashSlotSearchResult searchResult = FindSlot(
                 DATA_OF(Slot, newData), 
                 allocatedCapacity, 
                 oldCell.Value()
@@ -406,7 +406,7 @@ public:
             return false;
 
         // Find the cell that contains the key
-        const Bucketing::SearchResult searchResult = FindSlot(
+        const HashSlotSearchResult searchResult = FindSlot(
             DATA_OF(const Slot, _allocData),
             _capacity,
             key
@@ -431,7 +431,7 @@ public:
         }
 
         // Find the cell that contains the key
-        Bucketing::SearchResult searchResult = FindSlot(
+        HashSlotSearchResult searchResult = FindSlot(
             DATA_OF(const Slot, _allocData),
             _capacity, 
             element
@@ -484,7 +484,7 @@ public:
             return false;
 
         // Find the cell that contains the key
-        const Bucketing::SearchResult searchResult = FindSlot(
+        const HashSlotSearchResult searchResult = FindSlot(
             DATA_OF(const Slot, _allocData),
             _capacity,
             key

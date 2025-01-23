@@ -373,7 +373,7 @@ PRIVATE:
         const Slot* slots,
         const int32 capacity,
         const Key& key
-    ) -> Bucketing::SearchResult
+    ) -> HashSlotSearchResult
     {
         ASSERT_COLLECTION_INTEGRITY(slots);
         ASSERT_COLLECTION_INTEGRITY(Math::IsPow2(capacity)); // Make sure the capacity is a power of 2
@@ -442,7 +442,7 @@ PRIVATE:
             if (!oldSlot.IsOccupied()) // If there's no element, skip the slot.
                 continue;
 
-            const Bucketing::SearchResult result = FindSlot(
+            const HashSlotSearchResult result = FindSlot(
                 DATA_OF(Slot, newData),
                 allocatedCapacity,
                 oldSlot.GetKey()
@@ -596,7 +596,7 @@ public:
         }
 
         const K& keyConstRef = key; // If your code fails here, check if `K_` is `const K&` or `K&&`.
-        Bucketing::SearchResult searchResult = FindSlot(
+        HashSlotSearchResult searchResult = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             keyConstRef
@@ -644,7 +644,7 @@ public:
         if (_capacity == 0)
             return false;
 
-        const Bucketing::SearchResult result = FindSlot(
+        const HashSlotSearchResult result = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             key
@@ -673,7 +673,7 @@ public:
         if (_capacity == 0)
             return nullptr;
 
-        const Bucketing::SearchResult result = FindSlot(
+        const HashSlotSearchResult result = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             key
@@ -695,7 +695,7 @@ public:
         if (_capacity == 0)
             return nullptr;
 
-        const Bucketing::SearchResult result = FindSlot(
+        const HashSlotSearchResult result = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             key
@@ -716,7 +716,7 @@ public:
     {
         ASSERT(_capacity > 0);
 
-        const Bucketing::SearchResult result = FindSlot(
+        const HashSlotSearchResult result = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             key
@@ -735,7 +735,7 @@ public:
     {
         ASSERT(_capacity > 0);
 
-        const Bucketing::SearchResult result = FindSlot(
+        const HashSlotSearchResult result = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             key
@@ -761,7 +761,7 @@ public:
     {
         // The key needs to be find again, as there is not guarantee that the incoming key is the same as the stored one.
 
-        const Bucketing::SearchResult result = FindSlot(
+        const HashSlotSearchResult result = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             key
