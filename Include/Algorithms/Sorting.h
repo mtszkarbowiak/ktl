@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "Collections/Array.h"
 #include "Language/Communism.h"
 #include "Language/Templates.h"
 #include "Types/Span.h"
@@ -45,6 +46,69 @@ public:
     static void InsertionSort(Span<T> span)
     {
         InsertionSort(
+            span.Data(),
+            span.Data() + span.Count()
+        );
+    }
+
+
+    // Merge Sort
+
+PRIVATE:
+    /// <summary> 
+    /// Merges two sorted arrays into a single sorted array.
+    /// Both input arrays occupy the same memory block.
+    /// </summary>
+    template<typename T>
+    static FORCE_INLINE
+    void InplaceMerge(T* begin, T* mid, T* end)
+    {
+        while (begin < mid && mid < end)
+        {
+            if (*begin < *mid) 
+            {
+                ++begin;
+            }
+            else
+            {
+                T* temp = mid;
+                while (temp != begin)
+                {
+                    ::Swap<T>(*temp, *(temp - 1));
+                    --temp;
+                }
+                ++mid;
+                ++begin;
+            }
+        }
+    }
+
+
+public:
+    template<typename T>
+    static
+    void MergeSort(T* begin, T* end)
+    {
+        // Sorted array must have at least two elements.
+        if (end - begin < 2)
+            return;
+
+        // Split the array into two halves: [begin, mid) and [mid, end).
+        T* mid = begin + (end - begin) / 2;
+
+        // Recursively sort the two halves.
+        MergeSort(begin, mid);
+        MergeSort(mid, end);
+
+        // Merge the two sorted halves.
+        InplaceMerge(begin, mid, end);
+    }
+
+    template<typename T>
+    static FORCE_INLINE
+    void MergeSort(Span<T> span)
+    {
+        MergeSort(
             span.Data(),
             span.Data() + span.Count()
         );
