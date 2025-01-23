@@ -596,7 +596,7 @@ protected:
 
     void CopyToEmpty(const Ring& other)
     {
-        static_assert(std::is_copy_constructible<Element>::value, "Type must be copy-constructible.");
+        static_assert(THasCopyCtorV<Element>, "Type must be copy-constructible.");
 
         ASSERT_COLLECTION_SAFE_MOD(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
         ASSERT_COLLECTION_INTEGRITY(other.IsValid()); // Make sure the other ring is valid.
