@@ -7,6 +7,11 @@
 
 #pragma once
 
+#include "Language/Communism.h"
+#include "Language/Yolo.h"
+
+#include <cstddef>
+
 // --- Identity ---
 // Identity type traits are used to return the type they are given.
 
@@ -549,7 +554,7 @@ using TRemoveExtentT = typename TRemoveExtent<T>::Type;
 template<typename T>
 struct TDecay
 {
-private:
+PRIVATE:
     using RawType = typename TRemoveCV<typename TRemoveRef<T>::Type>::Type;
 
 public:
