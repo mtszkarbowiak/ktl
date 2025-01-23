@@ -689,3 +689,51 @@ struct THasTrivialDtor
 
 template<typename T>
 static constexpr bool THasTrivialDtorV = THasTrivialDtor<T>::Value;
+
+
+// Copyable Check
+
+template<typename T>
+struct THasCopyCtor
+{
+    enum { Value = __is_constructible(T, const T&) };
+};
+
+template<typename T>
+static constexpr bool THasCopyCtorV = THasCopyCtor<T>::Value;
+
+template<typename T>
+struct THasCopyAssign
+{
+    enum { Value = __is_assignable(T&, const T&) };
+};
+
+template<typename T>
+static constexpr bool THasCopyAssignV = THasCopyAssign<T>::Value;
+
+template<typename T>
+static constexpr bool TIsCopyableV = THasCopyCtorV<T> && THasCopyAssignV<T>;
+
+
+// Moveable Check
+
+template<typename T>
+struct THasMoveCtor
+{
+    enum { Value = __is_constructible(T, T&&) };
+};
+
+template<typename T>
+static constexpr bool THasMoveCtorV = THasMoveCtor<T>::Value;
+
+template<typename T>
+struct THasMoveAssign
+{
+    enum { Value = __is_assignable(T&, T&&) };
+};
+
+template<typename T>
+static constexpr bool THasMoveAssignV = THasMoveAssign<T>::Value;
+
+template<typename T>
+static constexpr bool TIsMoveableV = THasMoveCtorV<T> && THasMoveAssignV<T>;

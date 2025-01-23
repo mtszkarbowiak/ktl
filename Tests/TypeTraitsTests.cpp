@@ -79,3 +79,24 @@ static_assert(!THasTrivialDtorV<Array<int>>,  "TIsTriviallyDestructible test fai
 static_assert(THasTrivialCopyV<SomeStruct>,       "TIsTriviallyCopyable test failed");
 static_assert(THasTrivialCopyV<SomeEnum>,         "TIsTriviallyCopyable test failed");
 static_assert(!THasTrivialCopyV<Array<int>>,      "TIsTriviallyCopyable test failed");
+
+struct Donkey
+{
+    Donkey()  = default;
+    ~Donkey() = default;
+
+    Donkey(const Donkey&) = delete;
+    Donkey(Donkey&&)      = delete;
+    auto operator=(const Donkey&) -> Donkey& = delete;
+    auto operator=(Donkey&&)      -> Donkey& = delete;
+};
+
+static_assert(THasCopyCtorV<SomeStruct>,    "TIsCopyConstructible test failed");
+static_assert(!THasCopyCtorV<Donkey>,       "TIsCopyConstructible test failed");
+static_assert(THasCopyAssignV<SomeStruct>,  "TIsCopyAssignable test failed");
+static_assert(!THasCopyAssignV<Donkey>,     "TIsCopyAssignable test failed");
+static_assert(THasMoveCtorV<SomeStruct>,    "TIsMoveConstructible test failed");
+static_assert(!THasMoveCtorV<Donkey>,       "TIsMoveConstructible test failed");
+static_assert(THasMoveAssignV<SomeStruct>,  "TIsMoveAssignable test failed");
+static_assert(!THasMoveAssignV<Donkey>,     "TIsMoveAssignable test failed");
+ 
