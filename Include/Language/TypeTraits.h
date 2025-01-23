@@ -8,8 +8,7 @@
 #pragma once
 
 #include "Language/Communism.h"
-
-#include <cstddef>
+#include "Types/Numbers.h"
 
 // --- Identity ---
 // Identity type traits are used to return the type they are given.
@@ -374,7 +373,7 @@ struct TIsArray
     static constexpr bool Value = false;
 };
 
-template<typename T, size_t N>
+template<typename T, uintptr N>
 struct TIsArray<T[N]>
 {
     static constexpr bool Value = true;
@@ -550,7 +549,7 @@ struct TRemoveExtent<T[]>
     using Type = T;
 };
 
-template<typename T, size_t N>
+template<typename T, uintptr N>
 struct TRemoveExtent<T[N]>
 {
     using Type = T;

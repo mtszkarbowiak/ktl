@@ -52,7 +52,7 @@ public:
     }
 
     /// <summary> Initializes a span from C-style array. </summary>
-    template<size_t N>
+    template<uintptr N>
     FORCE_INLINE explicit
     Span(T(&array)[N])
         : Span{ array, static_cast<int32>(N) }
