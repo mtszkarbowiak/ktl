@@ -7,48 +7,65 @@
 
 #pragma once
 
-#include "Types/Numbers.h"
-#include "Language/Communism.h"
 #include "Language/Keywords.h"
-
-#include <algorithm>
-
-
-template<typename T>
-using VoidT = void;
-
+#include "Language/TypeTraits.h"
+#include "Language/Yolo.h"
+#include "Types/Numbers.h"
 
 // Move Semantics
 
-#define MOVE(x)       std::move(x)
-#define FORWARD(T, x) std::forward<T>(x)
+template<typename T>
+NO_DISCARD FORCE_INLINE constexpr
+auto Move(T&& x) NOEXCEPT_S -> TRemoveRefT<T>&&
+{
+    return static_cast<TRemoveRefT<T>&&>(x);
+}
+
+template<typename T>
+NO_DISCARD FORCE_INLINE constexpr
+auto Forward(TRemoveRefT<T>& x) NOEXCEPT_S -> T&&
+{
+    return static_cast<T&&>(x);
+}
+
+template<typename T>
+NO_DISCARD FORCE_INLINE constexpr
+auto Forward(TRemoveRefT<T>&& x) NOEXCEPT_S -> T&&
+{
+    return static_cast<T&&>(x);
+
+    static_assert(
+        !TIsLValRefV<T>,
+        "Forwarding an r-value as an l-value reference."
+    );
+}
+
+#define MOVE(x)       Move(x)
+#define FORWARD(T, x) Forward<T>(x)
+
 
 namespace SwapInternal // ADL Barrier
 {
-    /// <summary> Dispatch tag for types with a member <c>Swap</c> function. </summary>
-    struct HasSwapTag {};
-    /// <summary> Dispatch tag for types without a member <c>Swap</c> function. </summary>
-    struct NoSwapTag {};
-
-    /// <summary> Default tag for types without a member <c>Swap</c> function. </summary>
     template<typename T, typename = void>
-    struct HasSwapFunction : std::false_type {};
+    struct THasSwap
+    {
+        static constexpr bool Value = false;
+    };
 
-    /// <summary> Specialization for types with a member <c>Swap</c> function. </summary>
     template<typename T>
-    struct HasSwapFunction<T, VoidT<decltype(std::declval<T>().Swap(std::declval<T&>()))>> : std::true_type {};
+    struct THasSwap<T, VoidT<decltype(Declval<T>().Swap(Declval<T&>()))>>
+    {
+        static constexpr bool Value = true;
+    };
 
-    /// <summary>
-    /// Returns the appropriate dispatch tag informing whether the type has a member <c>Swap</c> function.
-    /// </summary>
     template<typename T>
-    using GetSwapTag = std::conditional_t<HasSwapFunction<T>::value, HasSwapTag, NoSwapTag>;
+    static constexpr bool THasSwapFunctionV = THasSwap<T>::Value;
 
     /// <summary>
     /// Swap implementation for types with a member <c>Swap</c> function.
     /// </summary>
     template<typename T>
-    void SwapImpl(T& a, T& b, HasSwapTag) noexcept
+    auto SwapImpl(T& a, T& b) NOEXCEPT_S -> TEnableIfT<THasSwapFunctionV<T>, void>
     {
         a.Swap(b);
     }
@@ -57,13 +74,8 @@ namespace SwapInternal // ADL Barrier
     /// Swap implementation for types without a member <c>Swap</c> function.
     /// </summary>
     template<typename T>
-    void SwapImpl(T& a, T& b, NoSwapTag) noexcept
+    auto SwapImpl(T& a, T& b) NOEXCEPT_S -> TDisableIfT<THasSwapFunctionV<T>, void>
     {
-        static_assert(
-            std::is_nothrow_move_constructible<T>::value,
-            "Type must be nothrow move constructible."
-        );
-
         T temp = MOVE(a);
         a = MOVE(b);
         b = MOVE(temp);
@@ -75,26 +87,10 @@ namespace SwapInternal // ADL Barrier
 /// If it does not, the objects will be moved, assuming the type is no-throw move constructible.
 /// </summary>
 template<typename T>
-void Swap(T& a, T& b) noexcept
+void Swap(T& a, T& b) NOEXCEPT_S
 {
-    ::SwapInternal::SwapImpl(a, b, ::SwapInternal::GetSwapTag<T>{});
+    ::SwapInternal::SwapImpl(a, b);
 }
-
-
-// Copy Semantics
-
-/// <summary> Dispatch tag for types supporting copy semantics. </summary>
-struct IsCopyableTag {};
-/// <summary> Dispatch tag for types not supporting copy semantics. </summary>
-struct NonCopyableTag {};
-
-/// <summary> Returns the appropriate dispatch tag informing whether the type supports copy semantics. </summary>
-template<typename T>
-using GetCopyableTag = typename std::conditional<
-    std::is_copy_constructible<T>::value,
-    IsCopyableTag,
-    NonCopyableTag
->::type;
 
 
 // Null Semantics
@@ -131,7 +127,7 @@ struct GetMaxTombstoneDepth
 
 template<typename T>
 NO_DISCARD FORCE_INLINE
-auto Ptr2Ref(const T* ptr) -> const T&
+auto Ptr2Ref(const T* ptr) NOEXCEPT_S -> const T&
 {
     ASSERT(ptr != nullptr);
     return *ptr;
@@ -139,7 +135,7 @@ auto Ptr2Ref(const T* ptr) -> const T&
 
 template<typename T>
 NO_DISCARD FORCE_INLINE
-auto Ptr2Ref(T* ptr) -> T&
+auto Ptr2Ref(T* ptr) NOEXCEPT_S -> T&
 {
     ASSERT(ptr != nullptr);
     return *ptr;

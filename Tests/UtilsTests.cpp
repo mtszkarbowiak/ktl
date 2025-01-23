@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include "Language/Templates.h"
+#include "Math/Hashing.h"
 #include "Types/Numbers.h"
 
 
@@ -71,42 +72,19 @@ TEST(TypeUtils, SwapByMember)
     GTEST_ASSERT_EQ(b._value, 1);
 }
 
-TEST(TypeUtils, CopyAbleDispatch)
+
+TEST(Hashing, PodHash)
 {
-    int32 result;
-
-    struct
+    struct SomeStruct
     {
-        int32* _theResult;
-
-        void Check(IsCopyableTag)
-        {
-            *_theResult = 1;
-        }
-
-        void Check(NonCopyableTag)
-        {
-            *_theResult = 2;
-        }
-    }
-    tester{ &result };
-
-    struct CopyableExample
-    {
-        CopyableExample(const CopyableExample&) = default;
+        int X, Y;
     };
 
-    struct NotCopyableExample
-    {
-        NotCopyableExample(const NotCopyableExample&) = delete;
-    };
+    constexpr SomeStruct A{ 1, 2 };
+    constexpr SomeStruct B{ 3, 4 };
 
-    using Tag1 = GetCopyableTag<CopyableExample>;
-    using Tag2 = GetCopyableTag<NotCopyableExample>;
+    const uint32 hashA = PodHashOf<SomeStruct>::GetHash(A);
+    const uint32 hashB = PodHashOf<SomeStruct>::GetHash(B);
 
-    tester.Check(Tag1{});
-    GTEST_ASSERT_EQ(result, 1);
-
-    tester.Check(Tag2{});
-    GTEST_ASSERT_EQ(result, 2);
+    GTEST_ASSERT_NE(hashA, hashB);
 }

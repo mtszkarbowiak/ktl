@@ -10,30 +10,33 @@
 #include "Algorithms/Sorting.h"
 #include "Collections/Array.h"
 
-TEST(Algorithms, QuickSort)
+using SortingAlgorithmTestParams = ::testing::Types<
+    QuickSort<int32_t>,
+    InsertionSort<int32_t>,
+    MergeSort<int32_t>,
+    TimSort<int32_t>
+>;
+
+template <typename Param>
+struct SortingAlgorithmsFixture : public ::testing::Test
 {
-    Array<int32> array = Array<int32>::Of({ 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 });
-    const Array<int32> expected = Array<int32>::Of({ 1, 1, 2, 3, 3, 4, 5, 5, 5, 6, 9 });
+    const Array<int32> Input    = Array<int32>::Of<int32>({ 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 });
+    const Array<int32> Expected = Array<int32>::Of<int32>({ 1, 1, 2, 3, 3, 4, 5, 5, 5, 6, 9 });
+};
 
-    Sorting::QuickSort(array.AsSpan());
 
-    for (int32 i = 0; i < array.Count(); ++i)
+TYPED_TEST_SUITE(SortingAlgorithmsFixture, SortingAlgorithmTestParams);
+
+TYPED_TEST(SortingAlgorithmsFixture, Sort)
+{
+    Array<int32> inputCopy = this->Input;
+
+    // Apply the sorting algorithm
+    TypeParam::Sort(inputCopy.AsSpan());
+
+    // Check that the array is sorted correctly
+    for (int32 i = 0; i < inputCopy.Count(); ++i)
     {
-        EXPECT_EQ(array[i], expected[i]);
+        EXPECT_EQ(inputCopy[i], this->Expected[i]);
     }
 }
-
-TEST(Algorithms, InsertionSort)
-{
-    Array<int32> array = Array<int32>::Of({ 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 });
-    const Array<int32> expected = Array<int32>::Of({ 1, 1, 2, 3, 3, 4, 5, 5, 5, 6, 9 });
-
-    Sorting::InsertionSort(array.AsSpan());
-
-    for (int32 i = 0; i < array.Count(); ++i)
-    {
-        EXPECT_EQ(array[i], expected[i]);
-    }
-}
-
-//TODO Paramaterized tests
