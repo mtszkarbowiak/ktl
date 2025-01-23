@@ -18,8 +18,35 @@
 
 // Move Semantics
 
-#define MOVE(x)       std::move(x)
-#define FORWARD(T, x) std::forward<T>(x)
+template<typename T>
+NO_DISCARD FORCE_INLINE constexpr
+auto Move(T&& x) noexcept -> TRemoveRefT<T>&&
+{
+    return static_cast<TRemoveRefT<T>&&>(x);
+}
+
+template<typename T>
+NO_DISCARD FORCE_INLINE constexpr
+auto Forward(TRemoveRefT<T>& x) noexcept -> T&&
+{
+    return static_cast<T&&>(x);
+}
+
+template<typename T>
+NO_DISCARD FORCE_INLINE constexpr
+auto Forward(TRemoveRefT<T>&& x) noexcept -> T&&
+{
+    return static_cast<T&&>(x);
+
+    static_assert(
+        !TIsLValRefV<T>,
+        "Forwarding an r-value as an l-value reference."
+    );
+}
+
+#define MOVE(x)       Move(x)
+#define FORWARD(T, x) Forward<T>(x)
+
 
 namespace SwapInternal // ADL Barrier
 {
