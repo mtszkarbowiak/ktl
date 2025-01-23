@@ -12,7 +12,6 @@
 #include "Language/Communism.h"
 #include "Language/Constraints.h"
 #include "Language/Templates.h"
-#include "Language/TypeInfo.h"
 #include "Language/Yolo.h"
 #include "Math/Arithmetic.h"
 #include "Math/Growing.h"
