@@ -69,7 +69,7 @@ namespace SwapInternal // ADL Barrier
     /// Swap implementation for types with a member <c>Swap</c> function.
     /// </summary>
     template<typename T>
-    TEnableIfT<THasSwapFunctionV<T>, void> SwapImpl(T& a, T& b) noexcept
+    auto SwapImpl(T& a, T& b) noexcept -> TEnableIfT<THasSwapFunctionV<T>, void>
     {
         a.Swap(b);
     }
@@ -78,7 +78,7 @@ namespace SwapInternal // ADL Barrier
     /// Swap implementation for types without a member <c>Swap</c> function.
     /// </summary>
     template<typename T>
-    TDisableIfT<THasSwapFunctionV<T>, void> SwapImpl(T& a, T& b) noexcept
+    auto SwapImpl(T& a, T& b) noexcept -> TDisableIfT<THasSwapFunctionV<T>, void>
     {
         static_assert(
             std::is_nothrow_move_constructible<T>::value,
