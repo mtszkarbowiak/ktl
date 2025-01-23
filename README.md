@@ -1,6 +1,14 @@
 # KTL
 
-Welcome to Mateusz Karbowiak's Template Library (KTL) for C++!
+Welcome to Mateusz Karbowiak's Template Library for C++!
+
+- [Features](#features)
+- [Planned](#planned)
+- [Specs](#specs)
+- [History](#history)
+- [Goals](#goals)
+- [Contributing](#contributing)
+- [Documentation](#documentation)
 
 
 # Features
@@ -30,6 +38,7 @@ Welcome to Mateusz Karbowiak's Template Library (KTL) for C++!
 
 # Planned
 
+- **No STL Dependencies**
 - **Benchmarks**
 - General Types
 	- Type safety measures: `SafeBool`, `SafeInt`, etc.
@@ -63,7 +72,7 @@ Welcome to Mateusz Karbowiak's Template Library (KTL) for C++!
 - Language: C++14, C++17, C++20
 - Compilers: MSVC, GCC, Clang
 - Platforms: Windows, Linux
-- 64 bits
+- Architecture: 64 bits
 
 
 # History

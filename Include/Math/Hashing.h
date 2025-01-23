@@ -9,7 +9,10 @@
 
 #include "Types/Numbers.h"
 #include "Language/Keywords.h"
+#include "Language/Memory.h"
 #include "Language/Yolo.h"
+
+// Member Hashing
 
 /// <summary>
 /// Default hash acquisition for a type. It uses the <c>GetHash</c> method of the type.
@@ -25,6 +28,9 @@ struct HashOf
         return key.GetHash();
     }
 };
+
+
+// Trivial Hashing
 
 template<>
 struct HashOf<int32>
@@ -83,5 +89,45 @@ struct HashOf<uint8>
     auto GetHash(const uint8 key) NOEXCEPT_Y -> uint32
     {
         return key;
+    }
+};
+
+
+// POD Hashing
+
+class HashUtils final
+{
+PRIVATE:
+    static constexpr uint32 FnvOffestBasis = 0x811C9DC5;
+    static constexpr uint32 FnvPrime = 0x01000193;
+
+public:
+    NO_DISCARD static FORCE_INLINE
+    auto FowlerNollVo(const void* key, const uintptr size) NOEXCEPT_Y -> uint32
+    {
+        const byte* data = static_cast<const byte*>(key);
+        uint32_t hash = FnvOffestBasis;
+
+        hash ^= static_cast<uint32>(size & 0xFFFFFFFF); // Mix with size for more entropy
+
+        for (uintptr i = 0; i < size; ++i)
+        {
+            hash ^= (data[i] ^ static_cast<byte>(i)); // Mix with index for more entropy
+            hash *= FnvPrime;
+        }
+
+        return hash;
+    }
+};
+
+template<typename T>
+struct PodHashOf
+{
+    static_assert(TIsPODV<T>, "Type must be a POD type.");
+
+    NO_DISCARD static FORCE_INLINE
+    auto GetHash(const T& key) NOEXCEPT_Y -> uint32
+    {
+        return HashUtils::FowlerNollVo(&key, sizeof(T));
     }
 };

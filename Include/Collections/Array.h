@@ -246,7 +246,7 @@ public:
     auto Add(U&& element) -> Element&
     {
         static_assert(
-            std::is_same<typename std::decay<U>::type, Element>::value,
+            TIsSameV<TRemoveCVRefT<U>, Element>,
             "Add requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
@@ -713,5 +713,5 @@ public:
 
     REQUIRE_TYPE_NOT_REFERENCE(Element);
     REQUIRE_TYPE_NOT_CONST(Element);
-    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Element);
+    REQUIRE_TYPE_MOVEABLE(Element);
 };

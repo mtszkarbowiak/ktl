@@ -7,27 +7,32 @@
 
 #pragma once
 
+#include "Collections/Array.h"
 #include "Language/Communism.h"
 #include "Language/Templates.h"
 #include "Types/Span.h"
 
-class Sorting
+
+template<typename T>
+class InsertionSort
 {
 public:
     /// <summary>
     /// Sorts the elements by repeatedly selecting the minimum element from the unsorted part
     /// and moving it to the beginning.
     /// </summary>
-    template<typename T>
-    static void InsertionSort(T* begin, T* end)
+    static void Sort(T* begin, T* end)
     {
-        for (T* i = begin + 1; i < end; ++i)
+        for (T* current = begin + 1; current < end; ++current)
         {
-            T* j = i;
-            while (j > begin && *(j - 1) > *j)
+            T* insertTarget = current;
+            while (
+                (insertTarget > begin) && // Ensure we don't go out of bounds.
+                (*(insertTarget - 1) > *insertTarget) // Compare with the previous element.
+                )
             {
-                ::Swap<T>(*(j - 1), *j);
-                --j;
+                ::Swap<T>(*(insertTarget - 1), *insertTarget);
+                --insertTarget;
             }
         }
     }
@@ -36,16 +41,110 @@ public:
     /// Sorts the elements by repeatedly selecting the minimum element from the unsorted part
     /// and moving it to the beginning.
     /// </summary>
-    template<typename T>
-    static void InsertionSort(Span<T> span)
+    static void Sort(Span<T> span)
     {
-        InsertionSort(
-            span.Data(),
-            span.Data() + span.Count()
-        );
+        Sort(span.begin(), span.end());
+    }
+};
+
+
+template<typename T>
+class MergeSort
+{
+public:
+    /// <summary> 
+    /// Merges two sorted arrays into a single sorted array.
+    /// Both input arrays occupy the same memory block.
+    /// </summary>
+    static FORCE_INLINE
+    void InplaceMerge(T* begin, T* mid, T* end)
+    {
+        while (begin < mid && mid < end)
+        {
+            if (*begin < *mid) 
+            {
+                ++begin;
+            }
+            else
+            {
+                T* temp = mid;
+                while (temp != begin)
+                {
+                    ::Swap<T>(*temp, *(temp - 1));
+                    --temp;
+                }
+                ++mid;
+                ++begin;
+            }
+        }
     }
 
+    static
+    void Sort(T* begin, T* end)
+    {
+        // Sorted array must have at least two elements.
+        if (end - begin < 2)
+            return;
 
+        // Split the array into two halves: [begin, mid) and [mid, end).
+        T* mid = begin + (end - begin) / 2;
+
+        // Recursively sort the two halves.
+        Sort(begin, mid);
+        Sort(mid, end);
+
+        // Merge the two sorted halves.
+        InplaceMerge(begin, mid, end);
+    }
+
+    static FORCE_INLINE
+    void Sort(Span<T> span)
+    {
+        Sort(span.begin(), span.end());
+    }
+};
+
+
+template<typename T, int32 MinRun = 32>
+class TimSort
+{
+public:
+    static
+    void Sort(T* begin, T* end)
+    {
+        const int32 count = static_cast<int32>(end - begin);
+
+        // Sort small runs with insertion sort.
+        for (T* current = begin; current < end; current += MinRun)
+        {
+            T* runEnd = Math::Min(current + MinRun, end);
+            InsertionSort<T>::Sort(current, runEnd);
+        }
+
+        // Merge the runs.
+        for (int32 runSize = MinRun; runSize < count; runSize *= 2)
+        {
+            for (T* current = begin; current < end; current += 2 * runSize)
+            {
+                T* runMid = current + runSize;
+                T* runEnd = Math::Min(runMid + runSize, end);
+                MergeSort<T>::InplaceMerge(current, runMid, runEnd);
+            }
+        }
+    }
+
+    static FORCE_INLINE
+    void Sort(Span<T> span)
+    {
+        Sort(span.begin(), span.end());
+    }
+};
+
+
+template<typename T>
+class QuickSort
+{
+public:
     /// <summary> 
     /// Strategy of selecting the pivot element for the partitioning in QuickSort. 
     /// </summary>
@@ -78,8 +177,8 @@ public:
 
 
 PRIVATE:
-    template<typename T>
-    static auto SelectMedian(T* begin, T* end) -> T*
+    static FORCE_INLINE
+    auto SelectMedian(T* begin, T* end) -> T*
     {
         T* first  = begin;
         T* middle = begin + (end - begin) / 2;
@@ -103,8 +202,8 @@ PRIVATE:
         }
     }
 
-    template<typename T>
-    static auto Partition(T* begin, T* end, const PivotMode pivotMode) -> T*
+    static FORCE_INLINE
+    auto Partition(T* begin, T* end, const PivotMode pivotMode) -> T*
     {
         T* pivot = nullptr;
 
@@ -163,15 +262,15 @@ public:
     /// Sorts the elements by recursively partitioning the array into two parts,
     /// each storing elements less than and greater than the pivot.
     /// </summary>
-    template<typename T>
-    static void QuickSort(T* begin, T* end, const PivotMode pivotMode = PivotMode::Middle)
+    static
+    void Sort(T* begin, T* end, const PivotMode pivotMode = PivotMode::Middle)
     {
         if (begin < end)
         {
-            T* pivot = Partition<T>(begin, end, pivotMode);
+            T* pivot = Partition(begin, end, pivotMode);
 
-            QuickSort(begin, pivot, pivotMode);
-            QuickSort(pivot + 1, end, pivotMode);
+            Sort(begin, pivot, pivotMode);
+            Sort(pivot + 1, end, pivotMode);
         }
     }
 
@@ -179,12 +278,9 @@ public:
     /// Sorts the elements by recursively partitioning the array into two parts,
     /// each storing elements less than and greater than the pivot.
     /// </summary>
-    template<typename T>
-    static void QuickSort(Span<T> span)
+    static
+    void Sort(Span<T> span)
     {
-        QuickSort(
-            span.Data(), 
-            span.Data() + span.Count()
-        );
+        Sort(span.begin(), span.end());
     }
 };

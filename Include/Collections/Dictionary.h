@@ -373,7 +373,7 @@ PRIVATE:
         const Slot* slots,
         const int32 capacity,
         const Key& key
-    ) -> Bucketing::SearchResult
+    ) -> HashSlotSearchResult
     {
         ASSERT_COLLECTION_INTEGRITY(slots);
         ASSERT_COLLECTION_INTEGRITY(Math::IsPow2(capacity)); // Make sure the capacity is a power of 2
@@ -442,7 +442,7 @@ PRIVATE:
             if (!oldSlot.IsOccupied()) // If there's no element, skip the slot.
                 continue;
 
-            const Bucketing::SearchResult result = FindSlot(
+            const HashSlotSearchResult result = FindSlot(
                 DATA_OF(Slot, newData),
                 allocatedCapacity,
                 oldSlot.GetKey()
@@ -596,7 +596,7 @@ public:
         }
 
         const K& keyConstRef = key; // If your code fails here, check if `K_` is `const K&` or `K&&`.
-        Bucketing::SearchResult searchResult = FindSlot(
+        HashSlotSearchResult searchResult = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             keyConstRef
@@ -644,7 +644,7 @@ public:
         if (_capacity == 0)
             return false;
 
-        const Bucketing::SearchResult result = FindSlot(
+        const HashSlotSearchResult result = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             key
@@ -673,7 +673,7 @@ public:
         if (_capacity == 0)
             return nullptr;
 
-        const Bucketing::SearchResult result = FindSlot(
+        const HashSlotSearchResult result = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             key
@@ -695,7 +695,7 @@ public:
         if (_capacity == 0)
             return nullptr;
 
-        const Bucketing::SearchResult result = FindSlot(
+        const HashSlotSearchResult result = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             key
@@ -716,7 +716,7 @@ public:
     {
         ASSERT(_capacity > 0);
 
-        const Bucketing::SearchResult result = FindSlot(
+        const HashSlotSearchResult result = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             key
@@ -735,7 +735,7 @@ public:
     {
         ASSERT(_capacity > 0);
 
-        const Bucketing::SearchResult result = FindSlot(
+        const HashSlotSearchResult result = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             key
@@ -761,7 +761,7 @@ public:
     {
         // The key needs to be find again, as there is not guarantee that the incoming key is the same as the stored one.
 
-        const Bucketing::SearchResult result = FindSlot(
+        const HashSlotSearchResult result = FindSlot(
             DATA_OF(Slot, _allocData),
             _capacity,
             key
@@ -927,13 +927,13 @@ public:
 
     /// <summary> Creates a dictionary with the specified elements. </summary>
     NO_DISCARD static constexpr
-    auto Of(std::initializer_list<std::pair<Key, Value>> list) -> Dictionary<Key, Value>
+    auto Of(std::initializer_list<Pair<Key, Value>> list) -> Dictionary<Key, Value>
     {
         const int32 capacity = static_cast<int32>(list.size());
         Dictionary<Key, Value> result{ capacity };
 
         for (const auto& pair : list)
-            result.Add(pair.first, pair.second);
+            result.Add(pair.Key, pair.Value);
 
         return result;
     }
@@ -1502,8 +1502,8 @@ public:
     REQUIRE_TYPE_NOT_REFERENCE(Value);
     REQUIRE_TYPE_NOT_CONST(Key);
     REQUIRE_TYPE_NOT_CONST(Value);
-    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Key);
-    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Value);
+    REQUIRE_TYPE_MOVEABLE(Key);
+    REQUIRE_TYPE_MOVEABLE(Value);
 
     static_assert(
         AllocHelper::HasBinaryMaskingSupport() == AllocHelper::BinaryMaskingSupportStatus::Supported, 

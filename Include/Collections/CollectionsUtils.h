@@ -12,7 +12,6 @@
 #include "Language/Communism.h"
 #include "Language/Constraints.h"
 #include "Language/Templates.h"
-#include "Language/TypeInfo.h"
 #include "Language/Yolo.h"
 #include "Math/Arithmetic.h"
 #include "Math/Growing.h"
@@ -22,6 +21,8 @@
 #include "Types/Nullable.h"
 #include "Types/SizeHint.h"
 #include "Types/Span.h"
+
+#include <initializer_list>
 
 
 /// <summary>
@@ -58,47 +59,22 @@ using DefaultAlloc = HeapAlloc;
 #endif
 
 
-
-namespace Bucketing
+/// <summary>
+/// Helper object for searching for a bucket in a hash-based collection.
+/// </summary>
+struct HashSlotSearchResult final
 {
-    /// <summary>
-    /// Helper object for searching for a bucket in a hash-based collection.
-    /// </summary>
-    struct SearchResult final
-    {
-        Nullable<Index> FoundObject;
-        Nullable<Index> FreeBucket;
-    };
-
-    /// <summary>
-    /// Signifies stage of life of a bucket in a hash-based collection.
-    /// </summary>
-    enum class BucketState
-    {
-        /// <summary>
-        /// The bucket is empty and can be used.
-        /// </summary>
-        Empty,
-
-        /// <summary>
-        /// The bucket is occupied and contains a valid key-value pair.
-        /// </summary>
-        Occupied,
-
-        /// <summary>
-        /// The bucket was occupied, but the key-value pair was deleted.
-        /// </summary>
-        /// <remarks> This value works as a tombstone. </remarks>
-        Deleted,
-    };
+    Nullable<Index> FoundObject;
+    Nullable<Index> FreeBucket;
 };
+
 
 class BulkOperations
 {
 PRIVATE:
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<!TIsCStyle<Element>::Value, void>
+    static TEnableIfT<TNotV<THasTrivialCtor<Element>>>
     DefaultLinearContentImpl(
         Element* elements,
         const int32 count
@@ -110,7 +86,7 @@ PRIVATE:
     
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<TIsCStyle<Element>::Value, void>
+    static TEnableIfT<THasTrivialCtorV<Element>>
     DefaultLinearContentImpl(
         Element* elements,
         const int32 count
@@ -122,7 +98,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<!TIsCStyle<Element>::Value, void>
+    static TEnableIfT<TNotV<THasTrivialCopy<Element>>>
     MoveLinearContentImpl(
         Element*    source,
         Element*    target,
@@ -135,7 +111,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<TIsCStyle<Element>::Value, void>
+    static TEnableIfT<THasTrivialCopyV<Element>>
     MoveLinearContentImpl(
         Element*    source,
         Element*    target,
@@ -151,7 +127,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<!TIsCStyle<Element>::Value, void>
+    static TEnableIfT<TNotV<THasTrivialCopy<Element>>>
     CopyLinearContentImpl(
         const Element* source,
         Element*       target,
@@ -164,7 +140,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<TIsCStyle<Element>::Value, void>
+    static TEnableIfT<THasTrivialCopyV<Element>>
     CopyLinearContentImpl(
         const Element* source,
         Element*       target,
@@ -177,7 +153,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<!TIsCStyle<Element>::Value, void>
+    static TEnableIfT<TNotV<THasTrivialDtor<Element>>>
     DestroyLinearContentImpl(
         Element*    elements,
         const int32 count
@@ -189,7 +165,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<TIsCStyle<Element>::Value, void>
+    static TEnableIfT<THasTrivialDtorV<Element>>
     DestroyLinearContentImpl(
         Element*    elements,
         const int32 count

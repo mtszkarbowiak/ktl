@@ -52,7 +52,7 @@ public:
     }
 
     /// <summary> Initializes a span from C-style array. </summary>
-    template<size_t N>
+    template<uintptr N>
     FORCE_INLINE explicit
     Span(T(&array)[N])
         : Span{ array, static_cast<int32>(N) }
@@ -131,6 +131,49 @@ public:
 
 
     // Iterators
+
+    /// <summary> STL-style begin iterator. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto begin() -> T*
+    {
+        return _data;
+    }
+
+    /// <summary> STL-style begin iterator. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto begin() const -> const T*
+    {
+        return _data;
+    }
+
+    /// <summary> STL-style begin iterator. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto cbegin() const -> const T*
+    {
+        return _data;
+    }
+
+    /// <summary> STL-style end iterator. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto end() -> T*
+    {
+        return _data + _count;
+    }
+
+    /// <summary> STL-style end iterator. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto end() const -> const T*
+    {
+        return _data + _count;
+    }
+
+    /// <summary> STL-style end iterator. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto cend() const -> const T*
+    {
+        return _data + _count;
+    }
+
 
     /// <summary> Creates a mutable-element enumerator for the span. </summary>
     /// <remarks>
@@ -247,7 +290,6 @@ public:
             return _begin < other._begin;
         }
     };
-
 
     /// <summary> Creates a const-element enumerator for the span. </summary>
     /// <remarks>

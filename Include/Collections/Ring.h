@@ -370,7 +370,7 @@ public:
     auto PushBack(U&& element) -> Element&
     {
         static_assert(
-            std::is_same<typename std::decay<U>::type, Element>::value,
+            TIsSameV<TRemoveCVRefT<U>, Element>,
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
@@ -412,7 +412,7 @@ public:
     auto PushFront(U&& element) -> Element&
     {
         static_assert(
-            std::is_same<typename std::decay<U>::type, Element>::value,
+            TIsSameV<TRemoveCVRefT<U>, Element>,
             "PushBack requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
@@ -596,7 +596,7 @@ protected:
 
     void CopyToEmpty(const Ring& other)
     {
-        static_assert(std::is_copy_constructible<Element>::value, "Type must be copy-constructible.");
+        static_assert(THasCopyCtorV<Element>, "Type must be copy-constructible.");
 
         ASSERT_COLLECTION_SAFE_MOD(_countCached == 0 && _capacity == 0); // Ring must be empty, but the collection must be initialized!
         ASSERT_COLLECTION_INTEGRITY(other.IsValid()); // Make sure the other ring is valid.
@@ -984,5 +984,5 @@ public:
 
     REQUIRE_TYPE_NOT_REFERENCE(Element);
     REQUIRE_TYPE_NOT_CONST(Element);
-    REQUIRE_TYPE_MOVEABLE_NOEXCEPT(Element);
+    REQUIRE_TYPE_MOVEABLE(Element);
 };

@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include "Language/TypeInfo.h"
-
 using uint8   = unsigned char;
 using uint16  = unsigned short;
 using uint32  = unsigned int;
@@ -43,14 +41,3 @@ static_assert(sizeof(intptr)  == sizeof(void*), "Pointer size mismatch!");
 
 // 2 lines above effectively enforce 64-bit architecture for the project.
 // This code is a subject of The Ostrich Algorithm.
-
-
-DECLARE_C_STYLE_TYPE(uint8);
-DECLARE_C_STYLE_TYPE(uint16);
-DECLARE_C_STYLE_TYPE(uint32);
-DECLARE_C_STYLE_TYPE(uint64);
-
-DECLARE_C_STYLE_TYPE(int8);
-DECLARE_C_STYLE_TYPE(int16);
-DECLARE_C_STYLE_TYPE(int32);
-DECLARE_C_STYLE_TYPE(int64);
