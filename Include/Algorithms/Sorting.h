@@ -112,7 +112,7 @@ public:
     static
     void Sort(T* begin, T* end)
     {
-        const int32 count = end - begin;
+        const int32 count = static_cast<int32>(end - begin);
 
         // Sort small runs with insertion sort.
         for (T* current = begin; current < end; current += MinRun)
