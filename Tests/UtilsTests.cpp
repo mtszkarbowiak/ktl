@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include "Language/Templates.h"
+#include "Math/Hashing.h"
 #include "Types/Numbers.h"
 
 
@@ -69,4 +70,21 @@ TEST(TypeUtils, SwapByMember)
 
     GTEST_ASSERT_EQ(a._value, 2);
     GTEST_ASSERT_EQ(b._value, 1);
+}
+
+
+TEST(Hashing, PodHash)
+{
+    struct SomeStruct
+    {
+        int X, Y;
+    };
+
+    constexpr SomeStruct A{ 1, 2 };
+    constexpr SomeStruct B{ 3, 4 };
+
+    const uint32 hashA = PodHashOf<SomeStruct>::GetHash(A);
+    const uint32 hashB = PodHashOf<SomeStruct>::GetHash(B);
+
+    GTEST_ASSERT_NE(hashA, hashB);
 }
