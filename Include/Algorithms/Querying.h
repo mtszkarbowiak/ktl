@@ -445,7 +445,7 @@ namespace Querying
     NO_DISCARD FORCE_INLINE
     auto Last(_C&& cursor) -> decltype(&*cursor)
     {
-        using ElementType = typename std::remove_reference<decltype(*cursor)>::type;
+        using ElementType = TRemoveRefT<decltype(*cursor)>;
 
         ElementType* last = nullptr;
         for (; cursor; ++cursor)
