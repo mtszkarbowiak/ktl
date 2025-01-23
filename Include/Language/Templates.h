@@ -102,22 +102,6 @@ void Swap(T& a, T& b) noexcept
 }
 
 
-// Copy Semantics
-
-/// <summary> Dispatch tag for types supporting copy semantics. </summary>
-struct IsCopyableTag {};
-/// <summary> Dispatch tag for types not supporting copy semantics. </summary>
-struct NonCopyableTag {};
-
-/// <summary> Returns the appropriate dispatch tag informing whether the type supports copy semantics. </summary>
-template<typename T>
-using GetCopyableTag = typename std::conditional<
-    std::is_copy_constructible<T>::value,
-    IsCopyableTag,
-    NonCopyableTag
->::type;
-
-
 // Null Semantics
 
 /// <summary>
