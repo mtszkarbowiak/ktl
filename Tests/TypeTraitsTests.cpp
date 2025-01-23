@@ -7,6 +7,8 @@
 
 #include "Language/TypeTraits.h"
 
+#include "Collections/Array.h"
+
 #include <type_traits> // Use standard library type traits for comparison.
 
 // --- Tests for Identity ---
@@ -56,3 +58,11 @@ static_assert(std::is_same_v<TDecay<const volatile int>::Type, int>, "TDecay tes
 static_assert(std::is_same_v<TDecay<int[]>::Type, int*>,             "TDecay test failed");
 static_assert(std::is_same_v<TDecay<int[10]>::Type, int*>,           "TDecay test failed");
 static_assert(std::is_same_v<TDecay<int(int)>::Type, int(*)(int)>,   "TDecay test failed");
+
+// --- Tests for Compiler Intrinsics ---
+enum class SomeEnum{ A, B, };
+static_assert(TIsEnumV<SomeEnum>,    "TIsEnum test failed");
+static_assert(!TIsEnumV<int>,        "TIsEnum test failed");
+struct SomeStruct { int i; };
+static_assert(TIsPODV<SomeStruct>,   "TIsPOD test failed");
+static_assert(!TIsPODV<Array<int>>,  "TIsPOD test failed");

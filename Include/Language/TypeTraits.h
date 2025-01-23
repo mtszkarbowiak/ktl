@@ -610,3 +610,24 @@ struct TAddConst<const T>
 
 template<typename T>
 using TAddConstT = typename TAddConst<T>::Type;
+
+
+// --- Compiler Intrinsics ---
+
+template<typename T>
+struct TIsEnum
+{
+    static constexpr bool Value = __is_enum(T);
+};
+
+template<typename T>
+static constexpr bool TIsEnumV = TIsEnum<T>::Value;
+
+template<typename T>
+struct TIsPOD
+{
+    static constexpr bool Value = __is_pod(T);
+};
+
+template<typename T>
+static constexpr bool TIsPODV = TIsPOD<T>::Value;
