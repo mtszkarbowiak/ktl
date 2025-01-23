@@ -23,30 +23,26 @@
 
 namespace SwapInternal // ADL Barrier
 {
-    /// <summary> Dispatch tag for types with a member <c>Swap</c> function. </summary>
-    struct HasSwapTag {};
-    /// <summary> Dispatch tag for types without a member <c>Swap</c> function. </summary>
-    struct NoSwapTag {};
-
-    /// <summary> Default tag for types without a member <c>Swap</c> function. </summary>
     template<typename T, typename = void>
-    struct HasSwapFunction : std::false_type {};
+    struct THasSwap
+    {
+        static constexpr bool Value = false;
+    };
 
-    /// <summary> Specialization for types with a member <c>Swap</c> function. </summary>
     template<typename T>
-    struct HasSwapFunction<T, VoidT<decltype(std::declval<T>().Swap(std::declval<T&>()))>> : std::true_type {};
+    struct THasSwap<T, VoidT<decltype(std::declval<T>().Swap(std::declval<T&>()))>>
+    {
+        static constexpr bool Value = true;
+    };
 
-    /// <summary>
-    /// Returns the appropriate dispatch tag informing whether the type has a member <c>Swap</c> function.
-    /// </summary>
     template<typename T>
-    using GetSwapTag = std::conditional_t<HasSwapFunction<T>::value, HasSwapTag, NoSwapTag>;
+    static constexpr bool THasSwapFunctionV = THasSwap<T>::Value;
 
     /// <summary>
     /// Swap implementation for types with a member <c>Swap</c> function.
     /// </summary>
     template<typename T>
-    void SwapImpl(T& a, T& b, HasSwapTag) noexcept
+    TEnableIfT<THasSwapFunctionV<T>, void> SwapImpl(T& a, T& b) noexcept
     {
         a.Swap(b);
     }
@@ -55,7 +51,7 @@ namespace SwapInternal // ADL Barrier
     /// Swap implementation for types without a member <c>Swap</c> function.
     /// </summary>
     template<typename T>
-    void SwapImpl(T& a, T& b, NoSwapTag) noexcept
+    TDisableIfT<THasSwapFunctionV<T>, void> SwapImpl(T& a, T& b) noexcept
     {
         static_assert(
             std::is_nothrow_move_constructible<T>::value,
@@ -75,7 +71,7 @@ namespace SwapInternal // ADL Barrier
 template<typename T>
 void Swap(T& a, T& b) noexcept
 {
-    ::SwapInternal::SwapImpl(a, b, ::SwapInternal::GetSwapTag<T>{});
+    ::SwapInternal::SwapImpl(a, b);
 }
 
 
