@@ -98,7 +98,7 @@ class BulkOperations
 PRIVATE:
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<!TIsCStyle<Element>::Value, void>
+    static TEnableIfT<!TIsCStyle<Element>::Value>
     DefaultLinearContentImpl(
         Element* elements,
         const int32 count
@@ -110,7 +110,7 @@ PRIVATE:
     
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<TIsCStyle<Element>::Value, void>
+    static TEnableIfT<TIsCStyle<Element>::Value>
     DefaultLinearContentImpl(
         Element* elements,
         const int32 count
@@ -122,7 +122,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<!TIsCStyle<Element>::Value, void>
+    static TEnableIfT<!TIsCStyle<Element>::Value>
     MoveLinearContentImpl(
         Element*    source,
         Element*    target,
@@ -135,7 +135,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<TIsCStyle<Element>::Value, void>
+    static TEnableIfT<TIsCStyle<Element>::Value>
     MoveLinearContentImpl(
         Element*    source,
         Element*    target,
@@ -151,7 +151,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<!TIsCStyle<Element>::Value, void>
+    static TEnableIfT<!TIsCStyle<Element>::Value>
     CopyLinearContentImpl(
         const Element* source,
         Element*       target,
@@ -164,7 +164,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<TIsCStyle<Element>::Value, void>
+    static TEnableIfT<TIsCStyle<Element>::Value>
     CopyLinearContentImpl(
         const Element* source,
         Element*       target,
@@ -177,7 +177,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<!TIsCStyle<Element>::Value, void>
+    static TEnableIfT<!TIsCStyle<Element>::Value>
     DestroyLinearContentImpl(
         Element*    elements,
         const int32 count
@@ -189,7 +189,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static std::enable_if_t<TIsCStyle<Element>::Value, void>
+    static TEnableIfT<TIsCStyle<Element>::Value>
     DestroyLinearContentImpl(
         Element*    elements,
         const int32 count
