@@ -7,30 +7,30 @@
 
 #pragma once
 
-#include "Types/Numbers.h"
-#include "Language/Communism.h"
 #include "Language/Keywords.h"
 #include "Language/TypeTraits.h"
+#include "Language/Yolo.h"
+#include "Types/Numbers.h"
 
 // Move Semantics
 
 template<typename T>
 NO_DISCARD FORCE_INLINE constexpr
-auto Move(T&& x) noexcept -> TRemoveRefT<T>&&
+auto Move(T&& x) NOEXCEPT_S -> TRemoveRefT<T>&&
 {
     return static_cast<TRemoveRefT<T>&&>(x);
 }
 
 template<typename T>
 NO_DISCARD FORCE_INLINE constexpr
-auto Forward(TRemoveRefT<T>& x) noexcept -> T&&
+auto Forward(TRemoveRefT<T>& x) NOEXCEPT_S -> T&&
 {
     return static_cast<T&&>(x);
 }
 
 template<typename T>
 NO_DISCARD FORCE_INLINE constexpr
-auto Forward(TRemoveRefT<T>&& x) noexcept -> T&&
+auto Forward(TRemoveRefT<T>&& x) NOEXCEPT_S -> T&&
 {
     return static_cast<T&&>(x);
 
@@ -65,7 +65,7 @@ namespace SwapInternal // ADL Barrier
     /// Swap implementation for types with a member <c>Swap</c> function.
     /// </summary>
     template<typename T>
-    auto SwapImpl(T& a, T& b) noexcept -> TEnableIfT<THasSwapFunctionV<T>, void>
+    auto SwapImpl(T& a, T& b) NOEXCEPT_S -> TEnableIfT<THasSwapFunctionV<T>, void>
     {
         a.Swap(b);
     }
@@ -74,7 +74,7 @@ namespace SwapInternal // ADL Barrier
     /// Swap implementation for types without a member <c>Swap</c> function.
     /// </summary>
     template<typename T>
-    auto SwapImpl(T& a, T& b) noexcept -> TDisableIfT<THasSwapFunctionV<T>, void>
+    auto SwapImpl(T& a, T& b) NOEXCEPT_S -> TDisableIfT<THasSwapFunctionV<T>, void>
     {
         T temp = MOVE(a);
         a = MOVE(b);
@@ -87,7 +87,7 @@ namespace SwapInternal // ADL Barrier
 /// If it does not, the objects will be moved, assuming the type is no-throw move constructible.
 /// </summary>
 template<typename T>
-void Swap(T& a, T& b) noexcept
+void Swap(T& a, T& b) NOEXCEPT_S
 {
     ::SwapInternal::SwapImpl(a, b);
 }
@@ -127,7 +127,7 @@ struct GetMaxTombstoneDepth
 
 template<typename T>
 NO_DISCARD FORCE_INLINE
-auto Ptr2Ref(const T* ptr) -> const T&
+auto Ptr2Ref(const T* ptr) NOEXCEPT_S -> const T&
 {
     ASSERT(ptr != nullptr);
     return *ptr;
@@ -135,7 +135,7 @@ auto Ptr2Ref(const T* ptr) -> const T&
 
 template<typename T>
 NO_DISCARD FORCE_INLINE
-auto Ptr2Ref(T* ptr) -> T&
+auto Ptr2Ref(T* ptr) NOEXCEPT_S -> T&
 {
     ASSERT(ptr != nullptr);
     return *ptr;
