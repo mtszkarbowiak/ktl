@@ -115,6 +115,44 @@ public:
     }
 
 
+    // Tim Sort
+
+    template<typename T, int32 MinRun = 32>
+    static
+    void TimSort(T* begin, T* end)
+    {
+        const int32 count = end - begin;
+
+        // Sort small runs with insertion sort.
+        for (T* current = begin; current < end; current += MinRun)
+        {
+            T* runEnd = Math::Min(current + MinRun, end);
+            InsertionSort<T>(current, runEnd);
+        }
+
+        // Merge the runs.
+        for (int32 runSize = MinRun; runSize < count; runSize *= 2)
+        {
+            for (T* current = begin; current < end; current += 2 * runSize)
+            {
+                T* runMid = current + runSize;
+                T* runEnd = Math::Min(runMid + runSize, end);
+                InplaceMerge(current, runMid, runEnd);
+            }
+        }
+    }
+
+    template<typename T, int32 MinRun = 32>
+    static FORCE_INLINE
+    void TimSort(Span<T> span)
+    {
+        TimSort(
+            span.Data(),
+            span.Data() + span.Count()
+        );
+    }
+
+
     // Quick Sort
 
     /// <summary> 
