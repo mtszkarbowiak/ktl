@@ -98,7 +98,7 @@ class BulkOperations
 PRIVATE:
     template<typename Element>
     FORCE_INLINE
-    static TEnableIfT<!TIsCStyle<Element>::Value>
+    static TEnableIfT<TNotV<THasTrivialCtor<Element>>>
     DefaultLinearContentImpl(
         Element* elements,
         const int32 count
@@ -110,7 +110,7 @@ PRIVATE:
     
     template<typename Element>
     FORCE_INLINE
-    static TEnableIfT<TIsCStyle<Element>::Value>
+    static TEnableIfT<THasTrivialCtorV<Element>>
     DefaultLinearContentImpl(
         Element* elements,
         const int32 count
@@ -122,7 +122,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static TEnableIfT<!TIsCStyle<Element>::Value>
+    static TEnableIfT<TNotV<THasTrivialCopy<Element>>>
     MoveLinearContentImpl(
         Element*    source,
         Element*    target,
@@ -135,7 +135,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static TEnableIfT<TIsCStyle<Element>::Value>
+    static TEnableIfT<THasTrivialCopyV<Element>>
     MoveLinearContentImpl(
         Element*    source,
         Element*    target,
@@ -151,7 +151,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static TEnableIfT<!TIsCStyle<Element>::Value>
+    static TEnableIfT<TNotV<THasTrivialCopy<Element>>>
     CopyLinearContentImpl(
         const Element* source,
         Element*       target,
@@ -164,7 +164,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static TEnableIfT<TIsCStyle<Element>::Value>
+    static TEnableIfT<THasTrivialCopyV<Element>>
     CopyLinearContentImpl(
         const Element* source,
         Element*       target,
@@ -177,7 +177,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static TEnableIfT<!TIsCStyle<Element>::Value>
+    static TEnableIfT<TNotV<THasTrivialDtor<Element>>>
     DestroyLinearContentImpl(
         Element*    elements,
         const int32 count
@@ -189,7 +189,7 @@ PRIVATE:
 
     template<typename Element>
     FORCE_INLINE
-    static TEnableIfT<TIsCStyle<Element>::Value>
+    static TEnableIfT<THasTrivialDtorV<Element>>
     DestroyLinearContentImpl(
         Element*    elements,
         const int32 count
