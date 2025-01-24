@@ -10,7 +10,7 @@
 #include "Language/Templates.h"
 #include "Math/Hashing.h"
 #include "Types/Numbers.h"
-#include "Types/Rc.h"
+#include "Types/RcBox.h"
 
 
 TEST(TypeUtils, SwapByMoves)
