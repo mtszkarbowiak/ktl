@@ -451,6 +451,13 @@ public:
         return Span<Element>{ DATA_OF(Element, _allocData), _count };
     }
 
+    /// <summary> Creates a read-only span of the stored elements. </summary>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto AsSpan() const noexcept -> Span<const Element>
+    {
+        return Span<const Element>{ DATA_OF(const Element, _allocData), _count };
+    }
+
     /// <summary>
     /// Adds one-by-one copies of the specified elements to the end of the array.
     /// Max one allocation is performed.
