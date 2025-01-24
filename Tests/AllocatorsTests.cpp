@@ -11,6 +11,7 @@
 #include "Allocators/HeapAlloc.h"
 #include "Allocators/BumpAlloc.h"
 #include "Allocators/PolymorphicAlloc.h"
+#include "Collections/Array.h"
 #include "Math/Arithmetic.h"
 
 TEST(CapacityMath, Pow2)
@@ -119,4 +120,25 @@ TEST(PolymorphicAlloc, AllocationCycle)
     alloc.Free();
 
     //TODO(mtszkarbowiak): Moving the polymorphic allocator.
+}
+
+TEST(PolymorphicAlloc, Array)
+{
+    using TestInt                  = int32;
+    constexpr int32 BufferCapacity = 32;
+    constexpr int32 BufferMemory   = BufferCapacity * sizeof(TestInt);
+    using TestPolymorphicAlloc     = PolymorphicAlloc<FixedAlloc<BufferMemory>, HeapAlloc>;
+
+    Array<TestInt, TestPolymorphicAlloc> array;
+    for (TestInt i = 0; i < BufferCapacity; ++i)
+    {
+        array.Add(i);
+    }
+    GTEST_ASSERT_EQ(array.Count(), BufferCapacity);
+
+    for (TestInt i = 0; i < BufferCapacity; ++i)
+    {
+        array.Add(i);
+    }
+    GTEST_ASSERT_EQ(array.Count(), BufferCapacity * 2);
 }

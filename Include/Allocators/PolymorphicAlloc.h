@@ -10,6 +10,7 @@
 #include "Debugging/Assertions.h"
 #include "Language/Communism.h"
 #include "Language/Keywords.h"
+#include "Language/Templates.h"
 #include "Language/Memory.h"
 #include "Math/Arithmetic.h"
 #include "Types/Numbers.h"
@@ -22,8 +23,10 @@ class PolymorphicAlloc
 {
 public:
     static constexpr bool  IsNullable  = true; // Because the allocator can always use `None` state.
-    static constexpr int32 MinCapacity = Math::Min(A1::MinCapacity, A2::MinCapacity);
-    static constexpr int32 MaxCapacity = Math::Max(A1::MaxCapacity, A2::MaxCapacity);
+    static constexpr int32 MinCapacity = A1::MinCapacity;
+    static constexpr int32 MaxCapacity = A2::MaxCapacity;
+
+    static_assert(MinCapacity < MaxCapacity, "The minimum capacity must be less than the maximum capacity.");
 
     class Data 
     {
@@ -39,6 +42,8 @@ public:
         }
         _state{ State::None };
 
+
+        // Allocation Manipulation
 
     public:
         NO_DISCARD FORCE_INLINE
@@ -140,6 +145,71 @@ public:
             };
 
             _state = State::None;
+        }
+
+
+        // Lifecycle
+
+        Data() = default;
+
+        Data(const Data& other)
+            : _mainData{ other._mainData }
+            , _backupData{ other._backupData }
+            , _state{ State::None }
+        {
+        }
+
+        Data(Data&& other) noexcept
+            : _mainData{ other._mainData }     // DO NOT MOVE! ONLY COPY BINDINGS!
+            , _backupData{ other._backupData } // DO NOT MOVE! ONLY COPY BINDINGS!
+            , _state{ other._state }
+        {
+            // Move depending on state
+            switch (_state)
+            {
+            case State::Main:
+                _mainData = MOVE(other._mainData);
+                break;
+            case State::Backup:
+                _backupData = MOVE(other._backupData);
+                break;
+            };
+        }
+
+        auto operator=(const Data& other) -> Data&
+        {
+            // Bindings can not be overwritten.
+            // (Allocation data can never be assigned.)
+            return *this;
+        }
+
+        auto operator=(Data&& other) noexcept -> Data&
+        {
+            // Bindings can not be overwritten.
+            // Only content can be moved.
+            // (Allocation data can never be assigned.)
+            if (this != &other)
+            {
+                _state = other._state;
+
+                switch (_state)
+                {
+                case State::Main:
+                    _mainData = MOVE(other._mainData);
+                    break;
+                case State::Backup:
+                    _backupData = MOVE(other._backupData);
+                    break;
+                };
+
+                other._state = State::None;
+            }
+            return *this;
+        }
+
+        ~Data()
+        {
+            ASSERT_ALLOCATOR_SAFETY(_state == State::None);
         }
     };
 };
