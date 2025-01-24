@@ -165,6 +165,12 @@ public:
         return Get();
     }
 
+    NO_DISCARD FORCE_INLINE
+    auto operator*() const -> const T&
+    {
+        return *Get();
+    }
+
     FORCE_INLINE
     void Clear()
     {
@@ -281,6 +287,18 @@ public:
     {
         ASSERT_COLLECTION_SAFE_ACCESS(_ptr != nullptr);
         return _ptr;
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto operator*() -> T&
+    {
+        return *Get();
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto operator*() const -> const T&
+    {
+        return *Get();
     }
 
     FORCE_INLINE

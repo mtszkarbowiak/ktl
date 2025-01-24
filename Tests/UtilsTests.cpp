@@ -10,6 +10,7 @@
 #include "Language/Templates.h"
 #include "Math/Hashing.h"
 #include "Types/Numbers.h"
+#include "Types/Rc.h"
 
 
 TEST(TypeUtils, SwapByMoves)
@@ -87,4 +88,31 @@ TEST(Hashing, PodHash)
     const uint32 hashB = PodHashOf<SomeStruct>::GetHash(B);
 
     GTEST_ASSERT_NE(hashA, hashB);
+}
+
+
+TEST(RefCounted, Rc)
+{
+    Rc rc{};
+    int32 resource{ 1 };
+
+    {
+        RcWrite<int32> write{ rc, resource };
+        GTEST_ASSERT_TRUE(write.HasValue());
+        *write = 3;
+
+        write.Clear();
+        GTEST_ASSERT_FALSE(write.HasValue());
+    }
+
+    {
+        RcRead<int32> read{ rc, resource };
+        GTEST_ASSERT_TRUE(read.HasValue());
+        GTEST_ASSERT_TRUE(read.IsUnique());
+        GTEST_ASSERT_EQ(*read, 3);
+
+        RcRead<int32> read2{ read };
+        GTEST_ASSERT_FALSE(read.IsUnique());
+        GTEST_ASSERT_FALSE(read2.IsUnique());
+    }
 }
