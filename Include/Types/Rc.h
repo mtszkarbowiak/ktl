@@ -129,6 +129,10 @@ public:
     auto operator=(const Rc& copied) -> Rc& = delete;
 };
 
+/// <summary>
+/// Read access to a reference counted object.
+/// Uses ctor/dtor to manage the reference count.
+/// </summary>
 template<typename T>
 class RcRead
 {
@@ -244,6 +248,10 @@ public:
     }
 };
 
+/// <summary>
+/// Write access to a reference counted object.
+/// Uses ctor/dtor to manage the reference count.
+/// </summary>
 template<typename T>
 class RcWrite
 {

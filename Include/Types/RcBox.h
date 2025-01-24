@@ -10,7 +10,11 @@
 #include "Types/Box.h"
 #include "Types/Rc.h"
 
-
+/// <summary>
+/// Non-thread safe reference counted box.
+/// To be used when the reference counter is to protect a resource from being
+/// read and written at the same time in not thread-safe code.
+/// </summary>
 template<
     typename  T,
     typename  A = HeapAlloc
@@ -34,28 +38,12 @@ public:
         _box.Reset();
     }
 
-    NO_DISCARD FORCE_INLINE
-    auto operator->() -> T*
+    template<typename... Args>
+    FORCE_INLINE
+    void Emplace(Args&&... args)
     {
-        return _box.Get();
-    }
-
-    NO_DISCARD FORCE_INLINE
-    auto operator->() const -> const T*
-    {
-        return _box.Get();
-    }
-
-    NO_DISCARD FORCE_INLINE
-    auto operator*() -> T&
-    {
-        return *_box.Get();
-    }
-
-    NO_DISCARD FORCE_INLINE
-    auto operator*() const -> const T&
-    {
-        return *_box.Get();
+        ASSERT_COLLECTION_SAFE_MOD(!_rc.HasAnyRefs());
+        _box.Emplace(FORWARD(Args..., args)...);
     }
 
 
@@ -66,7 +54,7 @@ public:
         {
             return RcRead<T>{};
         }
-        return RcRead<T>{&_rc, _box.Get()};
+        return RcRead<T>{ _rc, *_box };
     }
 
     NO_DISCARD FORCE_INLINE
@@ -76,7 +64,7 @@ public:
         {
             return RcRead<T>{};
         }
-        return RcRead<T>{&_rc, _box.Get()};
+        return RcRead<T>{ _rc, *_box };
     }
 
     NO_DISCARD FORCE_INLINE
@@ -86,6 +74,6 @@ public:
         {
             return RcWrite<T>{};
         }
-        return RcWrite<T>{&_rc, _box.Get()};
+        return RcWrite<T>{ _rc, *_box };
     }
 };

@@ -116,3 +116,21 @@ TEST(RefCounted, Rc)
         GTEST_ASSERT_FALSE(read2.IsUnique());
     }
 }
+
+TEST(RefCounted, RcBox)
+{
+    RcBox<int32> box;
+    box.Emplace(7);
+
+    {
+        RcWrite<int32> write = box.TryWrite();
+        *write = 3;
+    }
+    {
+        RcRead<int32> read = box.TryRead();
+        GTEST_ASSERT_EQ(*read, 3);
+
+        RcWrite<int32> write = box.TryWrite();
+        GTEST_ASSERT_FALSE(write.HasValue()); // Read lock is active.
+    }
+}
