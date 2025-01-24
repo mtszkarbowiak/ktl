@@ -246,6 +246,15 @@ public:
 
         return *this;
     }
+
+
+    // Conversion
+
+    NO_DISCARD FORCE_INLINE explicit
+    operator bool() const
+    {
+        return HasValue();
+    }
 };
 
 /// <summary>
@@ -358,4 +367,13 @@ public:
     }
 
     auto operator=(const RcWrite& copied)->RcWrite & = delete; // Copying is not allowed.
+
+
+    // Conversion
+
+    NO_DISCARD FORCE_INLINE explicit
+    operator bool() const
+    {
+        return HasValue();
+    }
 };
