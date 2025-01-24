@@ -78,7 +78,7 @@ public:
         NO_DISCARD FORCE_INLINE constexpr
         auto Allocate(const int32 size) -> int32
         {
-            ASSERT_ALLOCATOR_SAFETY(size == Size || size == 0);
+            // Let the allocator gracefully fail if the size is incorrect.
             return (size == Size) ? size : 0;
         }
 
