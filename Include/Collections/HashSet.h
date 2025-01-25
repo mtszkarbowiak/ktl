@@ -55,6 +55,8 @@ public:
     using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, DoubleGrowth>;
     using LoadFHelper = LoadFHelperOf<HASH_SETS_DEFAULT_SLACK_RATIO>;
 
+    constexpr static int32 SlotSize = sizeof(Slot);
+
 PRIVATE:
     AllocData _allocData{};
     int32     _capacity{};           // Number of slots
@@ -552,6 +554,11 @@ protected:
         }
         else
         {
+            _capacity = AllocHelper::Allocate(_allocData, other._capacity);
+            ASSERT(_capacity == other._capacity);
+
+            //TODO(mtszkarbowiak): Add rebuild on move.
+
             BulkOperations::MoveLinearContent<Slot>(
                 DATA_OF(Slot, other._allocData),
                 DATA_OF(Slot, _allocData),
@@ -561,8 +568,6 @@ protected:
                 DATA_OF(Slot, other._allocData),
                 other._capacity
             );
-
-            // It could be considered rebuilding the dictionary on move.
 
             _capacity = other._capacity;
             _elementCountCached = other._elementCountCached;
