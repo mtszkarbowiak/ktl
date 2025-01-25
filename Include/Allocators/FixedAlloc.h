@@ -33,6 +33,11 @@ public:
     {
         alignas(Alignment) byte _data[Size];
 
+#if (ASSERTIONS_LEVEL >= 2)
+        bool _allocated{ false };
+#endif
+
+
     public:
         FORCE_INLINE constexpr
         Data() = default;
@@ -46,9 +51,20 @@ public:
         FORCE_INLINE constexpr
         Data(Data&&) noexcept
         {
-            DEBUG_BREAK; // FixedAlloc must never be moved!
-            // FixedAlloc can never be moved - `MovesItems` is always false.
-            // Although, it must compile to allow run-time polymorphism.
+            // Pass
+
+            // Note: Even though, the FixedAlloc never moves the items,
+            // it can be moved - We treat it as binding-only move.
+        }
+
+        FORCE_INLINE
+        ~Data()
+        {
+            // Pass
+
+#if (ASSERTIONS_LEVEL >= 2)
+            ASSERT_ALLOCATOR_SAFETY(!_allocated);
+#endif
         }
 
         FORCE_INLINE constexpr
@@ -62,42 +78,80 @@ public:
         auto operator=(const Data&) -> Data&
         {
             // Pass
+
+#if (ASSERTIONS_LEVEL >= 2)
+            ASSERT_ALLOCATOR_SAFETY(!_allocated);
+#endif
+
             return *this;
         }
 
         MAY_DISCARD FORCE_INLINE constexpr
         auto operator=(Data&&) noexcept -> Data&
         {
-            DEBUG_BREAK; // FixedAlloc must never be moved!
-            // FixedAlloc can never be moved - `MovesItems` is always false.
-            // Although, it must compile to allow run-time polymorphism.
+            // Pass
+
+#if (ASSERTIONS_LEVEL >= 2)
+            ASSERT_ALLOCATOR_SAFETY(!_allocated);
+#endif
+
+            // Note: Even though, the FixedAlloc never moves the items,
+            // it can be moved - We treat it as binding-only move.
+
             return *this;
         }
 
 
-        NO_DISCARD FORCE_INLINE constexpr
+        // NO_DISCARD FORCE_INLINE constexpr
         auto Allocate(const int32 size) -> int32
         {
-            // Let the allocator gracefully fail if the size is incorrect.
-            return (size == Size) ? size : 0;
+    #if (ASSERTIONS_LEVEL >= 2)
+            ASSERT_ALLOCATOR_SAFETY(!_allocated);
+    #endif
+
+            if (size == Size)
+            {
+#if (ASSERTIONS_LEVEL >= 2)
+                _allocated = true;
+#endif
+                return size;
+            }
+            else 
+            {
+                // Let the allocator gracefully fail if the size is incorrect.
+                return 0;
+            }
         }
 
         FORCE_INLINE constexpr
         void Free()
         {
             // Pass
+
+#if (ASSERTIONS_LEVEL >= 2)
+            ASSERT_ALLOCATOR_SAFETY(_allocated);
+            _allocated = false;
+#endif
         }
 
 
         NO_DISCARD FORCE_INLINE constexpr
         auto Get() const -> const byte*
         {
+#if (ASSERTIONS_LEVEL >= 2)
+            ASSERT_ALLOCATOR_SAFETY(_allocated);
+#endif
+
             return _data;
         }
 
         NO_DISCARD FORCE_INLINE constexpr
         auto Get() -> byte*
         {
+#if (ASSERTIONS_LEVEL >= 2)
+            ASSERT_ALLOCATOR_SAFETY(_allocated);
+#endif
+
             return _data;
         }
     };
