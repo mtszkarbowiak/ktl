@@ -197,16 +197,8 @@ public:
                 ASSERT_ALLOCATOR_SAFETY(_state == State::None); // Active allocation can never be overwritten!
 
                 _state = other._state;
-
-                switch (_state)
-                {
-                case State::Main:
-                    _mainData = MOVE(other._mainData);
-                    break;
-                case State::Backup:
-                    _backupData = MOVE(other._backupData);
-                    break;
-                };
+                _mainData = MOVE(other._mainData);
+                _backupData = MOVE(other._backupData);
 
                 other._state = State::None;
             }
