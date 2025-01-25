@@ -55,6 +55,8 @@ public:
     using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, DoubleGrowth>;
     using LoadFHelper = LoadFHelperOf<HASH_SETS_DEFAULT_SLACK_RATIO>;
 
+    constexpr static int32 SlotSize = sizeof(Slot);
+
 PRIVATE:
     AllocData _allocData{};
     int32     _capacity{};           // Number of slots
