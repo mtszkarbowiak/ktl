@@ -7,9 +7,10 @@
 
 #include <gtest/gtest.h>
 
+#include "Allocators/BumpAlloc.h"
 #include "Allocators/FixedAlloc.h"
 #include "Allocators/HeapAlloc.h"
-#include "Allocators/BumpAlloc.h"
+#include "Allocators/LimiterAlloc.h"
 #include "Allocators/PolymorphicAlloc.h"
 #include "Collections/Array.h"
 #include "Math/Arithmetic.h"
@@ -141,4 +142,20 @@ TEST(PolymorphicAlloc, Array)
         array.Add(i);
     }
     GTEST_ASSERT_EQ(array.Count(), BufferCapacity * 8);
+}
+
+TEST(LimiterAlloc, AllocationCycle)
+{
+    LimiterAlloc<HeapAlloc, 1024, 2048>::Data alloc; // Only 1kB - 2kB allocations allowed.
+
+    const int32 allocated1 = alloc.Allocate(1); // 1 byte allocation must be allowed, boosted to 1kB.
+    GTEST_ASSERT_GE(allocated1, 1024);
+    alloc.Free();
+
+    const int32 allocated2 = alloc.Allocate(4096); // 4kB allocation must not be allowed.
+    GTEST_ASSERT_EQ(allocated2, 0);
+
+    const int32 allocated3 = alloc.Allocate(1024); // 1kB allocation must be allowed.
+    GTEST_ASSERT_GE(allocated3, 1024);
+    alloc.Free();
 }
