@@ -215,6 +215,7 @@ public:
             );
         }
 
+        _allocData.Free();
         _allocData = MOVE(newData);
         _capacity  = allocatedCapacity;
 
@@ -299,6 +300,7 @@ public:
         _head = 0;
         _tail = _countCached;
 
+        _allocData.Free(); // We already know that the capacity is above zero!
         _allocData = MOVE(newData);
         _capacity  = allocatedCapacity;
 

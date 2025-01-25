@@ -26,6 +26,8 @@ JobScheduler::JobScheduler(const int32 workers)
 
 JobScheduler::~JobScheduler()
 {
+    WaitAll();
+
     _running = false;
 
     {

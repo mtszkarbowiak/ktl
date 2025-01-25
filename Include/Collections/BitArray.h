@@ -145,17 +145,17 @@ public:
             const int32  requiredBlocksCapacity = AllocHelper::NextCapacity(_blockCapacity, minBlocksCapacity);
             const int32 allocatedBlocksCapacity = AllocHelper::Allocate(newData, requiredBlocksCapacity);
 
-            if (_blockCapacity > 0)
+            const int32 oldBlocksCount = BlocksForBits(_bitCount);
+            if (oldBlocksCount > 0)
             {
-                const int32 oldBlocksCount = BlocksForBits(_bitCount);
                 BulkOperations::MoveLinearContent<Block>(
                     DATA_OF(Block, _allocData),
                     DATA_OF(Block, newData),
                     oldBlocksCount
                 );
-                _allocData.Free();
             }
 
+            _allocData.Free();
             _allocData = MOVE(newData);
             _blockCapacity = allocatedBlocksCapacity;
         }

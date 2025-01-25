@@ -24,6 +24,9 @@
 template<typename T, bool M = (GetMaxTombstoneDepth<T>::Value > 0)>
 class Nullable;
 
+template<typename T>
+class Span;
+
 /// <summary>
 /// Wrapper over a value type that can be assigned an additional null value.
 /// To represent null, this implementation always uses a sentinel value taking additional byte.
@@ -140,6 +143,17 @@ public:
             _nullLevel = 1;
         }
     }
+
+
+    /// <summary> Creates a span which can be used to access the value. </summary>
+    template <typename U = T>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto AsSpan() -> Span<Element>;
+
+    /// <summary> Creates a span which can be used to access the value. </summary>
+    template <typename U = T>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto AsSpan() const -> Span<const Element>;
 
 
     // Tombstone (Nested Nullable)
@@ -399,6 +413,16 @@ public:
         _value = Element{ TombstoneDepth{ 1 } };
     }
 
+    /// <summary> Creates a span which can be used to access the value. </summary>
+    template<typename U = T>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto AsSpan() -> Span<Element>;
+
+    /// <summary> Creates a span which can be used to access the value. </summary>
+    template<typename U = T>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto AsSpan() const -> Span<const Element>;
+
 
     // Tombstone (Nested Nullable)
 
@@ -531,6 +555,7 @@ public:
         }
     }
 };
+
 
 template<typename T>
 struct GetMaxTombstoneDepth<Nullable<T, true>>

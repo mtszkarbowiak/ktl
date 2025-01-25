@@ -17,7 +17,7 @@
 /// </summary>
 /// <remarks>
 /// Span is classified as null if it points to <c>null</c> OR its points to zero elements.
-/// <remarks>
+/// </remarks>
 template<typename T>
 class Span
 {

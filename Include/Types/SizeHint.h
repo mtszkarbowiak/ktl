@@ -18,15 +18,12 @@ struct SizeHint final
 {
     /// <summary>
     /// Minimal number of elements to iterate over.
-    /// Non-nullable.
-    /// Includes the current element.
     /// </summary>
-    Index Min{ 0 };
+    Index Min{};
 
     /// <summary>
     /// Maximal number of elements to iterate over.
-    /// Nullable, where -1 means no limit.
-    /// Includes the current element.
+    /// <b>Includes the current element.</b>
     /// </summary>
-    Nullable<Index> Max{ -1 };
+    Nullable<Index> Max{};
 };
