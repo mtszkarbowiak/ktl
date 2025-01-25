@@ -128,7 +128,7 @@ public:
             const int32 allocatedCapacity = AllocHelper::Allocate(newData, requiredCapacity);
 
             // Move the content before reassigning the capacity
-            if (_capacity > 0)
+            if (_count > 0)
             {
                 BulkOperations::MoveLinearContent<Element>(
                     DATA_OF(Element, _allocData),
@@ -139,10 +139,9 @@ public:
                     DATA_OF(Element, _allocData),
                     _count
                 );
-
-                _allocData.Free();
             }
 
+            _allocData.Free();
             _allocData = MOVE(newData);
             _capacity = allocatedCapacity;
         }

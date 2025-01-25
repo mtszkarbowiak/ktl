@@ -117,8 +117,11 @@ public:
         MAY_DISCARD FORCE_INLINE
         auto operator=(const Data& other) -> Data&
         {
+            ASSERT_ALLOCATOR_SAFETY(_data == nullptr); // Active allocation can never be overwritten!
+
             _context = other._context;
             _data    = other._data;
+
             return *this;
         }
 
@@ -127,6 +130,8 @@ public:
         {
             if (this != &other)
             {
+                ASSERT_ALLOCATOR_SAFETY(_data == nullptr); // Active allocation can never be overwritten!
+
                 _context = other._context;
                 _data    = other._data;
                 other._context = nullptr;

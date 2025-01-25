@@ -67,7 +67,7 @@ public:
         MAY_DISCARD FORCE_INLINE
         auto operator=(const Data&) -> Data&
         {
-            Free();
+            ASSERT_ALLOCATOR_SAFETY(_ptr == nullptr); // Active allocation can never be overwritten!
 
             // No allocator context to bind to the new data
             return *this;
@@ -78,10 +78,7 @@ public:
         {
             if (this != &other)
             {
-                if (_ptr)
-                {
-                    FREE(_ptr);
-                }
+                ASSERT_ALLOCATOR_SAFETY(_ptr == nullptr); // Active allocation can never be overwritten!
 
                 _ptr = other._ptr;
                 other._ptr = nullptr;
