@@ -178,18 +178,24 @@ public:
 
         auto operator=(const Data& other) -> Data&
         {
-            // Bindings can not be overwritten.
-            // (Allocation data can never be assigned.)
+            if (this != &other)
+            {
+                ASSERT_ALLOCATOR_SAFETY(_state == State::None); // Active allocation can never be overwritten!
+
+                _mainData   = other._mainData;
+                _backupData = other._backupData;
+                _state      = State::None;
+            }
             return *this;
         }
 
         auto operator=(Data&& other) noexcept -> Data&
         {
             // Bindings can not be overwritten.
-            // Only content can be moved.
-            // (Allocation data can never be assigned.)
             if (this != &other)
             {
+                ASSERT_ALLOCATOR_SAFETY(_state == State::None); // Active allocation can never be overwritten!
+
                 _state = other._state;
 
                 switch (_state)
