@@ -26,7 +26,7 @@ public:
     static constexpr int32 MinCapacity = A1::MinCapacity;
     static constexpr int32 MaxCapacity = A2::MaxCapacity;
 
-    static_assert(MinCapacity < MaxCapacity, "The minimum capacity must be less than the maximum capacity.");
+    static_assert(MinCapacity < MaxCapacity, "The minimum capacity must be less than the maximum capacity."); // It is assumed that the second allocator has a higher capacity.
 
     class Data 
     {
@@ -160,20 +160,11 @@ public:
         }
 
         Data(Data&& other) noexcept
-            : _mainData{ other._mainData }     // DO NOT MOVE! ONLY COPY BINDINGS!
-            , _backupData{ other._backupData } // DO NOT MOVE! ONLY COPY BINDINGS!
+            : _mainData{ MOVE(other._mainData) }
+            , _backupData{ MOVE(other._backupData) }
             , _state{ other._state }
         {
-            // Move depending on state
-            switch (_state)
-            {
-            case State::Main:
-                _mainData = MOVE(other._mainData);
-                break;
-            case State::Backup:
-                _backupData = MOVE(other._backupData);
-                break;
-            };
+            other._state = State::None;
         }
 
         auto operator=(const Data& other) -> Data&
