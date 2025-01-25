@@ -136,9 +136,9 @@ TEST(PolymorphicAlloc, Array)
     }
     GTEST_ASSERT_EQ(array.Count(), BufferCapacity);
 
-    for (TestInt i = 0; i < BufferCapacity; ++i)
+    for (TestInt i = BufferCapacity; i < (BufferCapacity * 8); ++i)
     {
         array.Add(i);
     }
-    GTEST_ASSERT_EQ(array.Count(), BufferCapacity * 2);
+    GTEST_ASSERT_EQ(array.Count(), BufferCapacity * 8);
 }
