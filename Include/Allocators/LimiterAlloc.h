@@ -77,6 +77,22 @@ public:
         }
 
         NO_DISCARD FORCE_INLINE
+        auto Reallocate(int32 size) -> int32
+        {
+            // Apply the lower bound
+            size = Math::Max<int32>(size, MinCapacity);
+
+            // Apply the upper bound
+            if (size > MaxCapacity)
+            {
+                return 0;
+            }
+
+            // Reallocate the memory
+            return _data.Reallocate(size);
+        }
+
+        NO_DISCARD FORCE_INLINE
         auto Free()
         {
             _data.Free();

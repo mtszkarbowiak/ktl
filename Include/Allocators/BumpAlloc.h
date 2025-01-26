@@ -156,6 +156,13 @@ public:
             return _context->Allocate(size, _data);
         }
 
+        NO_DISCARD FORCE_INLINE
+        auto Relocate(const int32 size) -> int32
+        {
+            ASSERT_ALLOCATOR_SAFETY(_data != nullptr); // Active allocation must be present!
+            return 0; // BumpAlloc does not support reallocation.
+        }
+
         FORCE_INLINE
         void Free()
         {

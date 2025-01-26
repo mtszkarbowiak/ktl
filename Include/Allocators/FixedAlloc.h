@@ -123,6 +123,15 @@ public:
             }
         }
 
+        auto Reallocate(const int32 size) -> int32
+        {
+#if (ASSERTIONS_LEVEL >= 2)
+            ASSERT_ALLOCATOR_SAFETY(!_allocated);
+#endif
+
+            return 0; // FixedAlloc does not support reallocation (not yet).
+        }
+
         FORCE_INLINE constexpr
         void Free()
         {

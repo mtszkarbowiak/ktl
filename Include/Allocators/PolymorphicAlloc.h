@@ -147,6 +147,8 @@ public:
             _state = State::None;
         }
 
+        //TODO(mtszkarbowiak): Implement reallocation
+
 
         // Lifecycle
 
