@@ -50,8 +50,8 @@ public:
     using AllocData   = typename A::Data;
     using AllocHelper = AllocHelperOf<Element, A, ARRAY_DEFAULT_CAPACITY, G>;
 
-    using MutPuller   = typename Span<Element>::MutPuller;
-    using ConstPuller = typename Span<Element>::ConstPuller;
+    using MutPuller   = RawPuller<T>;
+    using ConstPuller = RawPuller<const T>;
 
 PRIVATE:
     AllocData _allocData{};

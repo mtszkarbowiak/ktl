@@ -175,20 +175,17 @@ public:
     }
 
 
-    using MutPuller   = RawPuller<T>;
-    using ConstPuller = RawPuller<const T>;
-
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Values() -> MutPuller
+    auto Values() -> RawPuller<T>
     {
-        return MutPuller{ *this };
+        return  RawPuller<T>{ *this };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstPuller
+    auto Values() const -> RawPuller<const T>
     {
-        return ConstPuller{ *this };
+        return RawPuller<const T>{ *this };
     }
 };
