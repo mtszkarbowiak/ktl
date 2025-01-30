@@ -725,7 +725,7 @@ PRIVATE:
 
 public:
     /// <summary> Puller for iterating over the elements of the set. </summary>
-    /// <remarks> <c>HashSet</c> does not have a read-write cursor. </remarks>
+    /// <remarks> <c>HashSet</c> does not have a read-write puller. </remarks>
     class ConstValuePuller
     {
         const HashSet* _set;

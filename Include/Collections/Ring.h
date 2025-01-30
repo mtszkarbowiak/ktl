@@ -805,7 +805,7 @@ public:
 
         // Iteration
 
-        /// <summary> Check if the cursor points to a valid element. </summary>
+        /// <summary> Check if the puller points to a valid element. </summary>
         NO_DISCARD FORCE_INLINE explicit
         operator bool() const 
         {
@@ -813,7 +813,7 @@ public:
             return _indexOfElement < _ring->_countCached;
         }
 
-        /// <summary> Moves the cursor to the next element. </summary>
+        /// <summary> Moves the puller to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
         auto operator++() -> MutPuller&
         {
@@ -822,7 +822,7 @@ public:
             return *this;
         }
 
-        /// <summary> Moves the cursor to the next element. </summary>
+        /// <summary> Moves the puller to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
         MAY_DISCARD FORCE_INLINE
         auto operator++(int) -> MutPuller
@@ -914,7 +914,7 @@ public:
 
         // Iteration
 
-        /// <summary> Check if the cursor points to a valid element. </summary>
+        /// <summary> Check if the puller points to a valid element. </summary>
         NO_DISCARD FORCE_INLINE explicit
         operator bool() const
         {
@@ -922,7 +922,7 @@ public:
             return _indexOfElement < _ring->_countCached;
         }
 
-        /// <summary> Moves the cursor to the next element. </summary>
+        /// <summary> Moves the puller to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
         auto operator++() -> ConstPuller&
         {
@@ -931,7 +931,7 @@ public:
             return *this;
         }
 
-        /// <summary> Moves the cursor to the next element. </summary>
+        /// <summary> Moves the puller to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
         MAY_DISCARD FORCE_INLINE
         auto operator++(int) -> ConstPuller
@@ -967,14 +967,14 @@ public:
         }
     };
 
-    /// <summary> Creates a read-write cursor for the ring. </summary>
+    /// <summary> Creates a read-write puller for the ring. </summary>
     NO_DISCARD FORCE_INLINE
     auto Values() -> MutPuller
     {
         return MutPuller{ *this };
     }
 
-    /// <summary> Creates a read-only cursor for the ring. </summary>
+    /// <summary> Creates a read-only puller for the ring. </summary>
     NO_DISCARD FORCE_INLINE
     auto Values() const -> ConstPuller
     {

@@ -36,22 +36,22 @@ namespace Querying
     };
 
     /// <summary> Maps the elements of the collection using the specified projection. </summary>
-    /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
+    /// <typeparam name="C"> Type of the puller pointing to the elements. </typeparam>
     /// <typeparam name="P"> Type of the projection function. </typeparam>
     template<typename C, typename P>
     class SelectPuller final
     {
-        C _cursor;
+        C _puller;
         P _projection;
 
     public:
-        using ElementType = decltype(_projection.operator()(*_cursor));
+        using ElementType = decltype(_projection.operator()(*_puller));
         
         FORCE_INLINE explicit
         SelectPuller(
-            C&& cursor,
+            C&& puller,
             P&& projection)
-            : _cursor{ MOVE(cursor) }
+            : _puller{ MOVE(puller) }
             , _projection{ MOVE(projection) }
         {
         }
@@ -60,7 +60,7 @@ namespace Querying
         SelectPuller(
             C&& producer,
             Select<P> select)
-            : _cursor{ MOVE(producer) }
+            : _puller{ MOVE(producer) }
             , _projection{ MOVE(select.Projection) }
         {
         }
@@ -68,13 +68,13 @@ namespace Querying
         NO_DISCARD FORCE_INLINE explicit
         operator bool() const
         {
-            return static_cast<bool>(_cursor);
+            return static_cast<bool>(_puller);
         }
 
         MAY_DISCARD FORCE_INLINE
         auto operator++() -> SelectPuller&
         {
-            ++_cursor;
+            ++_puller;
             return *this;
         }
 
@@ -89,7 +89,7 @@ namespace Querying
         NO_DISCARD FORCE_INLINE
         auto operator*() -> ElementType
         {
-            return _projection.operator()(*_cursor);
+            return _projection.operator()(*_puller);
         }
 
 
@@ -97,19 +97,19 @@ namespace Querying
         auto Hint() const -> SizeHint
         {
             // SelectPuller does not change the number of elements.
-            return _cursor.Hint();
+            return _puller.Hint();
         }
     };
 
     /// <summary> Maps the elements of the collection using the specified projection. </summary>
-    /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
+    /// <typeparam name="C"> Type of the puller pointing to the elements. </typeparam>
     /// <typeparam name="P"> Type of the projection function. </typeparam>
     template<typename _C, typename _P>
     NO_DISCARD FORCE_INLINE 
-    auto operator|(_C&& cursor, Select<_P>&& tag) -> SelectPuller<_C, _P>
+    auto operator|(_C&& puller, Select<_P>&& tag) -> SelectPuller<_C, _P>
     {
         return SelectPuller<_C, _P>(
-            FORWARD(_C, cursor),
+            FORWARD(_C, puller),
             MOVE(tag)
         );
     }
@@ -136,38 +136,38 @@ namespace Querying
     };
 
     /// <summary> Filters the elements of the collection using the specified predicate. </summary>
-    /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
+    /// <typeparam name="C"> Type of the puller pointing to the elements. </typeparam>
     /// <typeparam name="P"> Type of the predicate function. </typeparam>
     template<typename C, typename P>
     class WherePuller final
     {
-        C _cursor;
+        C _puller;
         P _predicate;
 
         // Helper to advance to the next valid element.
         FORCE_INLINE
         void SkipInvalid()
         {
-            while (_cursor && !_predicate(*_cursor))
+            while (_puller && !_predicate(*_puller))
             {
-                ++_cursor;
+                ++_puller;
             }
         }
 
     public:
-        using ElementType = decltype(*_cursor);
+        using ElementType = decltype(*_puller);
 
         FORCE_INLINE explicit
-        WherePuller(C&& cursor, P&& predicate)
-            : _cursor{ MOVE(cursor) }
+        WherePuller(C&& puller, P&& predicate)
+            : _puller{ MOVE(puller) }
             , _predicate{ MOVE(predicate) }
         {
             SkipInvalid(); // Ensure we start on a valid element.
         }
 
         FORCE_INLINE explicit
-        WherePuller(C&& cursor, Where<P> where)
-            : _cursor{ MOVE(cursor) }
+        WherePuller(C&& puller, Where<P> where)
+            : _puller{ MOVE(puller) }
             , _predicate{ MOVE(where.Predicate) }
         {
             SkipInvalid(); // Ensure we start on a valid element.
@@ -176,13 +176,13 @@ namespace Querying
         NO_DISCARD FORCE_INLINE explicit
         operator bool() const
         {
-            return static_cast<bool>(_cursor); // Valid if the producer is valid.
+            return static_cast<bool>(_puller); // Valid if the producer is valid.
         }
 
         MAY_DISCARD FORCE_INLINE
         auto operator++() -> WherePuller&
         {
-            ++_cursor;
+            ++_puller;
             SkipInvalid();
             return *this;
         }
@@ -198,7 +198,7 @@ namespace Querying
         NO_DISCARD FORCE_INLINE
         auto operator*() -> ElementType
         {
-            return *_cursor;
+            return *_puller;
         }
 
         NO_DISCARD FORCE_INLINE
@@ -207,19 +207,19 @@ namespace Querying
             // WherePuller may reduce the number of elements.
             // Yet currently, there is no way to know how many elements will be skipped.
             // In the future an advanced hint system could be implemented.
-            return _cursor.Hint();
+            return _puller.Hint();
         }
     };
 
     /// <summary> Filters the elements of the collection using the specified predicate. </summary>
-    /// <typeparam name="_C"> Type of the cursor pointing to the elements. </typeparam>
+    /// <typeparam name="_C"> Type of the puller pointing to the elements. </typeparam>
     /// <typeparam name="P"> Type of the predicate function. </typeparam>
     template<typename _C, typename P>
     NO_DISCARD FORCE_INLINE
-    auto operator|(_C&& cursor, Where<P>&& where) -> WherePuller<_C, P>
+    auto operator|(_C&& puller, Where<P>&& where) -> WherePuller<_C, P>
     {
         return WherePuller<_C, P>(
-            FORWARD(_C, cursor),
+            FORWARD(_C, puller),
             MOVE(where)
         );
     }
@@ -237,24 +237,24 @@ namespace Querying
     };
 
     /// <summary> Counts the number of elements in the collection. </summary>
-    /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
+    /// <typeparam name="C"> Type of the puller pointing to the elements. </typeparam>
     template<typename _C> // Universal reference
     NO_DISCARD FORCE_INLINE
-    auto Count(_C&& cursor) -> int32
+    auto Count(_C&& puller) -> int32
     {
         int32 count = 0;
-        for (; cursor; ++cursor)
+        for (; puller; ++puller)
             count += 1;
         return count;
     }
 
     /// <summary> Counts the number of elements in the collection. </summary>
-    /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
+    /// <typeparam name="C"> Type of the puller pointing to the elements. </typeparam>
     template<typename _C>
     NO_DISCARD FORCE_INLINE
-    auto operator|(_C&& cursor, ToCount) -> int32
+    auto operator|(_C&& puller, ToCount) -> int32
     {
-        return Count(FORWARD(_C, cursor));
+        return Count(FORWARD(_C, puller));
     }
 
 
@@ -276,11 +276,11 @@ namespace Querying
     /// <summary> Checks if the collection contains the specified value. </summary>
     template<typename _C, typename T>
     NO_DISCARD FORCE_INLINE
-    auto ContainsPtr(_C&& cursor, const T& value) -> bool
+    auto ContainsPtr(_C&& puller, const T& value) -> bool
     {
-        for (; cursor; ++cursor)
+        for (; puller; ++puller)
         {
-            if (*cursor == value)
+            if (*puller == value)
                 return true;
         }
         return false;
@@ -289,9 +289,9 @@ namespace Querying
     /// <summary> Checks if the collection contains the specified value. </summary>
     template<typename _C, typename T>
     NO_DISCARD FORCE_INLINE
-    auto operator|(_C&& cursor, ToContainsPtr<T>&& contains) -> bool
+    auto operator|(_C&& puller, ToContainsPtr<T>&& contains) -> bool
     {
-        return ContainsPtr(FORWARD(_C, cursor), *contains.Value);
+        return ContainsPtr(FORWARD(_C, puller), *contains.Value);
     }
 
 
@@ -313,11 +313,11 @@ namespace Querying
     /// <summary> Checks if the collection contains the specified value. </summary>
     template<typename _C, typename T>
     NO_DISCARD FORCE_INLINE
-    auto Contains(_C&& cursor, T&& value) -> bool
+    auto Contains(_C&& puller, T&& value) -> bool
     {
-        for (; cursor; ++cursor)
+        for (; puller; ++puller)
         {
-            if (*cursor == value)
+            if (*puller == value)
                 return true;
         }
         return false;
@@ -326,9 +326,9 @@ namespace Querying
     /// <summary> Checks if the collection contains the specified value. </summary>
     template<typename _C, typename T>
     NO_DISCARD FORCE_INLINE
-    auto operator|(_C&& cursor, ToContains<T>&& contains) -> bool
+    auto operator|(_C&& puller, ToContains<T>&& contains) -> bool
     {
-        return Contains(FORWARD(_C, cursor), MOVE(contains.Value));
+        return Contains(FORWARD(_C, puller), MOVE(contains.Value));
     }
 
 
@@ -350,11 +350,11 @@ namespace Querying
     /// <summary> Checks if any element satisfies the predicate. </summary>
     template<typename _C, typename P>
     NO_DISCARD FORCE_INLINE
-    auto Any(_C&& cursor, P&& predicate) -> bool
+    auto Any(_C&& puller, P&& predicate) -> bool
     {
-        for (; cursor; ++cursor)
+        for (; puller; ++puller)
         {
-            const bool result = predicate(*cursor);
+            const bool result = predicate(*puller);
             if (result)
                 return true;
         }
@@ -363,9 +363,9 @@ namespace Querying
 
     /// <summary> Checks if any element satisfies the predicate. </summary>
     template<typename _C, typename P>
-    auto operator|(_C&& cursor, ToAny<P>&& any) -> bool
+    auto operator|(_C&& puller, ToAny<P>&& any) -> bool
     {
-        return Any(FORWARD(_C, cursor), MOVE(any.Predicate));
+        return Any(FORWARD(_C, puller), MOVE(any.Predicate));
     }
 
 
@@ -387,11 +387,11 @@ namespace Querying
     /// <summary> Checks if all elements satisfy the predicate. </summary>
     template<typename _C, typename P>
     NO_DISCARD FORCE_INLINE
-    auto All(_C&& cursor, P&& predicate) -> bool
+    auto All(_C&& puller, P&& predicate) -> bool
     {
-        for (; cursor; ++cursor)
+        for (; puller; ++puller)
         {
-            const bool result = predicate(*cursor);
+            const bool result = predicate(*puller);
             if (!result)
                 return false;
         }
@@ -401,9 +401,9 @@ namespace Querying
     /// <summary> Checks if all elements satisfy the predicate. </summary>
     template<typename _C, typename P>
     NO_DISCARD FORCE_INLINE
-    auto operator|(_C&& cursor, ToAll<P>&& all) -> bool
+    auto operator|(_C&& puller, ToAll<P>&& all) -> bool
     {
-        return All(FORWARD(_C, cursor), MOVE(all.Predicate));
+        return All(FORWARD(_C, puller), MOVE(all.Predicate));
     }
 
 
@@ -418,17 +418,17 @@ namespace Querying
     /// <summary> Returns a pointer to the first element. </summary>
     template<typename _C>
     NO_DISCARD FORCE_INLINE
-    auto First(_C&& cursor) -> decltype(&*cursor)
+    auto First(_C&& puller) -> decltype(&*puller)
     {
-        return (cursor) ? &*cursor : nullptr;
+        return (puller) ? &*puller : nullptr;
     }
 
     /// <summary> Returns a pointer to the first element. </summary>
     template<typename _C>
     NO_DISCARD FORCE_INLINE
-    auto operator|(_C&& cursor, ToFirst) -> decltype(&*cursor)
+    auto operator|(_C&& puller, ToFirst) -> decltype(&*puller)
     {
-        return First(FORWARD(_C, cursor));
+        return First(FORWARD(_C, puller));
     }
 
 
@@ -443,21 +443,21 @@ namespace Querying
     /// <summary> Returns a pointer to the last element. </summary>
     template<typename _C>
     NO_DISCARD FORCE_INLINE
-    auto Last(_C&& cursor) -> decltype(&*cursor)
+    auto Last(_C&& puller) -> decltype(&*puller)
     {
-        using ElementType = TRemoveRefT<decltype(*cursor)>;
+        using ElementType = TRemoveRefT<decltype(*puller)>;
 
         ElementType* last = nullptr;
-        for (; cursor; ++cursor)
-            last = &*cursor;
+        for (; puller; ++puller)
+            last = &*puller;
         return last;
     }
 
     /// <summary> Returns a pointer to the last element. </summary>
     template<typename _C>
     NO_DISCARD FORCE_INLINE
-    auto operator|(_C&& cursor, ToLast) -> decltype(&*cursor)
+    auto operator|(_C&& puller, ToLast) -> decltype(&*puller)
     {
-        return Last(FORWARD(_C, cursor));
+        return Last(FORWARD(_C, puller));
     }
 }

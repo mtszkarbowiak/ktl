@@ -654,7 +654,7 @@ public:
 
     // Pullers
 
-    /// <summary> Creates a cursor for the array. </summary>
+    /// <summary> Creates a puller for the array. </summary>
     NO_DISCARD FORCE_INLINE
     auto Values() -> MutPuller
     {
@@ -662,7 +662,7 @@ public:
         return MutPuller{ data, data + _count };
     }
 
-    /// <summary> Creates a cursor for the array. </summary>
+    /// <summary> Creates a puller for the array. </summary>
     NO_DISCARD FORCE_INLINE
     auto Values() const -> ConstPuller
     {

@@ -681,7 +681,7 @@ public:
 
         // End Condition
 
-        /// <summary> Check if the cursor reached the end of the array. </summary>
+        /// <summary> Check if the puller reached the end of the array. </summary>
         NO_DISCARD FORCE_INLINE explicit
         operator bool() const 
         {
@@ -699,7 +699,7 @@ public:
 
         // Movement
 
-        /// <summary> Moves the cursor to the next element. </summary>
+        /// <summary> Moves the puller to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
         auto operator++() -> MutPuller&
         {
@@ -707,7 +707,7 @@ public:
             return *this;
         }
 
-        /// <summary> Moves the cursor to the next element. </summary>
+        /// <summary> Moves the puller to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
         auto operator++(int) -> MutPuller
         {

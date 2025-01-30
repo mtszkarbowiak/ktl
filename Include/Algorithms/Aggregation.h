@@ -22,20 +22,20 @@ namespace Querying
         typename _C
     >
     NO_DISCARD
-    auto ToArray(_C&& cursor, const int32 capacity) -> Array<decltype(*cursor), A, G>
+    auto ToArray(_C&& puller, const int32 capacity) -> Array<decltype(*puller), A, G>
     {
-        using ElementType = decltype(*cursor);
+        using ElementType = decltype(*puller);
         Array<ElementType, A, G> array{ capacity };
 
-        for (; cursor; ++cursor)
-            array.Add(MOVE(*cursor));
+        for (; puller; ++puller)
+            array.Add(MOVE(*puller));
 
         return array;
     }
 
     /// <summary>
     /// Collects the elements of the collection into an array,
-    /// which capacity is predicted by the cursor hint.
+    /// which capacity is predicted by the puller hint.
     /// </summary>
     template<
         typename A = HeapAlloc,
@@ -43,10 +43,10 @@ namespace Querying
         typename _C
     >
     NO_DISCARD
-    auto ToArray(_C&& cursor) -> Array<decltype(*cursor), A, G>
+    auto ToArray(_C&& puller) -> Array<decltype(*puller), A, G>
     {
-        const int32 predictedCount = cursor.Hint().Max.ValueOr(0);
-        return ToArray<A, G, _C>(FORWARD(_C, cursor), predictedCount);
+        const int32 predictedCount = puller.Hint().Max.ValueOr(0);
+        return ToArray<A, G, _C>(FORWARD(_C, puller), predictedCount);
     }
 }
 
