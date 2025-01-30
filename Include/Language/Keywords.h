@@ -67,7 +67,7 @@
 #if CXX17_SUPPORT
     #define NO_DISCARD          [[nodiscard]]
     #define MAY_DISCARD         [[maybe_unused]]
-    #define FALLTHROUGH         [[fallthrough]]
+    #define FALLTHROUGH         [[fallthrough]];
     #define MAYBE_UNUSED        [[maybe_unused]]
     #define IF_CONSTEXPR        constexpr
 
