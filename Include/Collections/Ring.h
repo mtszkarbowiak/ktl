@@ -742,9 +742,9 @@ public:
     }
 
 
-    // Cursors
+    // Pullers
 
-    class MutCursor
+    class MutPuller
     {
         Ring* _ring;
         int32 _indexOfElement;
@@ -753,7 +753,7 @@ public:
 
     public:
         FORCE_INLINE explicit
-        MutCursor(Ring& ring)
+        MutPuller(Ring& ring)
             : _ring{ &ring }
             , _indexOfElement{ 0 }
             , _indexOfSlot{ ring.Head() }
@@ -815,7 +815,7 @@ public:
 
         /// <summary> Moves the cursor to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> MutCursor&
+        auto operator++() -> MutPuller&
         {
             _indexOfElement += 1;
             _indexOfSlot = (_indexOfSlot + 1) % _ring->_capacity;
@@ -825,9 +825,9 @@ public:
         /// <summary> Moves the cursor to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> MutCursor
+        auto operator++(int) -> MutPuller
         {
-            MutCursor copy{ *this };
+            MutPuller copy{ *this };
             _indexOfElement += 1;
             _indexOfSlot = (_indexOfSlot + 1) % _ring->_capacity;
             return copy;
@@ -837,28 +837,28 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const MutCursor& other) const -> bool
+        auto operator==(const MutPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement == other._indexOfElement;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const MutCursor& other) const -> bool
+        auto operator!=(const MutPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement != other._indexOfElement;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const MutCursor& other) const -> bool
+        auto operator<(const MutPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement < other._indexOfElement;
         }
     };
 
-    class ConstCursor
+    class ConstPuller
     {
         const Ring* _ring;
         int32       _indexOfElement;
@@ -866,7 +866,7 @@ public:
 
     public:
         FORCE_INLINE explicit
-        ConstCursor(const Ring& ring)
+        ConstPuller(const Ring& ring)
             : _ring{ &ring }
             , _indexOfElement{ 0 }
             , _indexOfSlot{ ring.Head() }
@@ -874,7 +874,7 @@ public:
         }
 
         FORCE_INLINE explicit
-        ConstCursor(const MutCursor& other)
+        ConstPuller(const MutPuller& other)
             : _ring{ other._ring }
             , _indexOfElement{ other._indexOfElement }
             , _indexOfSlot{ other._indexOfSlot }
@@ -924,7 +924,7 @@ public:
 
         /// <summary> Moves the cursor to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> ConstCursor&
+        auto operator++() -> ConstPuller&
         {
             _indexOfElement += 1;
             _indexOfSlot = (_indexOfSlot + 1) % _ring->_capacity;
@@ -934,9 +934,9 @@ public:
         /// <summary> Moves the cursor to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> ConstCursor
+        auto operator++(int) -> ConstPuller
         {
-            ConstCursor copy{ *this };
+            ConstPuller copy{ *this };
             _indexOfElement += 1;
             _indexOfSlot = (_indexOfSlot + 1) % _ring->_capacity;
             return copy;
@@ -946,21 +946,21 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const ConstCursor& other) const -> bool
+        auto operator==(const ConstPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement == other._indexOfElement;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const ConstCursor& other) const -> bool
+        auto operator!=(const ConstPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement != other._indexOfElement;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const ConstCursor& other) const -> bool
+        auto operator<(const ConstPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_ring == other._ring);
             return _indexOfElement < other._indexOfElement;
@@ -969,16 +969,16 @@ public:
 
     /// <summary> Creates a read-write cursor for the ring. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Values() -> MutCursor
+    auto Values() -> MutPuller
     {
-        return MutCursor{ *this };
+        return MutPuller{ *this };
     }
 
     /// <summary> Creates a read-only cursor for the ring. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstCursor
+    auto Values() const -> ConstPuller
     {
-        return ConstCursor{ *this };
+        return ConstPuller{ *this };
     }
 
 

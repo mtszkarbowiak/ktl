@@ -618,14 +618,14 @@ public:
     /// <remarks>
     /// Warning: Dereferencing the iterator returns a mutable bit reference, not a value.
     /// </remarks>
-    class MutCursor
+    class MutPuller
     {
         BitArray* _array;
         int32     _index;
 
     public:
         FORCE_INLINE explicit
-        MutCursor(BitArray& array)
+        MutPuller(BitArray& array)
             : _array{ &array }
             , _index{ 0 }
         {
@@ -635,21 +635,21 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const MutCursor& other) const -> bool
+        auto operator==(const MutPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const MutCursor& other) const -> bool
+        auto operator!=(const MutPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const MutCursor& other) const -> bool
+        auto operator<(const MutPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
@@ -701,7 +701,7 @@ public:
 
         /// <summary> Moves the cursor to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> MutCursor&
+        auto operator++() -> MutPuller&
         {
             ++_index;
             return *this;
@@ -709,9 +709,9 @@ public:
 
         /// <summary> Moves the cursor to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> MutCursor
+        auto operator++(int) -> MutPuller
         {
-            MutCursor copy{ *this };
+            MutPuller copy{ *this };
             ++_index;
             return copy;
         }
@@ -723,14 +723,14 @@ public:
     /// <remarks>
     /// Warning: Dereferencing the iterator returns a const bit reference, not a value.
     /// </remarks>
-    class ConstCursor
+    class ConstPuller
     {
         const BitArray* _array;
         int32           _index;
 
     public:
         FORCE_INLINE explicit
-        ConstCursor(const BitArray& array)
+        ConstPuller(const BitArray& array)
             : _array{ &array }
             , _index{ 0 }
         {
@@ -740,21 +740,21 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const ConstCursor& other) const -> bool
+        auto operator==(const ConstPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const ConstCursor& other) const -> bool
+        auto operator!=(const ConstPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index != other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const ConstCursor& other) const -> bool
+        auto operator<(const ConstPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
             return _index < other._index;
@@ -788,30 +788,30 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> ConstCursor&
+        auto operator++() -> ConstPuller&
         {
             ++_index;
             return *this;
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> ConstCursor
+        auto operator++(int) -> ConstPuller
         {
-            ConstCursor copy{ *this };
+            ConstPuller copy{ *this };
             ++_index;
             return copy;
         }
     };
 
     NO_DISCARD FORCE_INLINE
-    auto Values() -> MutCursor
+    auto Values() -> MutPuller
     {
-        return MutCursor{ *this };
+        return MutPuller{ *this };
     }
 
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstCursor
+    auto Values() const -> ConstPuller
     {
-        return ConstCursor{ *this };
+        return ConstPuller{ *this };
     }
 };

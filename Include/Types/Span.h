@@ -180,14 +180,14 @@ public:
     /// This is the most basic iterator which uses raw memory pointers and does not track the iterated collection.
     /// To be used for any collection storing elements linearly in memory.
     /// </remarks>
-    class MutCursor
+    class MutPuller
     {
         T* _begin{};
         T* _end{};
 
     public:
         FORCE_INLINE
-        MutCursor(T* begin, T* end)
+        MutPuller(T* begin, T* end)
             : _begin{ begin }
             , _end{ end }
         {
@@ -195,7 +195,7 @@ public:
         }
 
         FORCE_INLINE explicit
-        MutCursor(Span& span)
+        MutPuller(Span& span)
             : _begin{ span.Data() }
             , _end{ span.Data() + span.Count() }
         {
@@ -252,7 +252,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> MutCursor&
+        auto operator++() -> MutPuller&
         {
             ++_begin;
             return *this;
@@ -261,9 +261,9 @@ public:
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> MutCursor
+        auto operator++(int) -> MutPuller
         {
-            MutCursor copy = *this;
+            MutPuller copy = *this;
             ++(*this);
             return copy;
         }
@@ -272,19 +272,19 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const MutCursor& other) const -> bool
+        auto operator==(const MutPuller& other) const -> bool
         {
             return _begin == other._begin && _end == other._end;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const MutCursor& other) const -> bool
+        auto operator!=(const MutPuller& other) const -> bool
         {
             return _begin != other._begin || _end != other._end;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const MutCursor& other) const -> bool
+        auto operator<(const MutPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_end == other._end); // Enumerators must be of the same span to be compared.
             return _begin < other._begin;
@@ -296,14 +296,14 @@ public:
     /// This is the most basic iterator which uses raw memory pointers and does not track the iterated collection.
     /// To be used for any collection storing elements linearly in memory.
     /// </remarks>
-    class ConstCursor
+    class ConstPuller
     {
         const T* _begin{};
         const T* _end{};
 
     public:
         FORCE_INLINE
-        ConstCursor(const T* begin, const T* end)
+        ConstPuller(const T* begin, const T* end)
             : _begin{ begin }
             , _end{ end }
         {
@@ -311,14 +311,14 @@ public:
         }
 
         FORCE_INLINE explicit
-        ConstCursor(const Span& span)
+        ConstPuller(const Span& span)
             : _begin{ span.Data() }
             , _end{ span.Data() + span.Count() }
         {
         }
 
         FORCE_INLINE explicit
-        ConstCursor(const MutCursor& enumerator)
+        ConstPuller(const MutPuller& enumerator)
             : _begin{ enumerator._begin }
             , _end{ enumerator._end }
         {
@@ -363,7 +363,7 @@ public:
 
         /// <summary> Moves the enumerator to the next element. </summary>
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> ConstCursor&
+        auto operator++() -> ConstPuller&
         {
             ++_begin;
             return *this;
@@ -372,9 +372,9 @@ public:
         /// <summary> Moves the enumerator to the next element. </summary>
         /// <remarks> Prefixed increment operator is faster. </remarks>
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> ConstCursor
+        auto operator++(int) -> ConstPuller
         {
-            ConstCursor copy = *this;
+            ConstPuller copy = *this;
             ++(*this);
             return copy;
         }
@@ -383,19 +383,19 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const MutCursor& other) const -> bool
+        auto operator==(const MutPuller& other) const -> bool
         {
             return _begin == other._begin && _end == other._end;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const MutCursor& other) const -> bool
+        auto operator!=(const MutPuller& other) const -> bool
         {
             return _begin != other._begin || _end != other._end;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const MutCursor& other) const -> bool
+        auto operator<(const MutPuller& other) const -> bool
         {
             ASSERT_COLLECTION_SAFE_ACCESS(_end == other._end); // Enumerators must be of the same span to be compared.
             return _begin < other._begin;
@@ -405,15 +405,15 @@ public:
 
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Values() -> MutCursor
+    auto Values() -> MutPuller
     {
-        return MutCursor{ *this };
+        return MutPuller{ *this };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstCursor
+    auto Values() const -> ConstPuller
     {
-        return ConstCursor{ *this };
+        return ConstPuller{ *this };
     }
 };

@@ -14,7 +14,7 @@
 
 namespace Querying
 {
-    // Utility Cursors
+    // Utility Pullers
 
     // Mapping
 
@@ -39,7 +39,7 @@ namespace Querying
     /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
     /// <typeparam name="P"> Type of the projection function. </typeparam>
     template<typename C, typename P>
-    class SelectCursor final
+    class SelectPuller final
     {
         C _cursor;
         P _projection;
@@ -48,7 +48,7 @@ namespace Querying
         using ElementType = decltype(_projection.operator()(*_cursor));
         
         FORCE_INLINE explicit
-        SelectCursor(
+        SelectPuller(
             C&& cursor,
             P&& projection)
             : _cursor{ MOVE(cursor) }
@@ -57,7 +57,7 @@ namespace Querying
         }
 
         FORCE_INLINE explicit
-        SelectCursor(
+        SelectPuller(
             C&& producer,
             Select<P> select)
             : _cursor{ MOVE(producer) }
@@ -72,14 +72,14 @@ namespace Querying
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> SelectCursor&
+        auto operator++() -> SelectPuller&
         {
             ++_cursor;
             return *this;
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> SelectCursor&
+        auto operator++(int) -> SelectPuller&
         {
             auto copy = *this;
             ++*this;
@@ -96,7 +96,7 @@ namespace Querying
         NO_DISCARD FORCE_INLINE
         auto Hint() const -> SizeHint
         {
-            // SelectCursor does not change the number of elements.
+            // SelectPuller does not change the number of elements.
             return _cursor.Hint();
         }
     };
@@ -106,9 +106,9 @@ namespace Querying
     /// <typeparam name="P"> Type of the projection function. </typeparam>
     template<typename _C, typename _P>
     NO_DISCARD FORCE_INLINE 
-    auto operator|(_C&& cursor, Select<_P>&& tag) -> SelectCursor<_C, _P>
+    auto operator|(_C&& cursor, Select<_P>&& tag) -> SelectPuller<_C, _P>
     {
-        return SelectCursor<_C, _P>(
+        return SelectPuller<_C, _P>(
             FORWARD(_C, cursor),
             MOVE(tag)
         );
@@ -139,7 +139,7 @@ namespace Querying
     /// <typeparam name="C"> Type of the cursor pointing to the elements. </typeparam>
     /// <typeparam name="P"> Type of the predicate function. </typeparam>
     template<typename C, typename P>
-    class WhereCursor final
+    class WherePuller final
     {
         C _cursor;
         P _predicate;
@@ -158,7 +158,7 @@ namespace Querying
         using ElementType = decltype(*_cursor);
 
         FORCE_INLINE explicit
-        WhereCursor(C&& cursor, P&& predicate)
+        WherePuller(C&& cursor, P&& predicate)
             : _cursor{ MOVE(cursor) }
             , _predicate{ MOVE(predicate) }
         {
@@ -166,7 +166,7 @@ namespace Querying
         }
 
         FORCE_INLINE explicit
-        WhereCursor(C&& cursor, Where<P> where)
+        WherePuller(C&& cursor, Where<P> where)
             : _cursor{ MOVE(cursor) }
             , _predicate{ MOVE(where.Predicate) }
         {
@@ -180,7 +180,7 @@ namespace Querying
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> WhereCursor&
+        auto operator++() -> WherePuller&
         {
             ++_cursor;
             SkipInvalid();
@@ -188,7 +188,7 @@ namespace Querying
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> WhereCursor
+        auto operator++(int) -> WherePuller
         {
             auto copy = *this;
             ++*this;
@@ -204,7 +204,7 @@ namespace Querying
         NO_DISCARD FORCE_INLINE
         auto Hint() const -> SizeHint
         {
-            // WhereCursor may reduce the number of elements.
+            // WherePuller may reduce the number of elements.
             // Yet currently, there is no way to know how many elements will be skipped.
             // In the future an advanced hint system could be implemented.
             return _cursor.Hint();
@@ -216,9 +216,9 @@ namespace Querying
     /// <typeparam name="P"> Type of the predicate function. </typeparam>
     template<typename _C, typename P>
     NO_DISCARD FORCE_INLINE
-    auto operator|(_C&& cursor, Where<P>&& where) -> WhereCursor<_C, P>
+    auto operator|(_C&& cursor, Where<P>&& where) -> WherePuller<_C, P>
     {
-        return WhereCursor<_C, P>(
+        return WherePuller<_C, P>(
             FORWARD(_C, cursor),
             MOVE(where)
         );
