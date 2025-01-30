@@ -26,16 +26,16 @@ public:
 
     class Context
     {
-        byte* _data;
-        int32 _size;
+        byte* _arenaPtr;
+        int32 _arenaSize;
         int32 _bump;
         int32 _alignment;
 
     public:
         FORCE_INLINE explicit
-        Context(byte* data, const int32 size, const int32 alignment = sizeof(void*))
-            : _data{ data }
-            , _size{ size }
+        Context(byte* arenaPtr, const int32 arenaSize, const int32 alignment = sizeof(void*))
+            : _arenaPtr{ arenaPtr }
+            , _arenaSize{ arenaSize }
             , _bump{ 0 }
             , _alignment{ alignment }
         {
@@ -46,15 +46,15 @@ public:
         {
             const int32 newOffset = _bump + size;
 
-            if (newOffset > _size)
+            if (newOffset > _arenaSize)
             {
                 return 0;
             }
 
-            result = _data + _bump;
+            result = _arenaPtr + _bump;
             _bump = newOffset;
 
-            //TODO(mtszkarbowiak) Add alignment support.
+            //TODO(mtszkarbowiak) Add alignment support to BumpAlloc.
 
             return size;
         }
@@ -68,7 +68,7 @@ public:
         NO_DISCARD FORCE_INLINE
         auto FreeSpace() const -> int32
         {
-            return _size - _bump;
+            return _arenaSize - _bump;
         }
     };
 
@@ -117,8 +117,11 @@ public:
         MAY_DISCARD FORCE_INLINE
         auto operator=(const Data& other) -> Data&
         {
+            ASSERT_ALLOCATOR_SAFETY(_data == nullptr); // Active allocation can never be overwritten!
+
             _context = other._context;
             _data    = other._data;
+
             return *this;
         }
 
@@ -127,6 +130,8 @@ public:
         {
             if (this != &other)
             {
+                ASSERT_ALLOCATOR_SAFETY(_data == nullptr); // Active allocation can never be overwritten!
+
                 _context = other._context;
                 _data    = other._data;
                 other._context = nullptr;

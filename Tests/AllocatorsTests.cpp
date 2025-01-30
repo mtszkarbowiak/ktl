@@ -7,9 +7,12 @@
 
 #include <gtest/gtest.h>
 
+#include "Allocators/BumpAlloc.h"
 #include "Allocators/FixedAlloc.h"
 #include "Allocators/HeapAlloc.h"
-#include "Allocators/BumpAlloc.h"
+#include "Allocators/LimiterAlloc.h"
+#include "Allocators/PolymorphicAlloc.h"
+#include "Collections/Array.h"
 #include "Math/Arithmetic.h"
 
 TEST(CapacityMath, Pow2)
@@ -92,4 +95,67 @@ TEST(BumpAlloc, AllocationCycle)
         GTEST_ASSERT_EQ(alloc.Get(), nullptr);
     }
     context.Reset();
+}
+
+TEST(PolymorphicAlloc, AllocationCycle)
+{
+    using TestInt                  = int64;
+    constexpr int32 BufferCapacity = 32;
+    constexpr int32 BufferMemory   = BufferCapacity * sizeof(TestInt);
+    using TestPolymorphicAllocData = PolymorphicAlloc<FixedAlloc<BufferMemory>, HeapAlloc>::Data;
+
+    // 0. Declare the polymorphic allocator.
+    TestPolymorphicAllocData alloc;
+    GTEST_ASSERT_TRUE(alloc.MovesItems()); // Empty polymorphic allocator should be able to move items, it's empty.
+
+    // 1. Test the polymorphic allocator, using the main allocator - FixedAlloc.
+    const int32 allocated = alloc.Allocate(BufferMemory);
+    GTEST_ASSERT_GE(allocated, BufferMemory);
+    GTEST_ASSERT_FALSE(alloc.MovesItems()); // If the main allocator is engaged, the polymorphic allocator should not be able to move items.
+    alloc.Free();
+
+    // 2. Test the polymorphic allocator, using the backup allocator - HeapAlloc.
+    const int32 allocated2 = alloc.Allocate(BufferMemory * 2); // Ask for twice the memory to force the backup allocator.
+    GTEST_ASSERT_GE(allocated2, BufferMemory * 2);
+    GTEST_ASSERT_TRUE(alloc.MovesItems()); // If the backup allocator is engaged, the polymorphic allocator should be able to move items.
+    alloc.Free();
+
+    //TODO(mtszkarbowiak): Moving the polymorphic allocator.
+}
+
+TEST(PolymorphicAlloc, Array)
+{
+    using TestInt                  = int32;
+    constexpr int32 BufferCapacity = 32;
+    constexpr int32 BufferMemory   = BufferCapacity * sizeof(TestInt);
+    using TestPolymorphicAlloc     = PolymorphicAlloc<FixedAlloc<BufferMemory>, HeapAlloc>;
+
+    Array<TestInt, TestPolymorphicAlloc> array;
+    for (TestInt i = 0; i < BufferCapacity; ++i)
+    {
+        array.Add(i);
+    }
+    GTEST_ASSERT_EQ(array.Count(), BufferCapacity);
+
+    for (TestInt i = BufferCapacity; i < (BufferCapacity * 8); ++i)
+    {
+        array.Add(i);
+    }
+    GTEST_ASSERT_EQ(array.Count(), BufferCapacity * 8);
+}
+
+TEST(LimiterAlloc, AllocationCycle)
+{
+    LimiterAlloc<HeapAlloc, 1024, 2048>::Data alloc; // Only 1kB - 2kB allocations allowed.
+
+    const int32 allocated1 = alloc.Allocate(1); // 1 byte allocation must be allowed, boosted to 1kB.
+    GTEST_ASSERT_GE(allocated1, 1024);
+    alloc.Free();
+
+    const int32 allocated2 = alloc.Allocate(4096); // 4kB allocation must not be allowed.
+    GTEST_ASSERT_EQ(allocated2, 0);
+
+    const int32 allocated3 = alloc.Allocate(1024); // 1kB allocation must be allowed.
+    GTEST_ASSERT_GE(allocated3, 1024);
+    alloc.Free();
 }

@@ -257,6 +257,8 @@ public:
     using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, DoubleGrowth>;
     using LoadFHelper = LoadFHelperOf<HASH_SETS_DEFAULT_SLACK_RATIO>;
 
+    constexpr static int32 SlotSize = sizeof(Slot);
+
 PRIVATE:
     AllocData _allocData{};
     int32     _capacity{};           // Number of slots
@@ -823,6 +825,11 @@ protected:
         }
         else
         {
+            _capacity = AllocHelper::Allocate(_allocData, other._capacity);
+            ASSERT(_capacity == other._capacity);
+
+            //TODO(mtszkarbowiak): Add rebuild on move.
+
             BulkOperations::MoveLinearContent<Slot>(
                 DATA_OF(Slot, other._allocData),
                 DATA_OF(Slot, _allocData),
@@ -833,9 +840,6 @@ protected:
                 other._capacity
             );
 
-            // It could be considered rebuilding the dictionary on move.
-
-            _capacity           = other._capacity;
             _elementCountCached = other._elementCountCached;
             _cellsCountCached   = other._cellsCountCached;
             other._allocData.Free();
@@ -939,7 +943,7 @@ public:
     }
 
 
-    // Cursors
+    // Pullers
 
 PRIVATE:
     /// <summary>
@@ -1005,14 +1009,14 @@ public:
     /// <remarks>
     /// Keys must never be modified, especially their hash.
     /// </remarks>
-    class KeyCursor
+    class KeyPuller
     {
         const Dictionary* _dictionary;
         int32             _index;
 
     public:
         FORCE_INLINE explicit
-        KeyCursor(const Dictionary& dictionary)
+        KeyPuller(const Dictionary& dictionary)
             : _dictionary{ &dictionary }
             , _index{ dictionary.SkipToOccupied(0) }
         {
@@ -1049,7 +1053,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> KeyCursor&
+        auto operator++() -> KeyPuller&
         {
             ++_index;
             _index = _dictionary->SkipToOccupied(_index);
@@ -1057,7 +1061,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> KeyCursor
+        auto operator++(int) -> KeyPuller
         {
             auto copy = *this;
             ++*this;
@@ -1068,20 +1072,20 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const KeyCursor& other) const -> bool
+        auto operator==(const KeyPuller& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const KeyCursor& other) const -> bool
+        auto operator!=(const KeyPuller& other) const -> bool
         {
             return !(*this == other);
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const KeyCursor& other) const -> bool
+        auto operator<(const KeyPuller& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index < other._index;
@@ -1091,14 +1095,14 @@ public:
     /// <summary>
     /// Enumerates over the values present in the dictionary, allowing modification.
     /// </summary>
-    class MutValueCursor
+    class MutValuePuller
     {
         Dictionary* _dictionary;
         int32       _index;
 
     public:
         FORCE_INLINE explicit
-        MutValueCursor(Dictionary& dictionary)
+        MutValuePuller(Dictionary& dictionary)
             : _dictionary{ &dictionary }
             , _index{ dictionary.SkipToOccupied(0) }
         {
@@ -1147,7 +1151,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> MutValueCursor&
+        auto operator++() -> MutValuePuller&
         {
             ++_index;
             _index = _dictionary->SkipToOccupied(_index);
@@ -1155,7 +1159,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> MutValueCursor
+        auto operator++(int) -> MutValuePuller
         {
             auto copy = *this;
             ++*this;
@@ -1166,20 +1170,20 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const MutValueCursor& other) const -> bool
+        auto operator==(const MutValuePuller& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const MutValueCursor& other) const -> bool
+        auto operator!=(const MutValuePuller& other) const -> bool
         {
             return !(*this == other);
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const MutValueCursor& other) const -> bool
+        auto operator<(const MutValuePuller& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index < other._index;
@@ -1189,14 +1193,14 @@ public:
     /// <summary>
     /// Enumerates over the values present in the dictionary, allowing only read access.
     /// </summary>
-    class ConstValueCursor
+    class ConstValuePuller
     {
         const Dictionary* _dictionary;
         int32             _index;
 
     public:
         FORCE_INLINE explicit
-        ConstValueCursor(const Dictionary& dictionary)
+        ConstValuePuller(const Dictionary& dictionary)
             : _dictionary{ &dictionary }
             , _index{ dictionary.SkipToOccupied(0) }
         {
@@ -1233,7 +1237,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> ConstValueCursor&
+        auto operator++() -> ConstValuePuller&
         {
             ++_index;
             _index = _dictionary->SkipToOccupied(_index);
@@ -1241,7 +1245,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> ConstValueCursor
+        auto operator++(int) -> ConstValuePuller
         {
             auto copy = *this;
             ++*this;
@@ -1252,20 +1256,20 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const ConstValueCursor& other) const -> bool
+        auto operator==(const ConstValuePuller& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const ConstValueCursor& other) const -> bool
+        auto operator!=(const ConstValuePuller& other) const -> bool
         {
             return !(*this == other);
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const ConstValueCursor& other) const -> bool
+        auto operator<(const ConstValuePuller& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index < other._index;
@@ -1275,7 +1279,7 @@ public:
     /// <summary>
     /// Enumerates over the key-value pairs present in the dictionary.
     /// </summary>
-    class MutPairCursor
+    class MutPairPuller
     {
         Dictionary* _dictionary;
         int32       _index;
@@ -1285,7 +1289,7 @@ public:
         using ConstPair = Pair<const K*, const V*>;
 
         FORCE_INLINE explicit
-        MutPairCursor(Dictionary& dictionary)
+        MutPairPuller(Dictionary& dictionary)
             : _dictionary{ &dictionary }
             , _index{ dictionary.SkipToOccupied(0) }
         {
@@ -1338,7 +1342,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> MutPairCursor&
+        auto operator++() -> MutPairPuller&
         {
             ++_index;
             _index = _dictionary->SkipToOccupied(_index);
@@ -1346,7 +1350,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> MutPairCursor
+        auto operator++(int) -> MutPairPuller
         {
             auto copy = *this;
             ++*this;
@@ -1357,27 +1361,27 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const MutPairCursor& other) const -> bool
+        auto operator==(const MutPairPuller& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const MutPairCursor& other) const -> bool
+        auto operator!=(const MutPairPuller& other) const -> bool
         {
             return !(*this == other);
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const MutPairCursor& other) const -> bool
+        auto operator<(const MutPairPuller& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index < other._index;
         }
     };
 
-    class ConstPairCursor
+    class ConstPairPuller
     {
         const Dictionary* _dictionary;
         int32             _index;
@@ -1386,7 +1390,7 @@ public:
         using ConstPair = Pair<const K*, const V*>;
 
         FORCE_INLINE explicit
-        ConstPairCursor(const Dictionary& dictionary)
+        ConstPairPuller(const Dictionary& dictionary)
             : _dictionary{ &dictionary }
             , _index{ dictionary.SkipToOccupied(0) }
         {
@@ -1425,7 +1429,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++() -> ConstPairCursor&
+        auto operator++() -> ConstPairPuller&
         {
             ++_index;
             _index = _dictionary->SkipToOccupied(_index);
@@ -1433,7 +1437,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> ConstPairCursor
+        auto operator++(int) -> ConstPairPuller
         {
             auto copy = *this;
             ++*this;
@@ -1444,20 +1448,20 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const ConstPairCursor& other) const -> bool
+        auto operator==(const ConstPairPuller& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const ConstPairCursor& other) const -> bool
+        auto operator!=(const ConstPairPuller& other) const -> bool
         {
             return !(*this == other);
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const ConstPairCursor& other) const -> bool
+        auto operator<(const ConstPairPuller& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._dictionary) == &_dictionary);
             return _index < other._index;
@@ -1466,33 +1470,33 @@ public:
 
 
     NO_DISCARD FORCE_INLINE
-    auto Keys() -> KeyCursor
+    auto Keys() -> KeyPuller
     {
-        return KeyCursor{ *this };
+        return KeyPuller{ *this };
     }
 
     NO_DISCARD FORCE_INLINE
-    auto Values() -> MutValueCursor
+    auto Values() -> MutValuePuller
     {
-        return MutValueCursor{ *this };
+        return MutValuePuller{ *this };
     }
 
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstValueCursor
+    auto Values() const -> ConstValuePuller
     {
-        return ConstValueCursor{ *this };
+        return ConstValuePuller{ *this };
     }
 
     NO_DISCARD FORCE_INLINE
-    auto Pairs() -> MutPairCursor
+    auto Pairs() -> MutPairPuller
     {
-        return MutPairCursor{ *this };
+        return MutPairPuller{ *this };
     }
 
     NO_DISCARD FORCE_INLINE
-    auto Pairs() const -> ConstPairCursor
+    auto Pairs() const -> ConstPairPuller
     {
-        return ConstPairCursor{ *this };
+        return ConstPairPuller{ *this };
     }
 
 

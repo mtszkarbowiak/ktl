@@ -50,8 +50,8 @@ public:
     using AllocData   = typename A::Data;
     using AllocHelper = AllocHelperOf<Element, A, ARRAY_DEFAULT_CAPACITY, G>;
 
-    using MutCursor   = typename Span<Element>::MutCursor;
-    using ConstCursor = typename Span<Element>::ConstCursor;
+    using MutPuller   = RawPuller<T>;
+    using ConstPuller = RawPuller<const T>;
 
 PRIVATE:
     AllocData _allocData{};
@@ -128,7 +128,7 @@ public:
             const int32 allocatedCapacity = AllocHelper::Allocate(newData, requiredCapacity);
 
             // Move the content before reassigning the capacity
-            if (_capacity > 0)
+            if (_count > 0)
             {
                 BulkOperations::MoveLinearContent<Element>(
                     DATA_OF(Element, _allocData),
@@ -139,10 +139,9 @@ public:
                     DATA_OF(Element, _allocData),
                     _count
                 );
-
-                _allocData.Free();
             }
 
+            _allocData.Free();
             _allocData = MOVE(newData);
             _capacity = allocatedCapacity;
         }
@@ -451,6 +450,13 @@ public:
         return Span<Element>{ DATA_OF(Element, _allocData), _count };
     }
 
+    /// <summary> Creates a read-only span of the stored elements. </summary>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto AsSpan() const noexcept -> Span<const Element>
+    {
+        return Span<const Element>{ DATA_OF(const Element, _allocData), _count };
+    }
+
     /// <summary>
     /// Adds one-by-one copies of the specified elements to the end of the array.
     /// Max one allocation is performed.
@@ -646,22 +652,22 @@ public:
     }
 
 
-    // Cursors
+    // Pullers
 
-    /// <summary> Creates a cursor for the array. </summary>
+    /// <summary> Creates a puller for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Values() -> MutCursor
+    auto Values() -> MutPuller
     {
         Element* data = DATA_OF(Element, _allocData);
-        return MutCursor{ data, data + _count };
+        return MutPuller{ data, data + _count };
     }
 
-    /// <summary> Creates a cursor for the array. </summary>
+    /// <summary> Creates a puller for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstCursor
+    auto Values() const -> ConstPuller
     {
         const Element* data = DATA_OF(const Element, _allocData);
-        return ConstCursor{ data, data + _count };
+        return ConstPuller{ data, data + _count };
     }
 
 

@@ -197,6 +197,8 @@ TYPED_TEST(HashSetFixture, ElementsManipulation)
     set.Compact();
     GTEST_ASSERT_EQ(set.Count(), 1);
     GTEST_ASSERT_EQ(set.CellCount(), 1);
+
+    //TODO(mtszkarbowiak): Lifecycle tests?
 };
 
 

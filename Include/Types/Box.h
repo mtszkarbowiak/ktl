@@ -265,11 +265,6 @@ public:
     // Constraints
 
     static_assert(A::IsNullable, "Allocator must be nullable.");
-
-    static_assert(!std::is_reference<T>                ::value, "Type must not be a reference.");
-    static_assert(!std::is_const<T>                    ::value, "Type must not be a const-qualified type.");
-    static_assert(std::is_move_constructible<T>        ::value, "Type must be move-constructible.");
-    static_assert(std::is_destructible<T>              ::value, "Type must be destructible.");
-    static_assert(std::is_nothrow_move_constructible<T>::value, "Type must be nothrow move-constructible.");
-    static_assert(std::is_nothrow_destructible<T>      ::value, "Type must be nothrow destructible.");
+    static_assert(!TIsRefV<T>,   "Type must not be a reference.");
+    static_assert(!TIsConstV<T>, "Type must not be a const-qualified type.");
 };

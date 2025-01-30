@@ -26,6 +26,8 @@ JobScheduler::JobScheduler(const int32 workers)
 
 JobScheduler::~JobScheduler()
 {
+    WaitAll();
+
     _running = false;
 
     {
@@ -120,9 +122,9 @@ void JobScheduler::Wait(const JobLabel label)
         {
 			jobRunning = false; // Reset the flag.
             std::unique_lock<std::mutex> lock{ _jobs.mutex };
-            for (auto jobCursor = _jobs.queue.Values(); jobCursor; ++jobCursor)
+            for (auto jobPuller = _jobs.queue.Values(); jobPuller; ++jobPuller)
             {
-                if (jobCursor->label == label)
+                if (jobPuller->label == label)
                 {
                     jobRunning = true;
                     break;

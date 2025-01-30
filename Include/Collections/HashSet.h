@@ -55,6 +55,8 @@ public:
     using AllocHelper = AllocHelperOf<Slot, A, HASH_SETS_DEFAULT_CAPACITY, DoubleGrowth>;
     using LoadFHelper = LoadFHelperOf<HASH_SETS_DEFAULT_SLACK_RATIO>;
 
+    constexpr static int32 SlotSize = sizeof(Slot);
+
 PRIVATE:
     AllocData _allocData{};
     int32     _capacity{};           // Number of slots
@@ -552,6 +554,11 @@ protected:
         }
         else
         {
+            _capacity = AllocHelper::Allocate(_allocData, other._capacity);
+            ASSERT(_capacity == other._capacity);
+
+            //TODO(mtszkarbowiak): Add rebuild on move.
+
             BulkOperations::MoveLinearContent<Slot>(
                 DATA_OF(Slot, other._allocData),
                 DATA_OF(Slot, _allocData),
@@ -561,8 +568,6 @@ protected:
                 DATA_OF(Slot, other._allocData),
                 other._capacity
             );
-
-            // It could be considered rebuilding the dictionary on move.
 
             _capacity = other._capacity;
             _elementCountCached = other._elementCountCached;
@@ -692,7 +697,7 @@ public:
     }
 
 
-    // Cursors
+    // Pullers
 
 PRIVATE:
     /// <summary>
@@ -719,9 +724,9 @@ PRIVATE:
 
 
 public:
-    /// <summary> Cursor for iterating over the elements of the set. </summary>
-    /// <remarks> <c>HashSet</c> does not have a read-write cursor. </remarks>
-    class ConstValueCursor
+    /// <summary> Puller for iterating over the elements of the set. </summary>
+    /// <remarks> <c>HashSet</c> does not have a read-write puller. </remarks>
+    class ConstValuePuller
     {
         const HashSet* _set;
         int32          _index;
@@ -729,7 +734,7 @@ public:
 
     public:
         FORCE_INLINE explicit
-        ConstValueCursor(const HashSet& set)
+        ConstValuePuller(const HashSet& set)
             : _set{ &set }
             , _index{ set.SkipToOccupied(0) }
         {
@@ -768,7 +773,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-            auto operator++() -> ConstValueCursor&
+            auto operator++() -> ConstValuePuller&
         {
             ++_index;
             _index = _set->SkipToOccupied(_index);
@@ -776,7 +781,7 @@ public:
         }
 
         MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> ConstValueCursor
+        auto operator++(int) -> ConstValuePuller
         {
             auto copy = *this;
             ++*this;
@@ -787,20 +792,20 @@ public:
         // Identity
 
         NO_DISCARD FORCE_INLINE
-        auto operator==(const ConstValueCursor& other) const -> bool
+        auto operator==(const ConstValuePuller& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._set) == &_set);
             return _index == other._index;
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator!=(const ConstValueCursor& other) const -> bool
+        auto operator!=(const ConstValuePuller& other) const -> bool
         {
             return !(*this == other);
         }
 
         NO_DISCARD FORCE_INLINE
-        auto operator<(const ConstValueCursor& other) const -> bool
+        auto operator<(const ConstValuePuller& other) const -> bool
         {
             ASSERT_ITERATOR_SAFETY(&(other._set) == &_set);
             return _index < other._index;
@@ -809,9 +814,9 @@ public:
 
 
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstValueCursor
+    auto Values() const -> ConstValuePuller
     {
-        return ConstValueCursor{ *this };
+        return ConstValuePuller{ *this };
     }
 
 
