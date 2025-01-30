@@ -50,8 +50,8 @@ public:
     using AllocData   = typename A::Data;
     using AllocHelper = AllocHelperOf<Element, A, ARRAY_DEFAULT_CAPACITY, G>;
 
-    using MutCursor   = typename Span<Element>::MutCursor;
-    using ConstCursor = typename Span<Element>::ConstCursor;
+    using MutPuller   = RawPuller<T>;
+    using ConstPuller = RawPuller<const T>;
 
 PRIVATE:
     AllocData _allocData{};
@@ -652,22 +652,22 @@ public:
     }
 
 
-    // Cursors
+    // Pullers
 
-    /// <summary> Creates a cursor for the array. </summary>
+    /// <summary> Creates a puller for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Values() -> MutCursor
+    auto Values() -> MutPuller
     {
         Element* data = DATA_OF(Element, _allocData);
-        return MutCursor{ data, data + _count };
+        return MutPuller{ data, data + _count };
     }
 
-    /// <summary> Creates a cursor for the array. </summary>
+    /// <summary> Creates a puller for the array. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstCursor
+    auto Values() const -> ConstPuller
     {
         const Element* data = DATA_OF(const Element, _allocData);
-        return ConstCursor{ data, data + _count };
+        return ConstPuller{ data, data + _count };
     }
 
 

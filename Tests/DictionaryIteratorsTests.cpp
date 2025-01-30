@@ -13,14 +13,14 @@
 #include "Debugging/LifecycleTracker.h"
 #include "Math/Stastics.h"
 
-TEST(HashSetCursors, Empty)
+TEST(HashSetPullers, Empty)
 {
     HashSet<int32> set;
     GTEST_ASSERT_EQ(set.Values().Hint().Min, 0);
     GTEST_ASSERT_EQ(set.Values().Hint().Max.Value(), 0);
 }
 
-TEST(HashSetCursors, Count)
+TEST(HashSetPullers, Count)
 {
     HashSet<int32> set;
     set.Add(1);
@@ -30,7 +30,7 @@ TEST(HashSetCursors, Count)
     GTEST_ASSERT_EQ(Querying::Count(set.Values()), 3);
 }
 
-TEST(DictionaryCursors, Empty)
+TEST(DictionaryPullers, Empty)
 {
     Dictionary<int32, int32> dict;
     GTEST_ASSERT_EQ(dict.Values().Hint().Min, 0);
@@ -44,7 +44,7 @@ TEST(DictionaryCursors, Empty)
     GTEST_ASSERT_EQ(Querying::Count(dict.Keys()), 0);
 }
 
-TEST(DictionaryCursors, Hint)
+TEST(DictionaryPullers, Hint)
 {
     Dictionary<int32, int32> dict;
     dict.Add(3, 0);
@@ -62,7 +62,7 @@ TEST(DictionaryCursors, Hint)
     GTEST_ASSERT_EQ(dict.Pairs().Hint().Max.Value(), 3);
 }
 
-TEST(DictionaryCursors, Count)
+TEST(DictionaryPullers, Count)
 {
     using namespace Querying;
 
@@ -84,7 +84,7 @@ TEST(DictionaryCursors, Count)
     GTEST_ASSERT_EQ(countPairs, 3);
 }
 
-TEST(DictionaryCursors, Sum)
+TEST(DictionaryPullers, Sum)
 {
     using namespace Querying;
     using namespace Statistics;
