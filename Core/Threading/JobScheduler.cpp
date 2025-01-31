@@ -30,13 +30,18 @@ JobScheduler::~JobScheduler()
 
     _running = false;
 
+    while (_joinableThreads != _threads.Count()) 
     {
-        std::unique_lock<std::mutex> lock{ _someJobs.mutex };
-        _someJobs.signal.notify_all();
-    }
-    {
-        std::unique_lock<std::mutex> lock{ _noMoreJobs.mutex };
-        _noMoreJobs.signal.notify_all();
+        {
+            std::unique_lock<std::mutex> lock{ _someJobs.mutex };
+            _someJobs.signal.notify_all();
+        }
+        {
+            std::unique_lock<std::mutex> lock{ _noMoreJobs.mutex };
+            _noMoreJobs.signal.notify_all();
+        }
+
+        std::this_thread::yield();
     }
 
     for (auto& thread : _threads)
@@ -90,6 +95,8 @@ void JobScheduler::WorkerLoop(const WorkerContext& workerContext)
             _someJobs.signal.wait(lock);
         }
     }
+
+    ++_joinableThreads;
 };
 
 void JobScheduler::WaitAll()
@@ -122,9 +129,9 @@ void JobScheduler::Wait(const JobLabel label)
         {
 			jobRunning = false; // Reset the flag.
             std::unique_lock<std::mutex> lock{ _jobs.mutex };
-            for (auto jobCursor = _jobs.queue.Values(); jobCursor; ++jobCursor)
+            for (auto jobPuller = _jobs.queue.Values(); jobPuller; ++jobPuller)
             {
-                if (jobCursor->label == label)
+                if (jobPuller->label == label)
                 {
                     jobRunning = true;
                     break;

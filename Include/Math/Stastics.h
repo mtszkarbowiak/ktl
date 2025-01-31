@@ -12,20 +12,20 @@
 namespace Statistics 
 {
     /// <summary>
-    /// Returns a pointer to the smallest element in the cursor.
+    /// Returns a pointer to the smallest element in the puller.
     /// </summary>
     template<typename _C>
     NO_DISCARD
-    auto Min(_C&& cursor) -> typename std::remove_reference<decltype(&*cursor)>::type
+    auto Min(_C&& puller) -> typename std::remove_reference<decltype(&*puller)>::type
     {
-        if (!cursor)
+        if (!puller)
             return nullptr;
 
-        auto* min = &*cursor;
+        auto* min = &*puller;
 
-        for (; cursor; ++cursor) {
-            if (*cursor < *min)
-                min = &*cursor;
+        for (; puller; ++puller) {
+            if (*puller < *min)
+                min = &*puller;
         }
 
         return min;
@@ -33,20 +33,20 @@ namespace Statistics
 
 
     /// <summary>
-    /// Returns a pointer to the biggest element in the cursor.
+    /// Returns a pointer to the biggest element in the puller.
     /// </summary>
     template<typename _C>
     NO_DISCARD
-    auto Max(_C&& cursor) -> typename std::remove_reference<decltype(&*cursor)>::type
+    auto Max(_C&& puller) -> typename std::remove_reference<decltype(&*puller)>::type
     {
-        if (!cursor)
+        if (!puller)
             return nullptr;
 
-        auto* min = &*cursor;
+        auto* min = &*puller;
 
-        for (; cursor; ++cursor) {
-            if (*cursor > *min)
-                min = &*cursor;
+        for (; puller; ++puller) {
+            if (*puller > *min)
+                min = &*puller;
         }
 
         return min;
@@ -54,43 +54,43 @@ namespace Statistics
 
 
     /// <summary>
-    /// Sums all elements of the cursor.
+    /// Sums all elements of the puller.
     /// </summary>
-    /// <param name="cursor"> The cursor to sum. If empty, identity (default ctor) is returned. </param>
+    /// <param name="puller"> The puller to sum. If empty, identity (default ctor) is returned. </param>
     template<typename _C>
     NO_DISCARD
-    auto Sum(_C&& cursor) -> std::decay_t<decltype(*cursor)>
+    auto Sum(_C&& puller) -> std::decay_t<decltype(*puller)>
     {
         // Note: The type must decay (remove reference and const) to avoid returning a reference to a temporary.
-        using ValueType = std::decay_t<decltype(*cursor)>;
+        using ValueType = std::decay_t<decltype(*puller)>;
 
         ValueType sum{};
-        for (; cursor; ++cursor)
-            sum += *cursor;
+        for (; puller; ++puller)
+            sum += *puller;
 
         return sum;
     }
 
     /// <summary>
-    /// Averages all elements of the cursor.
+    /// Averages all elements of the puller.
     /// </summary>
-    /// <param name="cursor"> The cursor to average. Must not be empty. </param>
+    /// <param name="puller"> The puller to average. Must not be empty. </param>
     template<typename _C>
     NO_DISCARD   
-    auto Average(_C&& cursor) -> std::decay_t<decltype(*cursor)>
+    auto Average(_C&& puller) -> std::decay_t<decltype(*puller)>
     {
-        ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(cursor)); // Enumerator must not be empty.
+        ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(puller)); // Enumerator must not be empty.
 
         // Note: The type must decay (remove reference and const) to avoid returning a reference to a temporary.
-        using ValueType = std::decay_t<decltype(*cursor)>;
+        using ValueType = std::decay_t<decltype(*puller)>;
 
-        ValueType sum{ *cursor };
+        ValueType sum{ *puller };
         int32 count = 1;
-        ++cursor;
+        ++puller;
 
-        for (; cursor; ++cursor)
+        for (; puller; ++puller)
         {
-            sum += *cursor;
+            sum += *puller;
             count += 1;
         }
 
@@ -109,30 +109,30 @@ namespace Statistics
 
     template<typename _C>
     NO_DISCARD
-    auto operator|(_C&& cursor, ToMin)
+    auto operator|(_C&& puller, ToMin)
     {
-        return Min(FORWARD(_C, cursor));
+        return Min(FORWARD(_C, puller));
     }
 
     template<typename _C>
     NO_DISCARD
-    auto operator|(_C&& cursor, ToMax)
+    auto operator|(_C&& puller, ToMax)
     {
-        return Max(FORWARD(_C, cursor));
+        return Max(FORWARD(_C, puller));
     }
 
     template<typename _C>
     NO_DISCARD
-    auto operator|(_C&& cursor, ToSum)
+    auto operator|(_C&& puller, ToSum)
     {
-        return Sum(FORWARD(_C, cursor));
+        return Sum(FORWARD(_C, puller));
     }
 
     template<typename _C>
     NO_DISCARD
-    auto operator|(_C&& cursor, ToAverage)
+    auto operator|(_C&& puller, ToAverage)
     {
-        return Average(FORWARD(_C, cursor));
+        return Average(FORWARD(_C, puller));
     }
 
 
@@ -140,28 +140,28 @@ namespace Statistics
     template<typename _CA, typename _CB>
     NO_DISCARD
     auto Rss(
-        _CA&& cursorA,
-        _CB&& cursorB
+        _CA&& pullerA,
+        _CB&& pullerB
     )
     {
-        using Number = decltype(*cursorA);
+        using Number = decltype(*pullerA);
 
         auto rss = Number{};
 
-        while (cursorA)
+        while (pullerA)
         {
-            ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(cursorB));
+            ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(pullerB));
 
-            const Number& a = *cursorA;
-            const Number& b = *cursorB;
+            const Number& a = *pullerA;
+            const Number& b = *pullerB;
 
             const auto residual        = b - a;
             const auto residualSquared = residual * residual;
 
             rss += residualSquared;
 
-            ++cursorA;
-            ++cursorB;
+            ++pullerA;
+            ++pullerB;
         }
 
         return rss;

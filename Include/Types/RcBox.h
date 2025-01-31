@@ -26,7 +26,7 @@ class RcBox
 
 public:
     NO_DISCARD FORCE_INLINE
-    auto Rc() const -> const Rc&
+    auto GetRc() const -> const Rc&
     {
         return _rc;
     }

@@ -18,17 +18,17 @@ While C++ provides an equivalent in the form of `std::ranges`, this comes with t
 This library abandons the concept of views entirely, as their potential benefits are outweighed by their complexity. However, it embraces the utility of sequential access tools.
 
 
-## Cursors
+## Pull-based Iterators
 
-> The term *cursor* is inspired by cursors in database management systems. The original name, enumerators, was replaced to avoid conflicts with `enum`.
+> In previous versions of the library, the term *cursor* and *enumerator* were used instead of *pull-based iterator*.
 
-Cursors are simple stateful objects that allow single-pass sequential access to all elements of a collection. While cursors effectively comply with STL forward-only iterators, they offer an additional feature: a length estimator.
+Pullers (pull iterators) are simple stateful objects that allow single-pass sequential access to all elements of a collection. Pullers API is inspired by the `IEnumerator<T>` interface in C#, but uses operator overloading to simplify the syntax and comply with C++ standards. One additional feature is the ability to provide a hint about the number of elements to be encountered.
 
 ```cpp
 template<typename T>
 class Collection
 {
-    class ValuesCursor
+    class ValuesPuller
     {
         // Checks if cursor points to an object
         auto operator bool() -> bool;
@@ -42,29 +42,29 @@ class Collection
         // ...
 
         // Returns length hint
-        auto Hint() const -> CursorHint;
+        auto Hint() const -> SizeHint;
     };
 
-    auto Values() -> ValuesCursor;
+    auto Values() -> ValuesPuller;
 
     // ...
 };
 ```
 
-`CursorHint` helps the user of the cursor estimate number of elements to be encountered. Thus it can use it to reserve space for incoming objects.
+`SizeHint` helps the user of the puller estimate number of elements to be encountered. Thus it can use it to reserve space for incoming objects.
 
-> Cursor Hint will be described in details once the API is stable.
+> *Size Hint* will be described in details once the API is stable.
 
 ### Loops
 
-Cursors can be used directly in for loops:
+Pullers can be used directly in for loops:
 
 ```cpp
 Collection<T> collection{};
 
-for (auto cursor = collection.Values(); cursor; ++cursor)
+for (auto puller = collection.Values(); puller; ++puller)
 {
-    T& element = *cursor;
+    T& element = *puller;
     //...
 }
 ```
@@ -72,13 +72,13 @@ for (auto cursor = collection.Values(); cursor; ++cursor)
 
 ## Queries
 
-Queries refer to a broad category of types and functions used to transform collection data. They operate on cursors as data sources, with naming conventions inspired by LINQ.
+Queries refer to a broad category of types and functions used to transform collection data. They operate on pullers as data sources, with naming conventions inspired by LINQ.
 
 ```cpp
 int sum = Sum(collection.Values());
 ```
 
-Query chaining is achieved using the bitwise OR operator (|), resembling the pipe operator in UNIX. The left side defines the source cursor, while the right side specifies an operation tag with any necessary metadata.
+Query chaining is achieved using the bitwise OR operator `|`, resembling the pipe operator in UNIX. The left side defines the source puller, while the right side specifies an operation tag with any necessary metadata.
 
 ```cpp
 int sum = collection.Values()
@@ -133,7 +133,7 @@ int sum = collection2.Values()
 
 #### `Select`
 
-`Select` transforms the object the cursor is currently pointing to into another object. It is one of the most fundamental queries. This query does not trigger evaluation by itself.
+`Select` transforms the object the puller is currently pointing to into another object. It is one of the most fundamental queries. This query does not trigger evaluation by itself.
 
 #### `Where`
 
@@ -141,18 +141,18 @@ int sum = collection2.Values()
 
 #### `Count`
 
-`Count` simply counts how many objects the cursor has pointed to. This query does not dereference the object. Generally, using this query in simple cases might be considered overkill as it will evaluate the entire cursor.
+`Count` simply counts how many objects the puller has pointed to. This query does not dereference the object. Generally, using this query in simple cases might be considered overkill as it will evaluate the entire puller.
 
 #### `First`*
 
-(Not yet implemented) First returns the first object the cursor points to. It evaluates the cursor until the first object is found.
+(Not yet implemented) First returns the first object the puller points to. It evaluates the puller until the first object is found.
 
 #### `ToArray<A, G>`
 
-`ToArray<A, G>` collects all objects the cursor points to and stores them in an array. This query evaluates the entire cursor.
+`ToArray<A, G>` collects all objects the puller points to and stores them in an array. This query evaluates the entire puller.
 
 
 ### Recommendations
 
-1. Always evaluate a query immediately after creating it, as some queries may require invoking the source cursor right after construction.
+1. Always evaluate a query immediately after creating it, as some queries may require invoking the source puller right after construction.
 2. Use the `To` prefix to distinguish collecting functions from other tags.
