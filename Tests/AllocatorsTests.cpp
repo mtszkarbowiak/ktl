@@ -159,3 +159,25 @@ TEST(LimiterAlloc, AllocationCycle)
     GTEST_ASSERT_GE(allocated3, 1024);
     alloc.Free();
 }
+
+TEST(BumpAlloc, Relocation)
+{
+    constexpr int32 arenaMemory = 4096;
+
+    byte arena[arenaMemory];
+    BumpAlloc::Context context{ arena, arenaMemory };
+
+    BumpAlloc::Data alloc{ context };
+
+    const int32 initSize = alloc.Allocate(1);
+    GTEST_ASSERT_EQ(initSize, 1);
+
+    constexpr int32 Sizes[] = { 64, arenaMemory / 2, arenaMemory };
+    for (const int32 request : Sizes)
+    {
+        const int32 size = alloc.Relocate(request);
+        GTEST_ASSERT_EQ(size, request);
+    }
+
+    alloc.Free();
+}
