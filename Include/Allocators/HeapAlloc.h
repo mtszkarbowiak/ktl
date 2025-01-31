@@ -97,6 +97,14 @@ public:
             return _ptr ? size : 0;
         }
 
+        NO_DISCARD FORCE_INLINE
+        auto Reallocate(const int32 size) -> int32
+        {
+            ASSERT_ALLOCATOR_SAFETY(_ptr != nullptr); // Active allocation must be present!
+            _ptr = static_cast<byte*>(REALLOC(_ptr, size));
+            return _ptr ? size : 0;
+        }
+
         FORCE_INLINE
         void Free()
         {
