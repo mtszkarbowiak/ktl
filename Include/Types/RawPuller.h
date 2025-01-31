@@ -74,13 +74,14 @@ public:
     NO_DISCARD FORCE_INLINE explicit
     operator bool() const
     {
-        return static_cast<bool>(_begin) && _begin < _end;
+        return _begin < _end;
     }
 
     /// <summary> Moves the enumerator to the next element. </summary>
     MAY_DISCARD FORCE_INLINE
     auto operator++() -> RawPuller&
     {
+        ASSERT_COLLECTION_SAFE_ACCESS(_begin < _end); // Iterator must not be at the end to be incremented.
         ++_begin;
         return *this;
     }
