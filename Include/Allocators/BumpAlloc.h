@@ -26,9 +26,10 @@ public:
 
     class Context
     {
-        byte* _arenaPtr;
-        int32 _arenaSize;
-        int32 _bump;
+        byte* _arenaPtr;   // Pointer to the beginning of the arena.
+        int32 _arenaSize;  // Total number of available bytes.
+        int32 _bump;       // Index of the next free byte.
+        int32 _lastAlloc;  // Index of the last allocation.
         int32 _alignment;
 
     public:
@@ -37,6 +38,7 @@ public:
             : _arenaPtr{ arenaPtr }
             , _arenaSize{ arenaSize }
             , _bump{ 0 }
+            , _lastAlloc{ 0 }
             , _alignment{ alignment }
         {
         }
@@ -51,11 +53,32 @@ public:
                 return 0;
             }
 
-            result = _arenaPtr + _bump;
-            _bump = newOffset;
+            result     = _arenaPtr + _bump;
+            _lastAlloc = _bump;
+            _bump      = newOffset;
 
             //TODO(mtszkarbowiak) Add alignment support to BumpAlloc.
 
+            return size;
+        }
+
+        NO_DISCARD FORCE_INLINE
+        auto Relocate(const int32 size, byte*& result) -> int32
+        {
+            // Check if incoming allocation has the same pointer as the last one.
+            byte* last = _arenaPtr + _lastAlloc;
+
+            if (result != last)
+                return 0;
+
+            // If the last allocation is the same as the incoming one, we can just bump the pointer.
+            const int32 prevSize = _bump - _lastAlloc;
+            const int32 newOffset = _lastAlloc + (size - prevSize);
+            if (newOffset > _arenaSize)
+            {
+                return 0;
+            }
+            _bump = newOffset;
             return size;
         }
 
@@ -159,6 +182,9 @@ public:
         NO_DISCARD FORCE_INLINE
         auto Relocate(const int32 size) -> int32
         {
+
+
+
             ASSERT_ALLOCATOR_SAFETY(_data != nullptr); // Active allocation must be present!
             return 0; // BumpAlloc does not support reallocation.
         }
