@@ -57,3 +57,19 @@ TEST(JobScheduler, WaitScheduled)
     const auto durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(then - now).count();
     GTEST_ASSERT_LT(durationMs, 1100);
 }
+
+//TEST(JobScheduler, Joining)
+//{
+//    for (int i = 0; i < 1000; ++i)
+//    {
+//        JobScheduler scheduler{ 4 };
+//
+//        const JobScheduler::JobLabel label1 = scheduler.Dispatch(TestJob<1, 100>{});
+//        const JobScheduler::JobLabel label2 = scheduler.Dispatch(TestJob<2, 100>{});
+//        const JobScheduler::JobLabel label3 = scheduler.Dispatch(TestJob<3, 100>{});
+//
+//        scheduler.Wait(label1);
+//        scheduler.Wait(label2);
+//        scheduler.Wait(label3);
+//    }
+//}
