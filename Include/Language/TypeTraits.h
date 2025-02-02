@@ -759,3 +759,12 @@ static constexpr bool THasMoveAssignV = THasMoveAssign<T>::Value;
 
 template<typename T>
 static constexpr bool TIsMoveableV = THasMoveCtorV<T> && THasMoveAssignV<T>;
+
+
+// Unerlying Type
+
+template<typename T>
+struct TUnderlyingType
+{
+    using Type = __underlying_type(T);
+};
