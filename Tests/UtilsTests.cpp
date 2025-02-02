@@ -10,6 +10,7 @@
 #include "Language/Templates.h"
 #include "Math/Hashing.h"
 #include "Types/Numbers.h"
+#include "Types/EnumPuller.h"
 #include "Types/RcBox.h"
 
 
@@ -140,4 +141,26 @@ TEST(RefCounted, RcBox)
         GTEST_ASSERT_TRUE(static_cast<bool>(read));
         GTEST_ASSERT_EQ(*read, 3);
     }
+}
+
+TEST(EnumPuller, Simple)
+{
+    enum class ExampleEnum : int32
+    {
+        A = 4, // Start at arbitrary value.
+        B,
+        C, // Increment by one.
+    };
+
+    using ExampleEnumPuller = EnumPuller<ExampleEnum, ExampleEnum::C, ExampleEnum::A>;
+
+    int32 count = 0, sum = 0;
+    for (ExampleEnumPuller it; it; ++it)
+    {
+        ++count;
+        sum += static_cast<int32>(*it);
+    }
+
+    GTEST_ASSERT_EQ(count, 3);
+    GTEST_ASSERT_EQ(sum, 4 + 5 + 6);
 }
