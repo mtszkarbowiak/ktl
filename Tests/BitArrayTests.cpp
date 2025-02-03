@@ -389,3 +389,17 @@ TEST(StaticBitArray, ValuesPuller)
         ++i;
     }
 }
+
+TEST(StaticBitArray, SetAll)
+{
+    constexpr int32 ElementCount = 12;
+    StaticBitArray<ElementCount> array{};
+
+    array.SetAll(true);
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(true, array.GetBit(i));
+
+    array.SetAll(false);
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(false, array.GetBit(i));
+}

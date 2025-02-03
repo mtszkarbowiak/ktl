@@ -148,11 +148,9 @@ public:
             return;
 
         const Block fillValue   = value ? ~Block{} : Block{};
-        const int32 blocksCount = BlocksForBits(BitCount);
 
-        Block* blocks = DATA_OF(Block, _allocData);
-        for (int32 i = 0; i < blocksCount; ++i)
-            blocks[i] = fillValue;
+        for (int32 i = 0; i < BlockCount; ++i)
+            _data[i] = fillValue;
     }
 
     
@@ -167,7 +165,7 @@ public:
     NO_DISCARD FORCE_INLINE
     auto Values() const -> BitConstPuller
     {
-        return BitConstPuller{ _data, 0, itCount };
+        return BitConstPuller{ _data, 0, BitCount };
     }
 };
 
