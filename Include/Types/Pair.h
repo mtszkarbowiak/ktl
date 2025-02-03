@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "Language/Keywords.h"
 
 /// <summary>
 /// Tuple of two elements, often used to represent a function mapping.
@@ -21,6 +22,23 @@ struct Pair
 {
     K Key;
     V Value;
-};
 
-// This type is not very advanced... The code ends here, I guess.
+
+    NO_DISCARD FORCE_INLINE constexpr
+    auto operator==(const Pair& other) const -> bool
+    {
+        return Key == other.Key && Value == other.Value;
+    }
+
+    NO_DISCARD FORCE_INLINE constexpr
+    auto operator!=(const Pair& other) const -> bool
+    {
+        return Key != other.Key || Value != other.Value;
+    }
+
+    NO_DISCARD FORCE_INLINE constexpr
+    auto operator<(const Pair& other) const -> bool
+    {
+        return Key < other.Key || (Key == other.Key && Value < other.Value);
+    }
+};
