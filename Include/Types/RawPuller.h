@@ -20,6 +20,8 @@ class RawPuller
     T* _end{};
 
 public:
+    RawPuller() = default;
+
     FORCE_INLINE
     RawPuller(T* begin, T* end)
         : _begin{ begin }
