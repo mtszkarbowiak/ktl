@@ -164,3 +164,60 @@ TEST(EnumPuller, Simple)
     GTEST_ASSERT_EQ(count, 3);
     GTEST_ASSERT_EQ(sum, 4 + 5 + 6);
 }
+
+
+TEST(CompilerIntrinsics, PopCount32)
+{
+    struct Case
+    {
+        uint32 Value;
+        int32 Expected;
+    };
+
+    const Case cases[] = {
+        { 0x00000000, 0 },  // All bits zero
+        { 0xFFFFFFFF, 32 }, // All bits set
+        { 0x00000001, 1 },  // Single bit set at LSB
+        { 0x80000000, 1 },  // Single bit set at MSB
+        { 0xAAAAAAAA, 16 }, // Alternating bits (1010...)
+        { 0x55555555, 16 }, // Alternating bits (0101...)
+        { 0x0F0F0F0F, 16 }, // Nibble pattern
+        { 0xF0F0F0F0, 16 }, // Inverse nibble pattern
+        { 0x12345678, 13 }, // Random pattern
+        { 0x7FFFFFFF, 31 }, // All bits set except MSB
+    };
+
+    for (const Case case_ : cases) 
+    {
+        const auto popCount = POP_COUNT32(case_.Value);
+        EXPECT_EQ(popCount, case_.Expected);
+    }
+}
+
+TEST(CompilerIntrinsics, PopCount64)
+{
+    struct Case
+    {
+        uint64 Value;
+        int32 Expected;
+    };
+
+    const Case cases[] = {
+        { 0x0000000000000000ULL, 0 },  // All bits zero
+        { 0xFFFFFFFFFFFFFFFFULL, 64 }, // All bits set
+        { 0x0000000000000001ULL, 1 },  // Single bit set at LSB
+        { 0x8000000000000000ULL, 1 },  // Single bit set at MSB
+        { 0xAAAAAAAAAAAAAAAAULL, 32 }, // Alternating bits (1010...)
+        { 0x5555555555555555ULL, 32 }, // Alternating bits (0101...)
+        { 0x0F0F0F0F0F0F0F0FULL, 32 }, // Nibble pattern
+        { 0xF0F0F0F0F0F0F0F0ULL, 32 }, // Inverse nibble pattern
+        { 0x123456789ABCDEF0ULL, 32 }, // Random pattern
+        { 0x7FFFFFFFFFFFFFFFULL, 63 }, // All bits set except MSB
+    };
+
+    for (const Case case_ : cases)
+    {
+        const auto popCount = POP_COUNT64(case_.Value);
+        EXPECT_EQ(popCount, case_.Expected);
+    }
+}
