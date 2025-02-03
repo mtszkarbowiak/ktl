@@ -12,6 +12,7 @@
 #include "Types/Numbers.h"
 #include "Types/EnumPuller.h"
 #include "Types/RcBox.h"
+#include "Types/RangePuller.h"
 
 
 TEST(TypeUtils, SwapByMoves)
@@ -220,4 +221,34 @@ TEST(CompilerIntrinsics, PopCount64)
         const auto popCount = POP_COUNT64(case_.Value);
         EXPECT_EQ(popCount, case_.Expected);
     }
+}
+
+
+TEST(RangePuller, EndOnly)
+{
+    RangePuller<int32> puller{ 10 };
+
+    int32 count = 0, sum = 0;
+    for (; puller; ++puller)
+    {
+        ++count;
+        sum += *puller;
+    }
+
+    GTEST_ASSERT_EQ(count, 10);
+    GTEST_ASSERT_EQ(sum, 45);
+}
+
+TEST(RangePuller, StartEnd)
+{
+    RangePuller<int32> puller{ 5, 10 };
+    int32 count = 0, sum = 0;
+    for (; puller; ++puller)
+    {
+        ++count;
+        sum += *puller;
+    }
+
+    GTEST_ASSERT_EQ(count, 5);
+    GTEST_ASSERT_EQ(sum, (5 + 6 + 7 + 8 + 9));
 }
