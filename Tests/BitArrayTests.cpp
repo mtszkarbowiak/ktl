@@ -306,3 +306,57 @@ TEST(BitArrayElementManipulation, StableRemoveMultipleBlocks)
         GTEST_ASSERT_EQ(i % 2 == 0, arrayOfOdds.GetBit(i));
     }
 }
+
+
+TEST(BitArrayPuller, BitReferenceOnly)
+{
+    BitArray<> array;
+    for (int32 i = 0; i < 128; ++i)
+        array.Add(i % 2 == 0);
+
+    for (int32 i = 0; i < 128; ++i) 
+    {
+        const bool current = array[i];
+        array[i] = !current;
+
+        const bool expected = i % 2 != 0;
+        GTEST_ASSERT_EQ(expected, array[i]);
+    }
+}
+
+TEST(BitArrayPuller, ConstPuller)
+{
+    BitArray<> array;
+    for (int32 i = 0; i < 128; ++i)
+        array.Add(i % 2 == 0);
+
+    auto puller = array.Values();
+    for (int32 i = 0; i < 128; ++i)
+    {
+        const bool current = *puller;
+        ++puller;
+        const bool expected = i % 2 == 0;
+        GTEST_ASSERT_EQ(expected, current);
+    }
+}
+
+TEST(BitArrayPuller, MutPuller)
+{
+    BitArray<> array;
+    for (int32 i = 0; i < 128; ++i)
+        array.Add(i % 2 == 0);
+
+    auto puller = array.Values();
+    for (int32 i = 0; i < 128; ++i)
+    {
+        bool current = *puller;
+        *puller = !current;
+        ++puller;
+    }
+
+    for (int32 i = 0; i < 128; ++i)
+    {
+        const bool expected = i % 2 != 0;
+        GTEST_ASSERT_EQ(expected, array[i]);
+    }
+}
