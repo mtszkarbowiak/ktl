@@ -9,7 +9,6 @@
 
 #include "Debugging/Assertions.h"
 #include "Language/Keywords.h"
-#include "Types/Numbers.h"
 #include "Types/SizeHint.h"
 
 /// <summary> Creates a pull iterator of consecutive numbers. </summary>
@@ -69,7 +68,7 @@ public:
     }
 
     NO_DISCARD FORCE_INLINE
-    auto operator*() const -> const T
+    auto operator*() const -> T
     {
         return _current;
     }
@@ -117,7 +116,7 @@ public:
     NO_DISCARD FORCE_INLINE
     auto operator!=(const RangePuller& other) const -> bool
     {
-        return !(*this == other);
+        return _current != other._current || _end != other._end;
     }
 
     NO_DISCARD FORCE_INLINE
@@ -131,4 +130,6 @@ public:
 
     static_assert(!TIsRefV<T>, "RawPuller cannot be used with references.");
     static_assert(!TIsConstV<T>, "RawPuller cannot be used with const types.");
+
+    //TODO(mtszkarbowiak): Constraint RangePuller to be used with numeric types only.
 };
