@@ -29,6 +29,7 @@ PRIVATE:
 
     // Lifecycle
 
+public:
     /// <summary> Initializes array with default values (unless fundamental type). </summary>
     FORCE_INLINE constexpr
     StaticArray() = default;

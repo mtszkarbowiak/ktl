@@ -210,8 +210,6 @@ public:
 
     // Element Access
 
-
-
     /// <summary> Accesses the bit at the specified index. </summary>
     /// <remarks>
     /// This method uses a proxy object to allow the assignment operator to be used.

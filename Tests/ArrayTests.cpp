@@ -10,6 +10,7 @@
 #include "Allocators/FixedAlloc.h"
 #include "Debugging/LifecycleTracker.h"
 #include "Collections/Array.h"
+#include "Collections/StaticArray.h"
 
 
 // Capacity Management
@@ -487,4 +488,31 @@ TEST(ArrayElementManipulation, RemoveStable)
         GTEST_ASSERT_EQ(array[4].Value, 5);
     }
     LIFECYCLE_TEST_OUT
+}
+
+
+TEST(StaticArray, BasicAssignment)
+{
+    constexpr int32 ElementCount = 12;
+
+    StaticArray<int32, ElementCount> array{};
+    for (int32 i = 0; i < ElementCount; ++i)
+        array[i] = i;
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(array[i], i);
+}
+
+TEST(StaticArray, ValuesPuller)
+{
+    constexpr int32 ElementCount = 12;
+    StaticArray<int32, ElementCount> array{};
+    for (int32 i = 0; i < ElementCount; ++i)
+        array[i] = i;
+
+    int32 i = 0;
+    for (auto puller = array.Values(); puller; ++puller)
+    {
+        GTEST_ASSERT_EQ(*puller, i);
+        ++i;
+    }
 }

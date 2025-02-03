@@ -9,6 +9,7 @@
 
 #include "Allocators/FixedAlloc.h"
 #include "Collections/BitArray.h"
+#include "Collections/StaticBitArray.h"
 
 
 // Capacity Management
@@ -358,5 +359,33 @@ TEST(BitArrayPuller, MutPuller)
     {
         const bool expected = i % 2 != 0;
         GTEST_ASSERT_EQ(expected, array[i]);
+    }
+}
+
+TEST(StaticBitArray, BasicAssignment)
+{
+    constexpr int32 ElementCount = 12;
+
+    StaticBitArray<ElementCount> array{};
+    for (int32 i = 0; i < ElementCount; ++i)
+        array.SetBit(i, i % 2 == 0);
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(i % 2 == 0, array.GetBit(i));
+}
+
+TEST(StaticBitArray, ValuesPuller)
+{
+    constexpr int32 ElementCount = 12;
+
+    StaticBitArray<ElementCount> array{};
+    for (int32 i = 0; i < ElementCount; ++i)
+        array.SetBit(i, i % 2 == 0);
+
+    int32 i = 0;
+    for (auto puller = array.Values(); puller; ++puller)
+    {
+        GTEST_ASSERT_EQ(*puller, i % 2 == 0);
+        ++i;
     }
 }
