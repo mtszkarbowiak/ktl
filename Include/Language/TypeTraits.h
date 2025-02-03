@@ -639,6 +639,38 @@ template<typename T>
 using TAddConstT = typename TAddConst<T>::Type;
 
 
+// --- Variadic Type Traits ---
+
+template<typename T, typename... Types>
+struct TGetIndex;
+
+template<typename T, typename TFirst, typename... Types>
+struct TGetIndex<T, TFirst, Types...>
+{
+    enum {
+        Value = (TIsSameV<T, TFirst>) ? (0) : (
+            (TGetIndex<T, Types...>::Value == -1) ? (-1) : (
+                1 + TGetIndex<T, Types...>::Value
+        ))
+    };
+};
+
+template<typename T, typename TLast>
+struct TGetIndex<T, TLast>
+{
+    enum { Value = (TIsSameV<T, TLast>) ? (0) : (-1) };
+};
+
+template<typename T>
+struct TGetIndex<T>
+{
+    enum { Value = (-1) };
+};
+
+template<typename T, typename... Types>
+static constexpr int TGetIndexV = TGetIndex<T, Types...>::Value;
+
+
 // --- Compiler Intrinsics ---
 
 // Enum Check

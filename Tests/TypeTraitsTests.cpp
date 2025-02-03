@@ -14,11 +14,13 @@
 // --- Tests for Identity ---
 static_assert(std::is_same<TIdentity<int>::Type, int>::value, "TIdentity test failed");
 
+
 // --- Tests for Flow Control ---
 static_assert(std::is_same<TConditionalT<true, int, float>, int>::value,    "TConditional test failed");
 static_assert(std::is_same<TConditionalT<false, int, float>, float>::value, "TConditional test failed");
 static_assert(std::is_same<TEnableIf<true, int>::Type, int>::value,         "TEnableIf test failed");
 static_assert(std::is_same<TDisableIf<false, int>::Type, int>::value,       "TDisableIf test failed");
+
 
 // --- Tests for Logic ---
 struct TrueTrait  { static constexpr bool Value = true; };
@@ -30,9 +32,11 @@ static_assert(TAndV<TrueTrait, FalseTrait> == false, "TAnd test failed");
 static_assert(TOrV<FalseTrait, TrueTrait>  == true,  "TOr test failed");
 static_assert(TOrV<FalseTrait, FalseTrait> == false, "TOr test failed");
 
+
 // --- Tests for Equality ---
 static_assert(TIsSameV<int, int>   == true,  "TIsSame test failed");
 static_assert(TIsSameV<int, float> == false, "TIsSame test failed");
+
 
 // --- Tests for Checkers ---
 static_assert(TIsLValRefV<int&>    == true,  "TIsLValRef test failed");
@@ -42,6 +46,7 @@ static_assert(TIsRefV<int&>        == true,  "TIsRef test failed");
 static_assert(TIsRefV<int&&>       == true,  "TIsRef test failed");
 static_assert(TIsPtrV<int*>        == true,  "TIsPtr test failed");
 static_assert(TIsFuncV<int(int)>   == true,  "TIsFunc test failed");
+
 
 // --- Tests for Type Modifiers ---
 static_assert(std::is_same<TRemoveRef<int&>::Type, int>::value,        "TRemoveRef test failed");
@@ -58,6 +63,15 @@ static_assert(std::is_same<TDecay<const volatile int>::Type, int>::value, "TDeca
 static_assert(std::is_same<TDecay<int[]>::Type, int*>::value,             "TDecay test failed");
 static_assert(std::is_same<TDecay<int[10]>::Type, int*>::value,           "TDecay test failed");
 static_assert(std::is_same<TDecay<int(int)>::Type, int(*)(int)>::value,   "TDecay test failed");
+
+
+// --- Tests for Variadic Type Traits ---
+static_assert(TGetIndexV<int32, int32> == 0,                "TGetIndex test failed: Single element");
+static_assert(TGetIndexV<int32, float, int32> == 1,         "TGetIndex test failed: Middle element");
+static_assert(TGetIndexV<int32, float, double, int32> == 2, "TGetIndex test failed: Last element");
+static_assert(TGetIndexV<int32, float, double> == -1,       "TGetIndex test failed: Missing element");
+static_assert(TGetIndexV<int32> == -1,                      "TGetIndex test failed: Empty list");
+
 
 // --- Tests for Compiler Intrinsics ---
 enum class SomeEnum{ A, B, };
