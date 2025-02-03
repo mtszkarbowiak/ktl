@@ -179,13 +179,13 @@ public:
     NO_DISCARD FORCE_INLINE
     auto Values() -> RawPuller<T>
     {
-        return  RawPuller<T>{ *this };
+        return RawPuller<T>{ begin(), end() };
     }
 
     /// <summary> Creates an enumerator for the array. </summary>
     NO_DISCARD FORCE_INLINE
     auto Values() const -> RawPuller<const T>
     {
-        return RawPuller<const T>{ *this };
+        return RawPuller<const T>{ cbegin(), cend() };
     }
 };
