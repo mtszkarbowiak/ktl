@@ -60,7 +60,8 @@ public:
     {
         union // Use union to avoid default construction of the value
         {
-            Value                   _value;
+            Value _value;
+            Dummy _dummy; // Ensure default ctor.
         };
 
         Nullable<Nullable<Key>> _key;

@@ -46,6 +46,7 @@ PRIVATE:
 
     Array<std::thread> _threads;
     std::atomic<bool>  _running{ true };
+    std::atomic<byte>  _joinableThreads{ 0 };
 
     struct
     {

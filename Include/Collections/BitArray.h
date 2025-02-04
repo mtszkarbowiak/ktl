@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Collections/CollectionsUtils.h"
+#include "Types/BitPuller.h"
 
 /// <summary>
 /// A specialized container for storing dynamically
@@ -209,58 +210,6 @@ public:
 
     // Element Access
 
-    /// <summary> Utility class that allows accessing the bit at the specified index using the assignment operator. </summary>
-    class MutBitRef final
-    {
-        BitArray* _array;
-        int32     _index;
-
-    public:
-        FORCE_INLINE explicit
-        MutBitRef(BitArray* array, const int32 index)
-            : _array{ array }
-            , _index{ index }
-        {
-        }
-
-        MAY_DISCARD FORCE_INLINE
-        auto operator=(const bool value) -> MutBitRef&
-        {
-            _array->SetBit(_index, value);
-            return *this;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        operator bool() const
-        {
-            return _array->GetBit(_index);
-        }
-    };
-
-    /// <summary> Utility class that allows accessing the bit at the specified index using the assignment operator. </summary>
-    class ConstBitRef final
-    {
-        const BitArray* _array;
-        int32           _index;
-
-    public:
-        FORCE_INLINE explicit
-        ConstBitRef(const BitArray* array, const int32 index)
-            : _array{ array }
-            , _index{ index }
-        {
-        }
-
-        auto operator=(bool value) -> ConstBitRef& = delete;
-
-        NO_DISCARD FORCE_INLINE
-        operator bool() const
-        {
-            return _array->GetBit(_index);
-        }
-    };
-
-
     /// <summary> Accesses the bit at the specified index. </summary>
     /// <remarks>
     /// This method uses a proxy object to allow the assignment operator to be used.
@@ -269,7 +218,9 @@ public:
     NO_DISCARD FORCE_INLINE
     auto operator[](const int32 index) const -> ConstBitRef
     {
-        return ConstBitRef{ this, index };
+        const int32 blockIndex = index / BitsPerBlock;
+        const int32 bitIndex   = index % BitsPerBlock;
+        return ConstBitRef{ DATA_OF(const Block, _allocData) + blockIndex, bitIndex };
     }
 
     /// <summary> Accesses the bit at the specified index. </summary>
@@ -280,7 +231,9 @@ public:
     NO_DISCARD FORCE_INLINE
     auto operator[](const int32 index) -> MutBitRef
     {
-        return MutBitRef{ this, index };
+        const int32 blockIndex = index / BitsPerBlock;
+        const int32 bitIndex   = index % BitsPerBlock;
+        return MutBitRef{ DATA_OF(Block, _allocData) + blockIndex, bitIndex };
     }
 
 
@@ -367,7 +320,7 @@ public:
         ++_bitCount;
         SetBit(bitIndex, value);
     }
-
+    
 
     /// <summary> Removes all bits from the array without freeing the allocation. </summary>
     FORCE_INLINE
@@ -612,206 +565,15 @@ public:
 
     // Iterators
 
-    /// <summary>
-    /// Iterator for the array which provides end condition and allows to iterate over the elements in a range-based for loop.
-    /// </summary>
-    /// <remarks>
-    /// Warning: Dereferencing the iterator returns a mutable bit reference, not a value.
-    /// </remarks>
-    class MutPuller
-    {
-        BitArray* _array;
-        int32     _index;
-
-    public:
-        FORCE_INLINE explicit
-        MutPuller(BitArray& array)
-            : _array{ &array }
-            , _index{ 0 }
-        {
-        }
-
-
-        // Identity
-
-        NO_DISCARD FORCE_INLINE
-        auto operator==(const MutPuller& other) const -> bool
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index == other._index;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        auto operator!=(const MutPuller& other) const -> bool
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index != other._index;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        auto operator<(const MutPuller& other) const -> bool
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index < other._index;
-        }
-
-
-        // Access
-
-        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        NO_DISCARD FORCE_INLINE
-        auto Hint() const -> SizeHint
-        {
-            const int32 remaining = _array->Count() - _index;
-            return { remaining, Nullable<::Index>{ remaining } };
-        }
-
-        NO_DISCARD FORCE_INLINE
-        auto operator*() -> MutBitRef
-        {
-            return MutBitRef{ _array, _index };
-        }
-
-        NO_DISCARD FORCE_INLINE
-        auto operator*() const -> ConstBitRef
-        {
-            return ConstBitRef{ _array, _index };
-        }
-
-
-        // End Condition
-
-        /// <summary> Check if the puller reached the end of the array. </summary>
-        NO_DISCARD FORCE_INLINE explicit
-        operator bool() const 
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
-            return _index < _array->_bitCount;
-        }
-
-        /// <summary> Returns the index of the current element. </summary>
-        NO_DISCARD FORCE_INLINE
-        auto Index() const -> int32
-        {
-            return _index;
-        }
-
-
-        // Movement
-
-        /// <summary> Moves the puller to the next element. </summary>
-        MAY_DISCARD FORCE_INLINE
-        auto operator++() -> MutPuller&
-        {
-            ++_index;
-            return *this;
-        }
-
-        /// <summary> Moves the puller to the next element. </summary>
-        MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> MutPuller
-        {
-            MutPuller copy{ *this };
-            ++_index;
-            return copy;
-        }
-    };
-
-    /// <summary>
-    /// Iterator for the array which provides end condition and allows to iterate over the elements in a range-based for loop.
-    /// </summary>
-    /// <remarks>
-    /// Warning: Dereferencing the iterator returns a const bit reference, not a value.
-    /// </remarks>
-    class ConstPuller
-    {
-        const BitArray* _array;
-        int32           _index;
-
-    public:
-        FORCE_INLINE explicit
-        ConstPuller(const BitArray& array)
-            : _array{ &array }
-            , _index{ 0 }
-        {
-        }
-
-
-        // Identity
-
-        NO_DISCARD FORCE_INLINE
-        auto operator==(const ConstPuller& other) const -> bool
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index == other._index;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        auto operator!=(const ConstPuller& other) const -> bool
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index != other._index;
-        }
-
-        NO_DISCARD FORCE_INLINE
-        auto operator<(const ConstPuller& other) const -> bool
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array == other._array);
-            return _index < other._index;
-        }
-
-
-        // Access
-
-        /// <summary> Returns the size hint about the numer of remaining elements. </summary>
-        NO_DISCARD FORCE_INLINE
-        auto Hint() const -> SizeHint
-        {
-            const int32 remaining = _array->Count() - _index;
-            return { remaining, Nullable<::Index>{ remaining } };
-        }
-
-        NO_DISCARD FORCE_INLINE
-        auto operator*() const -> ConstBitRef
-        {
-            return ConstBitRef{ _array, _index };
-        }
-
-
-        // End Condition and Movement
-
-        NO_DISCARD FORCE_INLINE explicit
-        operator bool() const 
-        {
-            ASSERT_COLLECTION_SAFE_ACCESS(_array != nullptr);
-            return _index < _array->_bitCount;
-        }
-
-        MAY_DISCARD FORCE_INLINE
-        auto operator++() -> ConstPuller&
-        {
-            ++_index;
-            return *this;
-        }
-
-        MAY_DISCARD FORCE_INLINE
-        auto operator++(int) -> ConstPuller
-        {
-            ConstPuller copy{ *this };
-            ++_index;
-            return copy;
-        }
-    };
-
     NO_DISCARD FORCE_INLINE
-    auto Values() -> MutPuller
+    auto Values() -> BitMutPuller
     {
-        return MutPuller{ *this };
+        return BitMutPuller{ DATA_OF(Block, _allocData), 0, _bitCount };
     }
 
     NO_DISCARD FORCE_INLINE
-    auto Values() const -> ConstPuller
+    auto Values() const -> BitConstPuller
     {
-        return ConstPuller{ *this };
+        return BitConstPuller{ DATA_OF(const Block, _allocData), 0, _bitCount };
     }
 };

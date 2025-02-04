@@ -9,6 +9,7 @@
 
 #include "Allocators/FixedAlloc.h"
 #include "Collections/BitArray.h"
+#include "Collections/StaticBitArray.h"
 
 
 // Capacity Management
@@ -305,4 +306,100 @@ TEST(BitArrayElementManipulation, StableRemoveMultipleBlocks)
         GTEST_ASSERT_EQ(i % 2 == 1, arrayOfEvens.GetBit(i));
         GTEST_ASSERT_EQ(i % 2 == 0, arrayOfOdds.GetBit(i));
     }
+}
+
+
+TEST(BitArrayPuller, BitReferenceOnly)
+{
+    BitArray<> array;
+    for (int32 i = 0; i < 128; ++i)
+        array.Add(i % 2 == 0);
+
+    for (int32 i = 0; i < 128; ++i) 
+    {
+        const bool current = array[i];
+        array[i] = !current;
+
+        const bool expected = i % 2 != 0;
+        GTEST_ASSERT_EQ(expected, array[i]);
+    }
+}
+
+TEST(BitArrayPuller, ConstPuller)
+{
+    BitArray<> array;
+    for (int32 i = 0; i < 128; ++i)
+        array.Add(i % 2 == 0);
+
+    auto puller = array.Values();
+    for (int32 i = 0; i < 128; ++i)
+    {
+        const bool current = *puller;
+        ++puller;
+        const bool expected = i % 2 == 0;
+        GTEST_ASSERT_EQ(expected, current);
+    }
+}
+
+TEST(BitArrayPuller, MutPuller)
+{
+    BitArray<> array;
+    for (int32 i = 0; i < 128; ++i)
+        array.Add(i % 2 == 0);
+
+    auto puller = array.Values();
+    for (int32 i = 0; i < 128; ++i)
+    {
+        bool current = *puller;
+        *puller = !current;
+        ++puller;
+    }
+
+    for (int32 i = 0; i < 128; ++i)
+    {
+        const bool expected = i % 2 != 0;
+        GTEST_ASSERT_EQ(expected, array[i]);
+    }
+}
+
+TEST(StaticBitArray, BasicAssignment)
+{
+    constexpr int32 ElementCount = 12;
+
+    StaticBitArray<ElementCount> array{};
+    for (int32 i = 0; i < ElementCount; ++i)
+        array.SetBit(i, i % 2 == 0);
+
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(i % 2 == 0, array.GetBit(i));
+}
+
+TEST(StaticBitArray, ValuesPuller)
+{
+    constexpr int32 ElementCount = 12;
+
+    StaticBitArray<ElementCount> array{};
+    for (int32 i = 0; i < ElementCount; ++i)
+        array.SetBit(i, i % 2 == 0);
+
+    int32 i = 0;
+    for (auto puller = array.Values(); puller; ++puller)
+    {
+        GTEST_ASSERT_EQ(*puller, i % 2 == 0);
+        ++i;
+    }
+}
+
+TEST(StaticBitArray, SetAll)
+{
+    constexpr int32 ElementCount = 12;
+    StaticBitArray<ElementCount> array{};
+
+    array.SetAll(true);
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(true, array.GetBit(i));
+
+    array.SetAll(false);
+    for (int32 i = 0; i < ElementCount; ++i)
+        GTEST_ASSERT_EQ(false, array.GetBit(i));
 }

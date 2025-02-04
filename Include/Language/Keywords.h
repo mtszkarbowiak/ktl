@@ -49,6 +49,20 @@
 #endif
 
 
+// Pop-Count Keywords
+
+#if defined(_MSC_VER)
+    #include <intrin.h>
+    #define POP_COUNT32(x)      static_cast<int>(__popcnt(x))
+    #define POP_COUNT64(x)      static_cast<int>(__popcnt64(x))
+
+#elif defined(__GNUC__) || defined(__clang__)
+    #define POP_COUNT32(x)      static_cast<int>(__builtin_popcount(x))
+    #define POP_COUNT64(x)      static_cast<int>(__builtin_popcountll(x))
+
+#endif
+
+
 
 // C++ Versions
 
@@ -67,7 +81,7 @@
 #if CXX17_SUPPORT
     #define NO_DISCARD          [[nodiscard]]
     #define MAY_DISCARD         [[maybe_unused]]
-    #define FALLTHROUGH         [[fallthrough]]
+    #define FALLTHROUGH         [[fallthrough]];
     #define MAYBE_UNUSED        [[maybe_unused]]
     #define IF_CONSTEXPR        constexpr
 

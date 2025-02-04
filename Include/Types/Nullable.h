@@ -10,6 +10,7 @@
 #include "Debugging/Assertions.h"
 #include "Language/Keywords.h"
 #include "Language/Templates.h"
+#include "Types/Dummy.h"
 
 /// <summary>
 /// Wrapper over a value type that can be assigned an additional null value.
@@ -45,6 +46,7 @@ PRIVATE:
     union
     {
         Element _value;
+        Dummy   _dummy; // Ensure default ctor.
     };
     int8 _nullLevel{ 1 };
 
