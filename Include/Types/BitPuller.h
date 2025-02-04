@@ -18,16 +18,16 @@
 /// </remarks>
 class BitMutPuller
 {
-    uint64* _blocks;
-    int32   _currentIndex;
-    int32   _endIndex;
+    BitsBlock* _blocks;
+    int32      _currentIndex;
+    int32      _endIndex;
 
     static constexpr int32 BitsPerBlock = sizeof(*_blocks) * 8;
 
 
 public:
     FORCE_INLINE explicit
-    BitMutPuller(uint64* blocks, const int32 beginIndex, const int32 endIndex)
+    BitMutPuller(BitsBlock* blocks, const int32 beginIndex, const int32 endIndex)
         : _blocks{ blocks }
         , _currentIndex{ beginIndex }
         , _endIndex{ endIndex }
@@ -132,16 +132,19 @@ public:
 /// </remarks>
 class BitConstPuller
 {
-    const uint64* _blocks;
-    int32         _currentIndex;
-    int32         _endIndex;
+    const BitsBlock* _blocks;
+    int32            _currentIndex;
+    int32            _endIndex;
 
     static constexpr int32 BitsPerBlock = sizeof(*_blocks) * 8;
 
 
 public:
     FORCE_INLINE explicit
-    BitConstPuller(const uint64* array, const int32 beginIndex, const int32 endIndex)
+    BitConstPuller(
+        const BitsBlock* array, 
+        const int32 beginIndex, 
+        const int32 endIndex)
         : _blocks{ array }
         , _currentIndex{ beginIndex }
         , _endIndex{ endIndex }

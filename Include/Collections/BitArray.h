@@ -42,30 +42,29 @@ class BitArray
 {
 public:
     /// <summary> Underlying data type used to store the bits. </summary>
-    using Block       = uint64;
     using AllocData   = typename A::Data;
-    using AllocHelper = AllocHelperOf<Block, A, ARRAY_DEFAULT_CAPACITY, G>;
+    using AllocHelper = AllocHelperOf<BitsBlock, A, ARRAY_DEFAULT_CAPACITY, G>;
 
 PRIVATE:
     AllocData _allocData{};
     int32     _blockCapacity{};
     int32     _bitCount{};
 
-    static constexpr int32 BytesPerBlock = sizeof(Block);
+    static constexpr int32 BytesPerBlock = sizeof(BitsBlock);
     static constexpr int32 BitsPerBlock  = BytesPerBlock * 8;
 
 
 protected:
     FORCE_INLINE
-    auto Data() -> Block*
+    auto Data() -> BitsBlock*
     {
-        return DATA_OF(Block, _allocData);
+        return DATA_OF(BitsBlock, _allocData);
     }
 
     FORCE_INLINE
-    auto Data() const -> const Block*
+    auto Data() const -> const BitsBlock*
     {
-        return DATA_OF(const Block, _allocData);
+        return DATA_OF(const BitsBlock, _allocData);
     }
 
 
@@ -149,9 +148,9 @@ public:
             const int32 oldBlocksCount = BlocksForBits(_bitCount);
             if (oldBlocksCount > 0)
             {
-                BulkOperations::MoveLinearContent<Block>(
-                    DATA_OF(Block, _allocData),
-                    DATA_OF(Block, newData),
+                BulkOperations::MoveLinearContent<BitsBlock>(
+                    DATA_OF(BitsBlock, _allocData),
+                    DATA_OF(BitsBlock, newData),
                     oldBlocksCount
                 );
             }
@@ -191,13 +190,13 @@ public:
 
         const int32 allocatedBlocksCapacity = AllocHelper::Allocate(newData, requiredBlocksCapacity);
 
-        BulkOperations::MoveLinearContent<Block>(
-            DATA_OF(Block, _allocData), 
-            DATA_OF(Block, newData), 
+        BulkOperations::MoveLinearContent<BitsBlock>(
+            DATA_OF(const BitsBlock, _allocData),
+            DATA_OF(BitsBlock,       newData),
             BlocksForBits(_bitCount)
         );
-        BulkOperations::DestroyLinearContent<Block>(
-            DATA_OF(Block, _allocData),
+        BulkOperations::DestroyLinearContent<BitsBlock>(
+            DATA_OF(BitsBlock, _allocData),
             BlocksForBits(_bitCount)
         );
 
@@ -220,7 +219,7 @@ public:
     {
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
-        return ConstBitRef{ DATA_OF(const Block, _allocData) + blockIndex, bitIndex };
+        return ConstBitRef{ DATA_OF(const BitsBlock, _allocData) + blockIndex, bitIndex };
     }
 
     /// <summary> Accesses the bit at the specified index. </summary>
@@ -233,7 +232,7 @@ public:
     {
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
-        return MutBitRef{ DATA_OF(Block, _allocData) + blockIndex, bitIndex };
+        return MutBitRef{ DATA_OF(BitsBlock, _allocData) + blockIndex, bitIndex };
     }
 
 
@@ -250,9 +249,9 @@ public:
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
 
-        const Block* srcBlock = DATA_OF(const Block, _allocData) + blockIndex;
-        const Block  mask     = Block{ 1 } << bitIndex;
-        const bool   result   = (*srcBlock & mask) != 0;
+        const BitsBlock* srcBlock = DATA_OF(const BitsBlock, _allocData) + blockIndex;
+        const BitsBlock  mask     = BitsBlock{ 1 } << bitIndex;
+        const bool       result   = (*srcBlock & mask) != 0;
 
         return result;
     }
@@ -268,8 +267,8 @@ public:
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
 
-        Block* dstBlock  = DATA_OF(Block, _allocData) + blockIndex;
-        const Block mask = Block{ 1 } << bitIndex;
+        BitsBlock* dstBlock  = DATA_OF(BitsBlock, _allocData) + blockIndex;
+        const BitsBlock mask = BitsBlock{ 1 } << bitIndex;
 
         if (value)
             *dstBlock |= mask;
@@ -284,10 +283,10 @@ public:
         if (_bitCount == 0)
             return;
 
-        const Block fillValue   = value ? ~Block{} : Block{};
+        const BitsBlock fillValue   = value ? ~BitsBlock{} : BitsBlock{};
         const int32 blocksCount = BlocksForBits(_bitCount);
 
-        Block* blocks = DATA_OF(Block, _allocData);
+        BitsBlock* blocks = DATA_OF(BitsBlock, _allocData);
         for (int32 i = 0; i < blocksCount; ++i)
             blocks[i] = fillValue;
     }
@@ -295,19 +294,19 @@ public:
 
     /// <summary> Accesses the block of bits bit at the specified index. </summary>
     NO_DISCARD FORCE_INLINE
-    auto GetBlock(const int32 blockIndex) const -> Block
+    auto GetBlock(const int32 blockIndex) const -> BitsBlock
     {
         ASSERT_COLLECTION_SAFE_ACCESS(blockIndex >= 0 && blockIndex < _blockCapacity);
-        const Block* srcBlock = DATA_OF(Block, _allocData) + blockIndex;
+        const BitsBlock* srcBlock = DATA_OF(BitsBlock, _allocData) + blockIndex;
         return *srcBlock;
     }
 
     /// <summary> Sets the block of bits bit at the specified index. </summary>
     FORCE_INLINE
-    void SetBlock(const int32 blockIndex, const Block value)
+    void SetBlock(const int32 blockIndex, const BitsBlock value)
     {
         ASSERT_COLLECTION_SAFE_MOD(blockIndex >= 0 && blockIndex < _blockCapacity);
-        Block* dstBlock = DATA_OF(Block, _allocData) + blockIndex;
+        BitsBlock* dstBlock = DATA_OF(BitsBlock, _allocData) + blockIndex;
         *dstBlock = value;
     }
 
@@ -330,7 +329,7 @@ public:
             return;
 
         const int32 blocksCount = BlocksForBits(_bitCount);
-        BulkOperations::DestroyLinearContent<Block>(DATA_OF(Block, _allocData), blocksCount);
+        BulkOperations::DestroyLinearContent<BitsBlock>(DATA_OF(BitsBlock, _allocData), blocksCount);
         _bitCount = 0;
     }
 
@@ -359,29 +358,29 @@ public:
         const int32 bitIndex    = index % BitsPerBlock;
         const int32 blocksCount = BlocksForBits(_bitCount);
 
-        Block* blocks = DATA_OF(Block, _allocData);
+        BitsBlock* blocks = DATA_OF(BitsBlock, _allocData);
 
         if (index < _bitCount)
         {
             // Shift all bits to the right starting from the insertion point.
             for (int32 i = blocksCount - 1; i > blockIndex; --i)
             {
-                const Block prevBlock = blocks[i - 1];
+                const BitsBlock prevBlock = blocks[i - 1];
                 blocks[i] = (blocks[i] >> 1) | (prevBlock << (BitsPerBlock - 1));
             }
 
             // Handle the block containing the insertion point.
-            Block& targetBlock = blocks[blockIndex];
-            const Block lowerMask = (Block{ 1 } << bitIndex) - 1; // Mask for bits below insertion.
-            const Block upperBits = targetBlock & ~lowerMask;   // Preserve bits above insertion.
-            const Block lowerBits = targetBlock & lowerMask;   // Preserve bits below insertion.
+            BitsBlock& targetBlock = blocks[blockIndex];
+            const BitsBlock lowerMask = (BitsBlock{ 1 } << bitIndex) - 1; // Mask for bits below insertion.
+            const BitsBlock upperBits = targetBlock & ~lowerMask;   // Preserve bits above insertion.
+            const BitsBlock lowerBits = targetBlock & lowerMask;   // Preserve bits below insertion.
 
             targetBlock = (upperBits << 1) | lowerBits; // Merge shifted upper bits and lower bits.
         }
 
         // Insert the new bit.
-        Block& block = blocks[blockIndex];
-        const Block mask = Block{ 1 } << bitIndex;
+        BitsBlock& block = blocks[blockIndex];
+        const BitsBlock mask = BitsBlock{ 1 } << bitIndex;
         if (value)
             block |= mask;
         else
@@ -399,16 +398,16 @@ public:
         const int32 bitIndex = index % BitsPerBlock;
         const int32 blocksCount = BlocksForBits(_bitCount);
 
-        Block* blocks = DATA_OF(Block, _allocData);
+        BitsBlock* blocks = DATA_OF(BitsBlock, _allocData);
 
         // Handle the block containing the removed bit.
         {
-            Block& targetBlock = blocks[blockIndex];
-            const Block lowerMask = (Block{ 1 } << bitIndex) - 1; // Mask for bits below the removed bit.
-            const Block upperMask = ~lowerMask & ~(Block{ 1 } << bitIndex); // Mask for bits above the removed bit.
+            BitsBlock& targetBlock = blocks[blockIndex];
+            const BitsBlock lowerMask = (BitsBlock{ 1 } << bitIndex) - 1; // Mask for bits below the removed bit.
+            const BitsBlock upperMask = ~lowerMask & ~(BitsBlock{ 1 } << bitIndex); // Mask for bits above the removed bit.
 
-            const Block lowerBits = targetBlock & lowerMask;       // Preserve bits below the removed bit.
-            const Block upperBits = (targetBlock & upperMask) >> 1; // Shift bits above the removed bit down.
+            const BitsBlock lowerBits = targetBlock & lowerMask;       // Preserve bits below the removed bit.
+            const BitsBlock upperBits = (targetBlock & upperMask) >> 1; // Shift bits above the removed bit down.
 
             targetBlock = lowerBits | upperBits; // Merge lower and shifted upper bits.
         }
@@ -416,8 +415,8 @@ public:
         // Shift remaining bits to the left for subsequent blocks.
         for (int32 i = blockIndex + 1; i < blocksCount; ++i)
         {
-            const Block currentBlock = blocks[i];
-            const Block carryBit = currentBlock & Block{ 1 }; // The lowest bit to carry.
+            const BitsBlock currentBlock = blocks[i];
+            const BitsBlock carryBit = currentBlock & BitsBlock{ 1 }; // The lowest bit to carry.
             blocks[i - 1] |= carryBit << (BitsPerBlock - 1); // Carry it to the previous block.
             blocks[i] = currentBlock >> 1;                  // Shift current block to the left.
         }
@@ -455,9 +454,9 @@ PRIVATE:
             _blockCapacity = AllocHelper::Allocate(_allocData, requestedBlocksCapacity);
             _bitCount = other._bitCount;
 
-            BulkOperations::MoveLinearContent<Block>(
-                DATA_OF(Block, other._allocData),
-                DATA_OF(Block, this->_allocData),
+            BulkOperations::MoveLinearContent<BitsBlock>(
+                DATA_OF(BitsBlock, other._allocData),
+                DATA_OF(BitsBlock, this->_allocData),
                 requiredBlocks
             );
 
@@ -478,9 +477,9 @@ PRIVATE:
         _blockCapacity = AllocHelper::Allocate(_allocData, requestedBlocksCapacity);
         _bitCount = other._bitCount;
 
-        BulkOperations::CopyLinearContent<Block>(
-            DATA_OF(const Block, other._allocData),
-            DATA_OF(Block, this->_allocData),
+        BulkOperations::CopyLinearContent<BitsBlock>(
+            DATA_OF(const BitsBlock, other._allocData),
+            DATA_OF(BitsBlock, this->_allocData),
             requiredBlocks
         );
     }
@@ -568,12 +567,12 @@ public:
     NO_DISCARD FORCE_INLINE
     auto Values() -> BitMutPuller
     {
-        return BitMutPuller{ DATA_OF(Block, _allocData), 0, _bitCount };
+        return BitMutPuller{ DATA_OF(BitsBlock, _allocData), 0, _bitCount };
     }
 
     NO_DISCARD FORCE_INLINE
     auto Values() const -> BitConstPuller
     {
-        return BitConstPuller{ DATA_OF(const Block, _allocData), 0, _bitCount };
+        return BitConstPuller{ DATA_OF(const BitsBlock, _allocData), 0, _bitCount };
     }
 };

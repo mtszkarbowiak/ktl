@@ -9,15 +9,18 @@
 
 #include "Collections/CollectionsUtils.h"
 
+/// <summary> Utility type used to store individual bits. </summary>
+using BitsBlock = uint32;
+
 /// <summary> Utility class that allows accessing the bit at the specified index using the assignment operator. </summary>
 class MutBitRef final
 {
-    uint64* _block;
-    int32   _index;
+    BitsBlock* _block;
+    int32      _index;
 
 public:
     FORCE_INLINE explicit
-    MutBitRef(uint64* block, const int32 index)
+    MutBitRef(BitsBlock* block, const int32 index)
         : _block{ block }
         , _index{ index }
     {
@@ -26,7 +29,7 @@ public:
     MAY_DISCARD FORCE_INLINE
     auto operator=(const bool value) -> MutBitRef&
     {
-        const uint64 mask = uint64{ 1 } << _index;
+        const BitsBlock mask = BitsBlock{ 1 } << _index;
 
         if (value)
             *_block |= mask;
@@ -39,7 +42,7 @@ public:
     NO_DISCARD FORCE_INLINE
     operator bool() const
     {
-        const uint64 mask = uint64{ 1 } << _index;
+        const BitsBlock mask = BitsBlock{ 1 } << _index;
         return (*_block & mask) != 0;
     }
 };
@@ -47,12 +50,12 @@ public:
 /// <summary> Utility class that allows accessing the bit at the specified index using the assignment operator. </summary>
 class ConstBitRef final
 {
-    const uint64* _block;
-    int32         _index;
+    const BitsBlock* _block;
+    int32            _index;
 
 public:
     FORCE_INLINE explicit
-    ConstBitRef(const uint64* block, const int32 index)
+    ConstBitRef(const BitsBlock* block, const int32 index)
         : _block{ block }
         , _index{ index }
     {
@@ -63,7 +66,7 @@ public:
     NO_DISCARD FORCE_INLINE
     operator bool() const
     {
-        const uint64 mask = uint64{ 1 } << _index;
+        const BitsBlock mask = BitsBlock{ 1 } << _index;
         return (*_block & mask) != 0;
     }
 };

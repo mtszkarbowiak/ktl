@@ -17,7 +17,6 @@ template<uintptr N>
 class StaticBitArray
 {
 public:
-    using Block       = uint64;
     using MutPuller   = BitMutPuller;
     using ConstPuller = BitConstPuller;
 
@@ -30,14 +29,14 @@ protected:
         return (bitCount + BitsPerBlock - 1) / BitsPerBlock;
     }
 
-    static constexpr int32 BitsPerBlock = sizeof(Block) * 8;
+    static constexpr int32 BitsPerBlock = sizeof(BitsBlock) * 8;
 
 
 PRIVATE:
     static constexpr int32 BitCount = N;
     static constexpr int32 BlockCount = BlocksForBits(N);
 
-    Block _data[BlockCount];
+    BitsBlock _data[BlockCount];
 
 
     // Lifecycle
@@ -113,8 +112,8 @@ public:
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
 
-        const Block* srcBlock = _data + blockIndex;
-        const Block  mask     = Block{ 1 } << bitIndex;
+        const BitsBlock* srcBlock = _data + blockIndex;
+        const BitsBlock  mask     = BitsBlock{ 1 } << bitIndex;
         const bool   result   = (*srcBlock & mask) != 0;
 
         return result;
@@ -131,8 +130,8 @@ public:
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
 
-        Block* dstBlock  = _data + blockIndex;
-        const Block mask = Block{ 1 } << bitIndex;
+        BitsBlock* dstBlock  = _data + blockIndex;
+        const BitsBlock mask = BitsBlock{ 1 } << bitIndex;
 
         if (value)
             *dstBlock |= mask;
@@ -147,7 +146,7 @@ public:
         if (BitCount == 0)
             return;
 
-        const Block fillValue   = value ? ~Block{} : Block{};
+        const BitsBlock fillValue   = value ? ~BitsBlock{} : BitsBlock{};
 
         for (int32 i = 0; i < BlockCount; ++i)
             _data[i] = fillValue;
@@ -168,5 +167,3 @@ public:
         return BitConstPuller{ _data, 0, BitCount };
     }
 };
-
-//TODO(mtszkarbowiak): Introduce specialized `BitsBlock` type shared between `BitArray` and `StaticBitArray`.
