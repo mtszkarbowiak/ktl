@@ -18,16 +18,14 @@
 /// </remarks>
 class BitMutPuller
 {
-    BitsBlock* _blocks;
+    BitsStorage::Block* _blocks;
     int32      _currentIndex;
     int32      _endIndex;
-
-    static constexpr int32 BitsPerBlock = sizeof(*_blocks) * 8;
 
 
 public:
     FORCE_INLINE explicit
-    BitMutPuller(BitsBlock* blocks, const int32 beginIndex, const int32 endIndex)
+    BitMutPuller(BitsStorage::Block* blocks, const int32 beginIndex, const int32 endIndex)
         : _blocks{ blocks }
         , _currentIndex{ beginIndex }
         , _endIndex{ endIndex }
@@ -72,6 +70,7 @@ public:
     NO_DISCARD FORCE_INLINE
     auto operator*() -> MutBitRef
     {
+        using namespace BitsStorage;
         const int32 blockIndex = _currentIndex / BitsPerBlock;
         const int32 bitIndex   = _currentIndex % BitsPerBlock;
         return MutBitRef{ _blocks + blockIndex, bitIndex };
@@ -80,6 +79,7 @@ public:
     NO_DISCARD FORCE_INLINE
     auto operator*() const -> ConstBitRef
     {
+        using namespace BitsStorage;
         const int32 blockIndex = _currentIndex / BitsPerBlock;
         const int32 bitIndex   = _currentIndex % BitsPerBlock;
         return ConstBitRef{ _blocks + blockIndex, bitIndex };
@@ -132,17 +132,15 @@ public:
 /// </remarks>
 class BitConstPuller
 {
-    const BitsBlock* _blocks;
+    const BitsStorage::Block* _blocks;
     int32            _currentIndex;
     int32            _endIndex;
-
-    static constexpr int32 BitsPerBlock = sizeof(*_blocks) * 8;
 
 
 public:
     FORCE_INLINE explicit
     BitConstPuller(
-        const BitsBlock* array, 
+        const BitsStorage::Block* array,
         const int32 beginIndex, 
         const int32 endIndex)
         : _blocks{ array }
@@ -189,6 +187,7 @@ public:
     NO_DISCARD FORCE_INLINE
     auto operator*() const -> ConstBitRef
     {
+        using namespace BitsStorage;
         const int32 blockIndex = _currentIndex / BitsPerBlock;
         const int32 bitIndex   = _currentIndex % BitsPerBlock;
         return ConstBitRef{ _blocks + blockIndex, bitIndex };
