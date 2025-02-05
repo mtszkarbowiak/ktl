@@ -13,6 +13,7 @@
 #include "Types/EnumPuller.h"
 #include "Types/RcBox.h"
 #include "Types/RangePuller.h"
+#include "Types/EnumSet.h"
 
 
 TEST(TypeUtils, SwapByMoves)
@@ -251,4 +252,86 @@ TEST(RangePuller, StartEnd)
 
     GTEST_ASSERT_EQ(count, 5);
     GTEST_ASSERT_EQ(sum, (5 + 6 + 7 + 8 + 9));
+}
+
+
+namespace
+{
+    enum class ExampleEnum { A, B, C, };
+}
+
+TEST(EnumSet, BasicOperations)
+{
+    EnumSet<ExampleEnum> set;
+
+    set.Add(ExampleEnum::A);
+    EXPECT_TRUE (set.Contains(ExampleEnum::A));
+    EXPECT_FALSE(set.Contains(ExampleEnum::B));
+
+    set.Remove(ExampleEnum::A);
+    EXPECT_FALSE(set.Contains(ExampleEnum::A));
+    EXPECT_FALSE(set.Contains(ExampleEnum::B));
+
+    EXPECT_TRUE(set.IsEmpty());
+    set.Add(ExampleEnum::B);
+    EXPECT_FALSE(set.IsEmpty());
+
+    set.Clear();
+    EXPECT_TRUE(set.IsEmpty());
+}
+
+TEST(EnumSet, CountElements)
+{
+    EnumSet<ExampleEnum> set;
+    EXPECT_EQ(set.Count(), 0);
+
+    set.Add(ExampleEnum::A).Add(ExampleEnum::B);
+    EXPECT_EQ(set.Count(), 2);
+
+    set.Remove(ExampleEnum::A);
+    EXPECT_EQ(set.Count(), 1);
+
+    set.Clear();
+    EXPECT_EQ(set.Count(), 0);
+}
+
+TEST(EnumSet, BitwiseOperations)
+{
+    EnumSet<ExampleEnum> setA;
+    EnumSet<ExampleEnum> setB;
+
+    setA.Add(ExampleEnum::A).Add(ExampleEnum::B);
+    setB.Add(ExampleEnum::B).Add(ExampleEnum::C);
+
+    EnumSet<ExampleEnum> setOr = setA | setB;
+    EXPECT_TRUE(setOr.Contains(ExampleEnum::A));
+    EXPECT_TRUE(setOr.Contains(ExampleEnum::B));
+    EXPECT_TRUE(setOr.Contains(ExampleEnum::C));
+
+    EnumSet<ExampleEnum> setAnd = setA & setB;
+    EXPECT_FALSE(setAnd.Contains(ExampleEnum::A));
+    EXPECT_TRUE (setAnd.Contains(ExampleEnum::B));
+    EXPECT_FALSE(setAnd.Contains(ExampleEnum::C));
+
+    EnumSet<ExampleEnum> setXor = setA ^ setB;
+    EXPECT_TRUE (setXor.Contains(ExampleEnum::A));
+    EXPECT_FALSE(setXor.Contains(ExampleEnum::B));
+    EXPECT_TRUE (setXor.Contains(ExampleEnum::C));
+}
+
+TEST(EnumSet, ComparisonOperations)
+{
+    EnumSet<ExampleEnum> setA;
+    EnumSet<ExampleEnum> setB;
+
+    setA.Add(ExampleEnum::A).Add(ExampleEnum::B);
+    setB.Add(ExampleEnum::A).Add(ExampleEnum::B);
+
+    EXPECT_TRUE(setA == setB);
+
+    setB.Add(ExampleEnum::C);
+    EXPECT_FALSE(setA == setB);
+    EXPECT_TRUE (setA != setB);
+    EXPECT_TRUE (setA <= setB);
+    EXPECT_FALSE(setB <= setA);
 }
