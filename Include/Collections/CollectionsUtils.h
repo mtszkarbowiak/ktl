@@ -22,7 +22,8 @@
 #include "Types/SizeHint.h"
 #include "Types/Span.h"
 
-#include <initializer_list>
+#include <new>              // Placement new.
+#include <initializer_list> // Initializer list.
 
 
 /// <summary>
