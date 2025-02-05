@@ -1503,12 +1503,12 @@ public:
 
     // Constraints
 
-    REQUIRE_TYPE_NOT_REFERENCE(Key);
-    REQUIRE_TYPE_NOT_REFERENCE(Value);
-    REQUIRE_TYPE_NOT_CONST(Key);
-    REQUIRE_TYPE_NOT_CONST(Value);
-    REQUIRE_TYPE_MOVEABLE(Key);
-    REQUIRE_TYPE_MOVEABLE(Value);
+    static_assert(!TIsRefV<Key>,       INFO_TYPE_NOT_REF);
+    static_assert(!TIsRefV<Value>,     INFO_TYPE_NOT_REF);
+    static_assert(!TIsConstV<Key>,     INFO_TYPE_NOT_CONST);
+    static_assert(!TIsConstV<Value>,   INFO_TYPE_NOT_CONST);
+    static_assert(TIsMoveableV<Key>,   INFO_TYPE_MOVEABLE);
+    static_assert(TIsMoveableV<Value>, INFO_TYPE_MOVEABLE);
 
     static_assert(
         AllocHelper::HasBinaryMaskingSupport() == AllocHelper::BinaryMaskingSupportStatus::Supported, 

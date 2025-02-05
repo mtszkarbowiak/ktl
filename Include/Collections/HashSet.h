@@ -822,9 +822,9 @@ public:
 
     // Constraints
 
-    REQUIRE_TYPE_NOT_REFERENCE(Element);
-    REQUIRE_TYPE_NOT_CONST(Element);
-    REQUIRE_TYPE_MOVEABLE(Element);
+    static_assert(!TIsRefV<Element>,     INFO_TYPE_NOT_REF);
+    static_assert(!TIsConstV<Element>,   INFO_TYPE_NOT_CONST);
+    static_assert(TIsMoveableV<Element>, INFO_TYPE_MOVEABLE);
 
     static_assert(
         AllocHelper::HasBinaryMaskingSupport() == AllocHelper::BinaryMaskingSupportStatus::Supported,
