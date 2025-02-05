@@ -17,7 +17,9 @@ namespace BitsStorage
     /// <summary> Number of bits stored in one block. </summary>
     static constexpr int32 BitsPerBlock = BytesPerBlock * 8;
 
+    /// <summary> Empty block of bits. </summary>
     static constexpr Block EmptyBlock = Block{ 0 };
+    /// <summary> Full block of bits. </summary>
     static constexpr Block FullBlock = ~Block{ 0 };
 
     /// <summary> Calculates the number of blocks required to store the given number of bits. </summary>

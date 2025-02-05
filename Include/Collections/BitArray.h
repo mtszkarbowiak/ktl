@@ -109,7 +109,9 @@ public:
 
     // Allocation Manipulation
 
-    /// <summary> Ensures that adding bits up to the requested capacity will not invoke the allocator. </summary>
+    /// <summary>
+    /// Ensures that adding bits up to the requested capacity will not invoke the allocator.
+    /// </summary>
     void Reserve(const int32 minBitsCapacity)
     {
         using namespace BitsStorage;
@@ -125,7 +127,8 @@ public:
         if (_blockCapacity == 0)
         {
             // If the array is empty, allocate the default capacity.
-            const int32 requiredBlocksCapacity = AllocHelper::InitCapacity(minBlocksCapacity);
+            const int32 requiredBlocksCapacity
+                = AllocHelper::InitCapacity(minBlocksCapacity);
             _blockCapacity = AllocHelper::Allocate(_allocData, requiredBlocksCapacity);
         }
         else
@@ -134,8 +137,10 @@ public:
             const AllocData& oldData = _allocData;
             AllocData newData{ oldData }; // Copy the binding
 
-            const int32  requiredBlocksCapacity = AllocHelper::NextCapacity(_blockCapacity, minBlocksCapacity);
-            const int32 allocatedBlocksCapacity = AllocHelper::Allocate(newData, requiredBlocksCapacity);
+            const int32  requiredBlocksCapacity
+                = AllocHelper::NextCapacity(_blockCapacity, minBlocksCapacity);
+            const int32 allocatedBlocksCapacity
+                = AllocHelper::Allocate(newData, requiredBlocksCapacity);
 
             const int32 oldBlocksCount = BlocksForBits(_bitCount);
             if (oldBlocksCount > 0)
@@ -212,9 +217,14 @@ public:
     auto operator[](const int32 index) const -> ConstBitRef
     {
         using namespace BitsStorage;
+
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
-        return ConstBitRef{ DATA_OF(const Block, _allocData) + blockIndex, bitIndex };
+
+        return ConstBitRef{
+            DATA_OF(const Block, _allocData) + blockIndex,
+            bitIndex
+        };
     }
 
     /// <summary> Accesses the bit at the specified index. </summary>
@@ -226,9 +236,14 @@ public:
     auto operator[](const int32 index) -> MutBitRef
     {
         using namespace BitsStorage;
+
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
-        return MutBitRef{ DATA_OF(Block, _allocData) + blockIndex, bitIndex };
+
+        return MutBitRef{
+            DATA_OF(Block, _allocData) + blockIndex,
+            bitIndex
+        };
     }
 
 
@@ -248,8 +263,8 @@ public:
         const int32 bitIndex   = index % BitsPerBlock;
 
         const Block* srcBlock = DATA_OF(const Block, _allocData) + blockIndex;
-        const Block mask      = Block{ 1 } << bitIndex;
-        const bool       result   = (*srcBlock & mask) != 0;
+        const Block  mask     = Block{ 1 } << bitIndex;
+        const bool   result   = (*srcBlock & mask) != 0;
 
         return result;
     }
@@ -321,8 +336,11 @@ public:
     void Add(const bool value)
     {
         const int32 bitIndex = _bitCount;
+
         Reserve(_bitCount + 1);
+
         ++_bitCount;
+
         SetBit(bitIndex, value);
     }
     
@@ -589,12 +607,20 @@ public:
     NO_DISCARD FORCE_INLINE
     auto Values() -> BitMutPuller
     {
-        return BitMutPuller{ DATA_OF(BitsStorage::Block, _allocData), 0, _bitCount };
+        return BitMutPuller{
+            DATA_OF(BitsStorage::Block, _allocData),
+            0,
+            _bitCount
+        };
     }
 
     NO_DISCARD FORCE_INLINE
     auto Values() const -> BitConstPuller
     {
-        return BitConstPuller{ DATA_OF(const BitsStorage::Block, _allocData), 0, _bitCount };
+        return BitConstPuller{
+            DATA_OF(const BitsStorage::Block, _allocData),
+            0,
+            _bitCount
+        };
     }
 };

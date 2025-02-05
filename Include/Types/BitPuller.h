@@ -64,25 +64,39 @@ public:
     auto Hint() const -> SizeHint
     {
         const int32 remaining = _endIndex - _currentIndex;
-        return { remaining, Nullable<::Index>{ remaining } };
+
+        return SizeHint{
+            remaining,
+            Nullable<::Index>{ remaining }
+        };
     }
 
     NO_DISCARD FORCE_INLINE
     auto operator*() -> MutBitRef
     {
         using namespace BitsStorage;
+
         const int32 blockIndex = _currentIndex / BitsPerBlock;
         const int32 bitIndex   = _currentIndex % BitsPerBlock;
-        return MutBitRef{ _blocks + blockIndex, bitIndex };
+
+        return MutBitRef{
+            _blocks + blockIndex,
+            bitIndex
+        };
     }
 
     NO_DISCARD FORCE_INLINE
     auto operator*() const -> ConstBitRef
     {
         using namespace BitsStorage;
+
         const int32 blockIndex = _currentIndex / BitsPerBlock;
         const int32 bitIndex   = _currentIndex % BitsPerBlock;
-        return ConstBitRef{ _blocks + blockIndex, bitIndex };
+
+        return ConstBitRef{
+            _blocks + blockIndex,
+            bitIndex
+        };
     }
 
 
