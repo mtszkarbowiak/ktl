@@ -699,7 +699,7 @@ public:
             return nullptr;
 
         const HashSlotSearchResult result = FindSlot(
-            DATA_OF(Slot, _allocData),
+            DATA_OF(const Slot, _allocData),
             _capacity,
             key
         );
@@ -707,7 +707,7 @@ public:
         if (result.FoundObject.IsEmpty())
             return nullptr;
 
-        return &(DATA_OF(Slot, _allocData)[result.FoundObject.Value()].GetValue());
+        return &(DATA_OF(const Slot, _allocData)[result.FoundObject.Value()].GetValue());
     }
 
     /// <summary>
