@@ -190,8 +190,8 @@ public:
         const int32 allocatedBlocksCapacity = AllocHelper::Allocate(newData, requiredBlocksCapacity);
 
         BulkOperations::MoveLinearContent<Block>(
-            DATA_OF(const Block, _allocData),
-            DATA_OF(Block,       newData),
+            DATA_OF(Block, _allocData),
+            DATA_OF(Block, newData),
             BlocksForBits(_bitCount)
         );
         BulkOperations::DestroyLinearContent<Block>(
