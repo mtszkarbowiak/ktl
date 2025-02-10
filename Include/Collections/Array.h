@@ -510,9 +510,9 @@ public:
         }
 
         const int32 startIndex = _count - count;
-        const Element* startPtr = DATA_OF(Element, _allocData) + startIndex;
+        Element* startPtr = DATA_OF(Element, _allocData) + startIndex;
 
-        return Span<Element>{ startPtr, count };
+        return Span<Element>{ startPtr, startPtr + count };
     }
 
 
