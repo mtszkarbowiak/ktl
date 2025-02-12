@@ -28,6 +28,8 @@ class Span
     // Constructors
 
 public:
+    using Element = T;
+
     /// <summary> Initializes an empty span. </summary>
     FORCE_INLINE
     Span() = default;
