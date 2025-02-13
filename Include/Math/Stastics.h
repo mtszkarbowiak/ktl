@@ -18,12 +18,15 @@ namespace Statistics
     /// </summary>
     template<typename _C>
     NO_DISCARD
-    auto Min(_C&& puller) -> TRemoveCVRefT<decltype(&*puller)>*
+    auto Min(_C&& puller) -> TRemoveRefT<decltype(*puller)>*
     {
+        using ElementType = decltype(*puller);
+        using PointerType = TRemoveRefT<ElementType>*;
+
         if (!puller)
             return nullptr;
 
-        auto* min = &*puller;
+        PointerType min = &*puller;
 
         for (; puller; ++puller) {
             if (*puller < *min)
@@ -39,19 +42,22 @@ namespace Statistics
     /// </summary>
     template<typename _C>
     NO_DISCARD
-    auto Max(_C&& puller) -> TRemoveCVRefT<decltype(&*puller)>*
+    auto Max(_C&& puller) -> TRemoveRefT<decltype(*puller)>*
     {
+        using ElementType = decltype(*puller);
+        using PointerType = TRemoveRefT<ElementType>*;
+
         if (!puller)
             return nullptr;
 
-        auto* min = &*puller;
+        PointerType max = &*puller;
 
         for (; puller; ++puller) {
-            if (*puller > *min)
-                min = &*puller;
+            if (*max < *puller)
+                max = &*puller;
         }
 
-        return min;
+        return max;
     }
 
 
