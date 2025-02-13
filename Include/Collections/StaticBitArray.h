@@ -17,27 +17,15 @@ template<uintptr N>
 class StaticBitArray
 {
 public:
-    using Block       = uint64;
     using MutPuller   = BitMutPuller;
     using ConstPuller = BitConstPuller;
 
 
-protected:
-    /// <summary> Calculates the number of blocks required to store the given number of bits. </summary>
-    static FORCE_INLINE constexpr
-    auto BlocksForBits(const int32 bitCount) -> int32
-    {
-        return (bitCount + BitsPerBlock - 1) / BitsPerBlock;
-    }
-
-    static constexpr int32 BitsPerBlock = sizeof(Block) * 8;
-
-
 PRIVATE:
     static constexpr int32 BitCount = N;
-    static constexpr int32 BlockCount = BlocksForBits(N);
+    static constexpr int32 BlockCount = BitsStorage::BlocksForBits(N);
 
-    Block _data[BlockCount];
+    BitsStorage::Block _data[BlockCount];
 
 
     // Lifecycle
@@ -81,9 +69,15 @@ public:
     NO_DISCARD FORCE_INLINE
     auto operator[](const int32 index) const -> ConstBitRef
     {
+        using namespace BitsStorage;
+
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
-        return ConstBitRef{ _data + blockIndex, bitIndex };
+
+        return ConstBitRef{
+            _data + blockIndex,
+            bitIndex
+        };
     }
 
     /// <summary> Accesses the bit at the specified index. </summary>
@@ -94,9 +88,15 @@ public:
     NO_DISCARD FORCE_INLINE
     auto operator[](const int32 index) -> MutBitRef
     {
+        using namespace BitsStorage;
+
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
-        return MutBitRef{ _data + blockIndex, bitIndex };
+
+        return MutBitRef{
+            _data + blockIndex,
+            bitIndex
+        };
     }
 
 
@@ -108,6 +108,8 @@ public:
     NO_DISCARD FORCE_INLINE
     auto GetBit(const int32 index) const -> bool
     {
+        using namespace BitsStorage;
+
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < BitCount);
 
         const int32 blockIndex = index / BitsPerBlock;
@@ -126,6 +128,8 @@ public:
     FORCE_INLINE
     void SetBit(const int32 index, const bool value)
     {
+        using namespace BitsStorage;
+
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index < BitCount);
 
         const int32 blockIndex = index / BitsPerBlock;
@@ -144,10 +148,14 @@ public:
     FORCE_INLINE
     void SetAll(const bool value)
     {
+        using namespace BitsStorage;
+
         if (BitCount == 0)
             return;
 
-        const Block fillValue   = value ? ~Block{} : Block{};
+        const Block fillValue = value
+            ? FullBlock
+            : EmptyBlock;
 
         for (int32 i = 0; i < BlockCount; ++i)
             _data[i] = fillValue;
@@ -159,14 +167,20 @@ public:
     NO_DISCARD FORCE_INLINE
     auto Values() -> BitMutPuller
     {
-        return BitMutPuller{ _data, 0, BitCount };
+        return BitMutPuller{
+            _data,
+            0,
+            BitCount
+        };
     }
 
     NO_DISCARD FORCE_INLINE
     auto Values() const -> BitConstPuller
     {
-        return BitConstPuller{ _data, 0, BitCount };
+        return BitConstPuller{
+            _data,
+            0,
+            BitCount
+        };
     }
 };
-
-//TODO(mtszkarbowiak): Introduce specialized `BitsBlock` type shared between `BitArray` and `StaticBitArray`.

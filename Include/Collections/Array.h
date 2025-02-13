@@ -510,9 +510,9 @@ public:
         }
 
         const int32 startIndex = _count - count;
-        const Element* startPtr = DATA_OF(Element, _allocData) + startIndex;
+        Element* startPtr = DATA_OF(Element, _allocData) + startIndex;
 
-        return Span<Element>{ startPtr, count };
+        return Span<Element>{ startPtr, startPtr + count };
     }
 
 
@@ -717,7 +717,7 @@ public:
 
     // Constraints
 
-    REQUIRE_TYPE_NOT_REFERENCE(Element);
-    REQUIRE_TYPE_NOT_CONST(Element);
-    REQUIRE_TYPE_MOVEABLE(Element);
+    static_assert(!TIsRefV<Element>,     INFO_TYPE_NOT_REF);
+    static_assert(!TIsConstV<Element>,   INFO_TYPE_NOT_CONST);
+    static_assert(TIsMoveableV<Element>, INFO_TYPE_MOVEABLE);
 };

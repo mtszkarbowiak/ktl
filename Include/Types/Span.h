@@ -28,13 +28,15 @@ class Span
     // Constructors
 
 public:
+    using Element = T;
+
     /// <summary> Initializes an empty span. </summary>
     FORCE_INLINE
     Span() = default;
 
     /// <summary> Initializes a span with the specified data and size. </summary>
     FORCE_INLINE
-    Span(T* data, const int32 size)
+    Span(T* data, const int32 size) //TODO Ambiguous ctor
         : _data{ data }
         , _count{ size }
     {

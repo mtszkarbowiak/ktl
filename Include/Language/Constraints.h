@@ -7,19 +7,8 @@
 
 #pragma once
 
-#include "Language/TypeTraits.h"
-
-#define REQUIRE_TYPE_NOT_CONST(T) \
-    static_assert(!TIsConstV<T>, "Type must not be const.")
-
-#define REQUIRE_TYPE_NOT_REFERENCE(T) \
-    static_assert(!TIsRefV<T>, "Type must not be a reference type.")
-
-#define REQUIRE_TYPE_NOT_VOID(T) \
-    static_assert(!TIsVoidV<T>, "Type must not be void.")
-
-#define REQUIRE_TYPE_NOT_ARRAY(T) \
-    static_assert(!TIsArrayV<T>, "Type must not be an array.")
-
-#define REQUIRE_TYPE_MOVEABLE(T) \
-    static_assert(TIsMoveableV<T>, "Type must be moveable.")
+#define INFO_TYPE_NOT_CONST  "Type must not be const."
+#define INFO_TYPE_NOT_REF    "Type must not be a reference type."
+#define INFO_TYPE_NOT_VOID   "Type must not be void."
+#define INFO_TYPE_NOT_ARRAY  "Type must not be an array."
+#define INFO_TYPE_MOVEABLE   "Type must be moveable."
