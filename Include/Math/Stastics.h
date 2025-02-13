@@ -18,7 +18,7 @@ namespace Statistics
     /// </summary>
     template<typename _C>
     NO_DISCARD
-    auto Min(_C&& puller) -> typename std::remove_reference<decltype(&*puller)>::type
+    auto Min(_C&& puller) -> TRemoveCVRefT<decltype(&*puller)>*
     {
         if (!puller)
             return nullptr;
@@ -39,7 +39,7 @@ namespace Statistics
     /// </summary>
     template<typename _C>
     NO_DISCARD
-    auto Max(_C&& puller) -> typename std::remove_reference<decltype(&*puller)>::type
+    auto Max(_C&& puller) -> TRemoveCVRefT<decltype(&*puller)>*
     {
         if (!puller)
             return nullptr;
@@ -61,10 +61,10 @@ namespace Statistics
     /// <param name="puller"> The puller to sum. If empty, identity (default ctor) is returned. </param>
     template<typename _C>
     NO_DISCARD
-    auto Sum(_C&& puller) -> std::decay_t<decltype(*puller)>
+    auto Sum(_C&& puller)
     {
         // Note: The type must decay (remove reference and const) to avoid returning a reference to a temporary.
-        using ValueType = std::decay_t<decltype(*puller)>;
+        using ValueType = TRemoveCVRefT<decltype(*puller)>;
 
         ValueType sum{};
         for (; puller; ++puller)
@@ -79,12 +79,12 @@ namespace Statistics
     /// <param name="puller"> The puller to average. Must not be empty. </param>
     template<typename _C>
     NO_DISCARD   
-    auto Average(_C&& puller) -> std::decay_t<decltype(*puller)>
+    auto Average(_C&& puller)
     {
         ASSERT_COLLECTION_SAFE_ACCESS(static_cast<bool>(puller)); // Enumerator must not be empty.
 
         // Note: The type must decay (remove reference and const) to avoid returning a reference to a temporary.
-        using ValueType = std::decay_t<decltype(*puller)>;
+        using ValueType = TRemoveCVRefT<decltype(*puller)>;
 
         ValueType sum{ *puller };
         int32 count = 1;
