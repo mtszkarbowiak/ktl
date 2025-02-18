@@ -434,7 +434,7 @@ PRIVATE:
     NO_DISCARD FORCE_INLINE
     auto IsTombstone() const -> bool
     {
-        return GetTombstoneLevel() > 0;
+        return _value.IsTombstone() && GetTombstoneLevel() > 0;
     }
 
     NO_DISCARD FORCE_INLINE

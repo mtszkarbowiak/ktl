@@ -261,3 +261,63 @@ TEST(NullableUtilities, AsSpan)
     GTEST_ASSERT_EQ(nullableA.AsSpan()[0], 69);
     GTEST_ASSERT_EQ(nullableB.AsSpan()[0], 69);
 }
+
+
+namespace TombstonePropagation
+{
+    /// <summary>
+    /// Custom value type used to test if Nullable propagates null correctly.
+    /// The main idea is that GetTombstoneLevel() returns the depth of the tombstone,
+    /// EVEN IF the value is not a tombstone. Nullable must not use the level value,
+    /// before checking if the value is a tombstone in the first place.
+    /// </summary>
+    struct CustomType
+    {
+        int8 Value;
+        bool MIsTombstone;
+
+        auto IsTombstone() const -> bool
+        {
+            return MIsTombstone;
+        }
+
+        auto GetTombstoneLevel() const -> int8
+        {
+            return Value;
+        }
+
+        explicit CustomType(const int8 value)
+            : Value{ value }
+            , MIsTombstone{ false }
+        {
+        }
+
+        explicit CustomType(const TombstoneDepth depth)
+            : Value{ depth.Value }
+            , MIsTombstone{ true }
+        {
+        }
+    };
+}
+
+template<>
+struct GetMaxTombstoneDepth<TombstonePropagation::CustomType>
+{
+    enum { Value = 64 }; // More than enough for any collection.
+};
+
+TEST(NullableNested, Propagation)
+{
+    using namespace TombstonePropagation;
+
+    using Nullable0 = Nullable<CustomType>;
+    using Nullable1 = Nullable<Nullable0>;
+    using Nullable2 = Nullable<Nullable1>;
+
+    static_assert(sizeof(Nullable2) == sizeof(CustomType), "");
+
+    Nullable2 nullableA{};
+    nullableA.Set(Nullable1{ Nullable0{ CustomType{ 69 } } });
+
+    GTEST_ASSERT_TRUE(nullableA.HasValue());
+}
