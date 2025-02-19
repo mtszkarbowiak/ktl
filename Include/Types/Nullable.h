@@ -197,10 +197,18 @@ public:
         // Pass (`default` not supported)
     }
 
-    /// <summary> Initializes nullable with the specified value. </summary>
+    /// <summary> Initializes nullable with the specified value by move. </summary>
     FORCE_INLINE explicit
     Nullable(Element&& value) NOEXCEPT_Y
         : _value{ MOVE(value) }
+        , _nullLevel{ 0 }
+    {
+    }
+
+    /// <summary> Initializes nullable with the specified value by copy. </summary>
+    FORCE_INLINE explicit
+    Nullable(const Element& value) NOEXCEPT_Y
+        : _value{ value }
         , _nullLevel{ 0 }
     {
     }
@@ -465,10 +473,17 @@ public:
         // Pass (`default` not supported)
     }
 
-    /// <summary> Initializes nullable with the specified value. </summary>
+    /// <summary> Initializes nullable with the specified value by move. </summary>
     FORCE_INLINE explicit
     Nullable(Element&& value) NOEXCEPT_Y
         : _value{ MOVE(value) }
+    {
+    }
+
+    /// <summary> Initializes nullable with the specified value by copy. </summary>
+    FORCE_INLINE explicit
+    Nullable(const Element& value) NOEXCEPT_Y
+        : _value{ value }
     {
     }
 
