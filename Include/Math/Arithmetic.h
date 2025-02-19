@@ -49,6 +49,14 @@ namespace Math
         return value;
     }
 
+    /// <summary> Distance from the number to zero. </summary>
+    template<typename T>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto Abs(const T value) -> T
+    {
+        return value < 0 ? -value : value;
+    }
+
 
     /// <summary> Returns the smallest power of 2 greater or equal to the given number. </summary>
     NO_DISCARD FORCE_INLINE constexpr
