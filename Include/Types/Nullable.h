@@ -56,14 +56,14 @@ PRIVATE:
 public:
     /// <summary> Checks if the nullable has a value. </summary>
     NO_DISCARD FORCE_INLINE
-    auto HasValue() const -> bool
+    auto HasValue() const NOEXCEPT_Y -> bool
     {
         return _nullLevel == 0;
     }
 
     /// <summary> Reference to the value. Nullable must not be empty. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Value() -> Element&
+    auto Value() NOEXCEPT_Y -> Element&
     {
         ASSERT(HasValue());
         return _value;
@@ -71,7 +71,7 @@ public:
 
     /// <summary> Reference to the value. Nullable must not be empty. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Value() const -> const Element&
+    auto Value() const NOEXCEPT_Y -> const Element&
     {
         ASSERT(HasValue());
         return _value;
@@ -79,7 +79,7 @@ public:
 
     /// <summary> Reference to the value or the fallback. </summary>
     NO_DISCARD FORCE_INLINE
-    auto ValueOr(const Element& fallback) const -> const Element&
+    auto ValueOr(const Element& fallback) const NOEXCEPT_Y -> const Element&
     {
         if (HasValue())
         {
@@ -92,7 +92,7 @@ public:
     }
 
     /// <summary> Overwrites the value with the specified one by move. </summary>
-    void Set(Element&& value)
+    void Set(Element&& value) NOEXCEPT_Y
     {
         if (HasValue())
         {
@@ -106,7 +106,7 @@ public:
     }
 
     /// <summary> Overwrites the value with the specified one by copy. </summary>
-    void Set(const Element& value)
+    void Set(const Element& value) NOEXCEPT_Y
     {
         if (HasValue())
         {
@@ -121,7 +121,7 @@ public:
 
     /// <summary> Overwrites the value with the specified ony by emplace (ctor only). </summary>
     template<typename... Args>
-    void Emplace(Args&&... args)
+    void Emplace(Args&&... args) NOEXCEPT_Y
     {
         if (HasValue())
         {
@@ -137,7 +137,7 @@ public:
 
 
     /// <summary> Resets the value to null. </summary>
-    void Clear()
+    void Clear() NOEXCEPT_Y
     {
         if (HasValue())
         {
@@ -164,13 +164,13 @@ public:
 
 PRIVATE:
     NO_DISCARD FORCE_INLINE
-    auto IsTombstone() const -> bool
+    auto IsTombstone() const NOEXCEPT_Y -> bool
     {
         return _nullLevel > 1;
     }
 
     NO_DISCARD FORCE_INLINE
-    auto GetTombstoneLevel() const -> int8
+    auto GetTombstoneLevel() const NOEXCEPT_Y -> int8
     {
         return _nullLevel - 1; // Go out
     }
@@ -180,7 +180,7 @@ PRIVATE:
     /// You better know what you are doing, if you want to use it!
     /// </summary>
     FORCE_INLINE explicit
-    Nullable(const TombstoneDepth tombstoneTag)
+    Nullable(const TombstoneDepth tombstoneTag) NOEXCEPT_Y
         : _nullLevel{ static_cast<int8>(tombstoneTag.Value + 1) } // Go in
     {
         ASSERT(tombstoneTag.Value >= 0);
@@ -192,14 +192,14 @@ PRIVATE:
 public:
     /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE constexpr
-    Nullable()
+    Nullable() NOEXCEPT_Y
     {
         // Pass (`default` not supported)
     }
 
     /// <summary> Initializes nullable with the specified value. </summary>
     FORCE_INLINE explicit
-    Nullable(Element&& value)
+    Nullable(Element&& value) NOEXCEPT_Y
         : _value{ MOVE(value) }
         , _nullLevel{ 0 }
     {
@@ -207,7 +207,7 @@ public:
 
     /// <summary> Initializes nullable with a copy of the specified value. </summary>
     FORCE_INLINE
-    Nullable(const Nullable& other)
+    Nullable(const Nullable& other) NOEXCEPT_Y
         : _nullLevel{ other._nullLevel }
     {
         if (HasValue())
@@ -218,7 +218,7 @@ public:
 
     /// <summary> Initializes nullable by moving the value from other nullable. </summary>
     FORCE_INLINE
-    Nullable(Nullable&& other) noexcept
+    Nullable(Nullable&& other) NOEXCEPT_S
         : _nullLevel{ other._nullLevel }
     {
         if (HasValue())
@@ -230,7 +230,7 @@ public:
 
     /// <summary> Assigns the value from the specified nullable. </summary>
     MAY_DISCARD FORCE_INLINE
-    auto operator=(const Nullable& other) -> Nullable&
+    auto operator=(const Nullable& other) NOEXCEPT_Y -> Nullable&
     {
         if (this != &other)
         {
@@ -246,7 +246,7 @@ public:
 
     /// <summary> Assigns the value by moving it from the specified nullable. </summary>
     MAY_DISCARD FORCE_INLINE
-    auto operator=(Nullable&& other) noexcept -> Nullable&
+    auto operator=(Nullable&& other) NOEXCEPT_S -> Nullable&
     {
         if (this != &other)
         {
@@ -262,7 +262,7 @@ public:
     }
 
     FORCE_INLINE
-    ~Nullable()
+    ~Nullable() NOEXCEPT_Y
     {
         Clear();
     }
@@ -274,7 +274,7 @@ public:
     /// Converts the nullable to boolean indicating whether the nullable has a value.
     /// </summary>
     NO_DISCARD FORCE_INLINE explicit
-    operator bool() const
+    operator bool() const NOEXCEPT_Y
     {
         return HasValue();
     }
@@ -283,14 +283,14 @@ public:
     // Utility
 
     NO_DISCARD FORCE_INLINE
-    auto IsEmpty() const -> bool
+    auto IsEmpty() const NOEXCEPT_Y -> bool
     {
         return !HasValue();
     }
 
     /// <summary> Overwrites the value with the specified one by move, if it is null. </summary>
     FORCE_INLINE
-    void SetIfNull(Element&& value)
+    void SetIfNull(Element&& value) NOEXCEPT_Y
     {
         if (!HasValue())
         {
@@ -300,7 +300,7 @@ public:
 
     /// <summary> Overwrites the value with the specified one by copy, if it is null. </summary>
     FORCE_INLINE
-    void SetIfNull(const Element& value)
+    void SetIfNull(const Element& value) NOEXCEPT_Y
     {
         if (!HasValue())
         {
@@ -347,14 +347,14 @@ PRIVATE:
 public:
     /// <summary> Checks if the nullable has a value. </summary>
     NO_DISCARD FORCE_INLINE
-    auto HasValue() const -> bool
+    auto HasValue() const NOEXCEPT_Y -> bool
     {
         return !_value.IsTombstone(); // Use the underlying type's tombstone.
     }
 
     /// <summary> Reference to the value. Nullable must not be empty. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Value() -> Element&
+    auto Value() NOEXCEPT_Y -> Element&
     {
         ASSERT(HasValue());
         return _value;
@@ -362,7 +362,7 @@ public:
 
     /// <summary> Reference to the value. Nullable must not be empty. </summary>
     NO_DISCARD FORCE_INLINE
-    auto Value() const -> const Element&
+    auto Value() const NOEXCEPT_Y -> const Element&
     {
         ASSERT(HasValue());
         return _value;
@@ -370,7 +370,7 @@ public:
 
     /// <summary> Reference to the value or the fallback. </summary>
     NO_DISCARD FORCE_INLINE
-    auto ValueOr(const Element& fallback) const -> const Element&
+    auto ValueOr(const Element& fallback) const NOEXCEPT_Y -> const Element&
     {
         if (HasValue())
         {
@@ -384,14 +384,14 @@ public:
 
     /// <summary> Overwrites the value with the specified one by move. </summary>
     FORCE_INLINE
-    void Set(Element&& value)
+    void Set(Element&& value) NOEXCEPT_Y
     {
         _value = MOVE(value); // Should overwrite the tombstone. (or should it?)
     }
 
     /// <summary> Overwrites the value with the specified one by copy. </summary>
     FORCE_INLINE
-    void Set(const Element& value)
+    void Set(const Element& value) NOEXCEPT_Y
     {
         _value = value; // Should overwrite the tombstone. (or should it?)
     }
@@ -402,7 +402,7 @@ public:
     /// Never pass the tombstone depth directly.
     /// </remarks>
     template<typename... Args>
-    void Emplace(Args&&... args)
+    void Emplace(Args&&... args) NOEXCEPT_Y
     {
         _value.~Element();
         new (&_value) Element{ FORWARD(Args, args)... };
@@ -410,7 +410,7 @@ public:
 
     /// <summary> Resets the value to null. </summary>
     FORCE_INLINE
-    void Clear()
+    void Clear() NOEXCEPT_Y
     {
         _value = Element{ TombstoneDepth{ 1 } };
     }
@@ -432,13 +432,13 @@ public:
 
 PRIVATE:
     NO_DISCARD FORCE_INLINE
-    auto IsTombstone() const -> bool
+    auto IsTombstone() const NOEXCEPT_Y -> bool
     {
         return _value.IsTombstone() && GetTombstoneLevel() > 0;
     }
 
     NO_DISCARD FORCE_INLINE
-    auto GetTombstoneLevel() const -> int8
+    auto GetTombstoneLevel() const  NOEXCEPT_Y-> int8
     {
         return _value.GetTombstoneLevel() - 1; // Go out
     }
@@ -448,7 +448,7 @@ PRIVATE:
     /// You better know what you are doing, if you want to use it!
     /// </summary>
     FORCE_INLINE explicit
-    Nullable(const TombstoneDepth tombstoneTag)
+    Nullable(const TombstoneDepth tombstoneTag) NOEXCEPT_Y
         : _value{ TombstoneDepth{static_cast<int8>(tombstoneTag.Value + 1) } } // Go in
     {
         ASSERT(tombstoneTag.Value > 0);
@@ -460,28 +460,28 @@ PRIVATE:
 public:
     /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE constexpr
-    Nullable()
+    Nullable() NOEXCEPT_Y
     {
         // Pass (`default` not supported)
     }
 
     /// <summary> Initializes nullable with the specified value. </summary>
     FORCE_INLINE explicit
-    Nullable(Element&& value)
+    Nullable(Element&& value) NOEXCEPT_Y
         : _value{ MOVE(value) }
     {
     }
 
     /// <summary> Initializes nullable with a copy of the specified value. </summary>
     FORCE_INLINE
-    Nullable(const Nullable& other)
+    Nullable(const Nullable& other) NOEXCEPT_Y
         : _value{ other._value }
     {
     }
 
     /// <summary> Initializes nullable by moving the value from other nullable. </summary>
     FORCE_INLINE
-    Nullable(Nullable&& other) noexcept
+    Nullable(Nullable&& other) NOEXCEPT_S
         : _value{ MOVE(other._value) }
     {
         other.Clear();
@@ -489,7 +489,7 @@ public:
 
     /// <summary> Assigns the value from the specified nullable. </summary>
     MAY_DISCARD FORCE_INLINE
-    auto operator=(const Nullable& other) -> Nullable&
+    auto operator=(const Nullable& other) NOEXCEPT_Y -> Nullable&
     {
         if (this != &other)
         {
@@ -500,7 +500,7 @@ public:
 
     /// <summary> Assigns the value by moving it from the specified nullable. </summary>
     MAY_DISCARD FORCE_INLINE
-    auto operator=(Nullable&& other) noexcept -> Nullable&
+    auto operator=(Nullable&& other) NOEXCEPT_S -> Nullable&
     {
         if (this != &other)
         {
@@ -511,7 +511,7 @@ public:
     }
 
     FORCE_INLINE
-    ~Nullable()
+    ~Nullable() NOEXCEPT_Y
     {
         Clear();
     }
@@ -523,7 +523,7 @@ public:
     /// Converts the nullable to boolean indicating whether the nullable has a value.
     /// </summary>
     NO_DISCARD FORCE_INLINE explicit
-    operator bool() const
+    operator bool() const NOEXCEPT_Y
     {
         return HasValue();
     }
@@ -532,14 +532,14 @@ public:
     // Utility
 
     NO_DISCARD FORCE_INLINE
-    auto IsEmpty() const -> bool
+    auto IsEmpty() const NOEXCEPT_Y -> bool
     {
         return !HasValue();
     }
 
     /// <summary> Overwrites the value with the specified one by move, if it is null. </summary>
     FORCE_INLINE
-    void SetIfNull(Element&& value)
+    void SetIfNull(Element&& value) NOEXCEPT_Y
     {
         if (!HasValue())
         {
@@ -549,7 +549,7 @@ public:
 
     /// <summary> Overwrites the value with the specified one by copy, if it is null. </summary>
     FORCE_INLINE
-    void SetIfNull(const Element& value)
+    void SetIfNull(const Element& value) NOEXCEPT_Y
     {
         if (!HasValue())
         {
