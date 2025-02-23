@@ -109,6 +109,24 @@ add_test(NAME MyTests COMMAND Tests)
 if(MSVC)
     # Set the startup project for Visual Studio
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Tests)
+
+    # Define the source and destination paths of Natvis files
+    set(NATVIS_SOURCE_DIR "${CMAKE_SOURCE_DIR}/Debug/Natvis")
+    set(NATVIS_DEST_DIR "${CMAKE_BINARY_DIR}")
+
+    # Copy Natvis files only if they change
+    file(GLOB NATVIS_FILES "${NATVIS_SOURCE_DIR}/*.natvis")
+    foreach(NATVIS_FILE ${NATVIS_FILES})
+        get_filename_component(NATVIS_NAME ${NATVIS_FILE} NAME)
+        add_custom_command(
+            TARGET Tests POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${NATVIS_FILE} ${NATVIS_DEST_DIR}/${NATVIS_NAME}
+            COMMENT "Copying updated ${NATVIS_NAME} for debugging visualization"
+        )
+    endforeach()
+
+
 endif()
 
 # -----------------------------------------------------------------------------
