@@ -201,7 +201,7 @@ public:
     /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
     /// </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    auto Data() -> Element*
+    auto Data() & -> Element*
     {
         return DATA_OF(Element, _allocData);
     }
@@ -211,7 +211,7 @@ public:
     /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
     /// </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    auto Data() const -> const Element*
+    auto Data() const& -> const Element*
     {
         return DATA_OF(const Element, _allocData);
     }

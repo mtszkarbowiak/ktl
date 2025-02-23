@@ -53,13 +53,13 @@ PRIVATE:
 
 protected:
     FORCE_INLINE
-    auto Data() -> BitsStorage::Block*
+    auto Data() & -> BitsStorage::Block*
     {
         return DATA_OF(BitsStorage::Block, _allocData);
     }
 
     FORCE_INLINE
-    auto Data() const -> const BitsStorage::Block*
+    auto Data() const& -> const BitsStorage::Block*
     {
         return DATA_OF(const BitsStorage::Block, _allocData);
     }
