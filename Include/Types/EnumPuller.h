@@ -36,7 +36,7 @@ PRIVATE:
 
 public:
     NO_DISCARD FORCE_INLINE explicit
-    operator bool() const NOEXCEPT_Y
+    operator bool() const
     {
         return _current < UEnd;
     }
