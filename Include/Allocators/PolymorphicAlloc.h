@@ -67,7 +67,7 @@ public:
         }
 
         NO_DISCARD FORCE_INLINE
-        auto Get() -> void*
+        auto Get() -> byte*
         {
             switch (_state)
             {
@@ -85,7 +85,7 @@ public:
         }
 
         NO_DISCARD FORCE_INLINE
-        auto Get() const -> const void* 
+        auto Get() const -> const byte*
         {
             switch (_state)
             {
