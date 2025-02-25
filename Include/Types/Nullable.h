@@ -197,6 +197,13 @@ public:
         // Pass (`default` not supported)
     }
 
+    /// <summary> Initializes empty nullable. </summary>
+    FORCE_INLINE constexpr explicit
+    Nullable(NullOptT) NOEXCEPT_Y
+    {
+        // Pass (`default` not supported)
+    }
+
     /// <summary> Initializes nullable with the specified value by move. </summary>
     FORCE_INLINE explicit
     Nullable(Element&& value) NOEXCEPT_Y
@@ -469,6 +476,13 @@ public:
     /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE constexpr
     Nullable() NOEXCEPT_Y
+    {
+        // Pass (`default` not supported)
+    }
+
+    /// <summary> Initializes empty nullable. </summary>
+    FORCE_INLINE constexpr explicit
+    Nullable(NullOptT) NOEXCEPT_Y
     {
         // Pass (`default` not supported)
     }
