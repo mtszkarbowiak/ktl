@@ -237,6 +237,21 @@ public:
     // Element Manipulation
 
     /// <summary>
+    /// Adds an element to the end of the array, without initializing it.
+    /// Warning: This function is unsafe and should be used with caution.
+    /// </summary>
+    MAY_DISCARD FORCE_INLINE
+    auto AddNoInit() -> Element&
+    {
+        if (_count == _capacity)
+            Reserve(_capacity + 1);
+
+        Element* result = DATA_OF(Element, _allocData) + _count;
+        _count += 1;
+        return *result;
+    }
+
+    /// <summary>
     /// Adds an element to the end of the array, by forwarding it to the constructor.
     /// </summary>
     /// <param name="element"> Element to add. </param>
@@ -249,14 +264,8 @@ public:
             "Add requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
-        if (_count == _capacity)
-            Reserve(_capacity + 1);
-
-        Element* target = DATA_OF(Element, _allocData) + _count;
-
-        // Placement new
+        Element* target = &AddNoInit();
         new (target) Element(FORWARD(U, element));
-        _count += 1;
 
         return *target;
     }
@@ -267,14 +276,8 @@ public:
     MAY_DISCARD FORCE_INLINE
     auto Emplace(Args&&... args) -> Element&
     {
-        if (_count == _capacity)
-            Reserve(_capacity + 1);
-
-        Element* target = DATA_OF(Element, _allocData) + _count;
-
-        // Placement new
+        Element* target = &AddNoInit();
         new (target) Element(FORWARD(Args, args)...);
-        _count += 1;
 
         return *target;
     }
@@ -377,6 +380,11 @@ public:
     /// Removes element at the specified index, disregarding the order of the elements.
     /// </summary>
     /// <param name="index"> Index of the element to remove. It must be in the range [0, Count). </param>
+    /// <remarks>
+    /// Method <c>Remove(const T&)</c> is not provided.
+    /// It would be ambiguous if it removes the first or all occurrences.
+    /// The comparator is not an element of the array definition.
+    /// </remarks>
     FORCE_INLINE
     void RemoveAt(const int32 index)
     {
@@ -400,6 +408,11 @@ public:
     /// <param name="index"> Index of the element to remove. It must be in the range [0, Count). </param>
     /// <remarks>
     /// This operation is significantly slower than basic insertion. It should be used only when the order of the elements matters.
+    /// </remarks>
+    /// <remarks>
+    /// Method <c>Remove(const T&)</c> is not provided.
+    /// It would be ambiguous if it removes the first or all occurrences.
+    /// The comparator is not an element of the array definition.
     /// </remarks>
     void RemoveAtStable(const int32 index)
     {
