@@ -243,8 +243,7 @@ public:
     MAY_DISCARD FORCE_INLINE
     auto AddNoInit() -> Element&
     {
-        if (_count == _capacity)
-            Reserve(_capacity + 1);
+        Reserve(_count + 1);
 
         Element* result = DATA_OF(Element, _allocData) + _count;
         _count += 1;
@@ -295,8 +294,7 @@ public:
     {
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _count);  // Allow index == _count for appending
 
-        if (_count == _capacity)
-            Reserve(_capacity + 1);
+        Reserve(_count + 1);
 
         // Pointer to the slot at the insertion point.
         Element* insertPtr = DATA_OF(Element, _allocData) + index;
@@ -339,8 +337,7 @@ public:
 
         // Technically, we could reduce number of moves for relocation.
         // However, it would complicate the code even more. A task for another day.
-        if (_count == _capacity)
-            Reserve(_capacity + 1);
+        Reserve(_count + 1);
 
         // Pointer to the first slot.
         Element* dataPtr = DATA_OF(Element, _allocData);
