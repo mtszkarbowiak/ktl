@@ -491,6 +491,48 @@ TEST(ArrayElementManipulation, RemoveStable)
 }
 
 
+TEST(ArrayElementManipulation, ResizeDown)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Array<TestTracker> array;
+
+        for (int32 i = 0; i < 6; ++i)
+            array.Emplace(i);
+
+        const Span<TestTracker> added = array.Resize(3);
+        GTEST_ASSERT_EQ(added.Count(), 0);
+
+        GTEST_ASSERT_EQ(array.Count(), 3);
+        GTEST_ASSERT_EQ(array[0].Value, 0);
+        GTEST_ASSERT_EQ(array[1].Value, 1);
+        GTEST_ASSERT_EQ(array[2].Value, 2);
+    }
+    LIFECYCLE_TEST_OUT
+}
+
+TEST(ArrayElementManipulation, ResizeUp)
+{
+    LIFECYCLE_TEST_INTO
+    {
+        Array<TestTracker> array;
+        for (int32 i = 0; i < 3; ++i)
+            array.Emplace(i);
+
+        const Span<TestTracker> added = array.Resize(6);
+        GTEST_ASSERT_EQ(added.Count(), 3);
+        GTEST_ASSERT_EQ(array.Count(), 6);
+        GTEST_ASSERT_EQ(array[0].Value, 0);
+        GTEST_ASSERT_EQ(array[1].Value, 1);
+        GTEST_ASSERT_EQ(array[2].Value, 2);
+        GTEST_ASSERT_EQ(array[3].Value, 0);
+        GTEST_ASSERT_EQ(array[4].Value, 0);
+        GTEST_ASSERT_EQ(array[5].Value, 0);
+    }
+    LIFECYCLE_TEST_OUT
+}
+
+
 TEST(StaticArray, BasicAssignment)
 {
     constexpr int32 ElementCount = 12;

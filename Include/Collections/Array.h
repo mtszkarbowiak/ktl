@@ -237,6 +237,22 @@ public:
     // Element Manipulation
 
     /// <summary>
+    /// Adds many elements to the end of the array, without initializing them.
+    /// Warning: This function is unsafe and should be used with caution.
+    /// </summary>
+    MAY_DISCARD FORCE_INLINE
+    auto AddNoInit(const int32 count) -> Span<Element>
+    {
+        const int32 newCount = _count + count;
+        Reserve(newCount);
+
+        Element* target = DATA_OF(Element, _allocData) + _count;
+        _count = newCount;
+
+        return Span<Element>{ target, count };
+    }
+
+    /// <summary>
     /// Adds an element to the end of the array, without initializing it.
     /// Warning: This function is unsafe and should be used with caution.
     /// </summary>
@@ -450,6 +466,43 @@ public:
 
         _allocData.Free(); // Capacity is above zero!
         _capacity = 0;
+    }
+
+
+    /// <summary>
+    /// Changes number of the elements by default-constructing or destroying them.
+    /// Element must be default-constructible.
+    /// </summary>
+    /// <returns> Span of the new elements, if they exist. </returns>
+    MAY_DISCARD FORCE_INLINE
+    auto Resize(const int32 newCount) -> Span<Element>
+    {
+        const int32 oldCount = _count;
+
+        if (newCount > oldCount)
+        {
+            // Add new elements by default-construction.
+            Span<Element> newElements = AddNoInit(newCount - oldCount);
+            BulkOperations::DefaultLinearContent<Element>(
+                newElements.Data(),
+                newElements.Count()
+            );
+
+            return newElements;
+        }
+
+        if (newCount < oldCount)
+        {
+            // Destroy the elements that are no longer needed.
+            BulkOperations::DestroyLinearContent<Element>(
+                DATA_OF(Element, _allocData) + newCount,
+                oldCount - newCount
+            );
+
+            _count = newCount;
+        }
+
+        return Span<Element>{ DATA_OF(Element, _allocData) + newCount, 0 };
     }
 
 
