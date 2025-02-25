@@ -125,6 +125,24 @@ public:
             return 0;
         }
 
+        NO_DISCARD FORCE_INLINE
+        auto Reallocate(const int32 size) -> int32
+        {
+            ASSERT_ALLOCATOR_SAFETY(_state != State::None);
+
+            switch (_state)
+            {
+            case State::Main:
+                return _mainData.Relocate(size);
+            case State::Backup:
+                return _backupData.Relocate(size);
+            case State::None:
+                FALLTHROUGH
+            default:
+                return 0;
+            };
+        }
+
         FORCE_INLINE
         auto Free()
         {

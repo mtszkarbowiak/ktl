@@ -14,8 +14,8 @@
 template<typename A>
 concept AllocatorData2 = requires(A alloc, const A& constAlloc)
 {
-    { alloc.Allocate(int32{}) }      -> SameAs<int32>;
-    // { alloc.Reallocate(int32{}) } -> SameAs<int32>;
+    { alloc.Allocate(int32{}) }   -> SameAs<int32>;
+    { alloc.Reallocate(int32{}) } -> SameAs<int32>;
     { alloc.Free() };
 
     { constAlloc.MovesItems() } -> SameAs<bool>;
