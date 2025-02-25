@@ -12,7 +12,7 @@
 #if CONCEPTS_ENABLED
 
 template<typename A>
-concept AllocatorData2 = requires(A alloc, const A& constAlloc)
+concept AllocatorData = requires(A alloc, const A& constAlloc)
 {
     { alloc.Allocate(int32{}) }   -> SameAs<int32>;
     { alloc.Reallocate(int32{}) } -> SameAs<int32>;
@@ -23,6 +23,8 @@ concept AllocatorData2 = requires(A alloc, const A& constAlloc)
     { alloc.Get() }      -> SameAs<byte*>;
     { constAlloc.Get() } -> SameAs<const byte*>;
 
+    requires Constructible<A, NullOptT>;
+
     //TODO(mtszkarbowiak): Lifecycle methods
 };
 
@@ -30,7 +32,7 @@ template<typename A>
 concept Allocator = requires(A alloc)
 {
     typename A::Data;
-    requires AllocatorData2<typename A::Data>;
+    requires AllocatorData<typename A::Data>;
 
     { A::IsNullable };
     { A::MaxCapacity };

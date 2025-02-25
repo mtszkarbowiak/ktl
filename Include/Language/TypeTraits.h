@@ -720,6 +720,13 @@ struct THasTrivialCtor
 template<typename T>
 static constexpr bool THasTrivialCtorV = THasTrivialCtor<T>::Value;
 
+#if CONCEPTS_ENABLED
+
+template<typename T>
+concept TriviallyConstructible = THasTrivialCtorV<T>;
+
+#endif
+
 
 // Trivially Copyable Check
 
@@ -764,6 +771,14 @@ struct THasCopyCtor
 template<typename T>
 static constexpr bool THasCopyCtorV = THasCopyCtor<T>::Value;
 
+#if CONCEPTS_ENABLED
+
+template<typename T>
+concept CopyConstructible = THasCopyCtorV<T>;
+
+#endif
+
+
 template<typename T>
 struct THasCopyAssign
 {
@@ -775,6 +790,14 @@ static constexpr bool THasCopyAssignV = THasCopyAssign<T>::Value;
 
 template<typename T>
 static constexpr bool TIsCopyableV = THasCopyCtorV<T> && THasCopyAssignV<T>;
+
+#if CONCEPTS_ENABLED
+
+template<typename T>
+concept Copyable = TIsCopyableV<T>;
+
+#endif
+
 
 
 // Moveable Check
@@ -788,6 +811,14 @@ struct THasMoveCtor
 template<typename T>
 static constexpr bool THasMoveCtorV = THasMoveCtor<T>::Value;
 
+#if CONCEPTS_ENABLED
+
+template<typename T>
+concept MoveConstructible = THasMoveCtorV<T>;
+
+#endif
+
+
 template<typename T>
 struct THasMoveAssign
 {
@@ -799,6 +830,32 @@ static constexpr bool THasMoveAssignV = THasMoveAssign<T>::Value;
 
 template<typename T>
 static constexpr bool TIsMoveableV = THasMoveCtorV<T> && THasMoveAssignV<T>;
+
+#if CONCEPTS_ENABLED
+
+template<typename T>
+concept Moveable = TIsMoveableV<T>;
+
+#endif
+
+
+// Generic contructible check
+
+template<typename T, typename U>
+struct THasCtor
+{
+    enum { Value = __is_constructible(T, U) };
+};
+
+template<typename T, typename U>
+static constexpr bool THasCtorV = THasCtor<T, U>::Value;
+
+#if CONCEPTS_ENABLED
+
+template<typename T, typename U>
+concept Constructible = THasCtorV<T, U>;
+
+#endif
 
 
 // Unerlying Type
