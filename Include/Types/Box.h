@@ -126,7 +126,8 @@ public:
     void Emplace(Args&&... args)
     {
         Reset();
-        _allocData.Allocate(sizeof(Element));
+        const int32 allocated = _allocData.Allocate(sizeof(Element));
+        ASSERT_COLLECTION_SAFE_MOD(allocated > 0); // Allocation must succeed.
         new (Get()) Element(FORWARD(Args, args)...);
     }
 
