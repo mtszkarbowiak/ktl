@@ -8,6 +8,8 @@
 #pragma once
 
 #include "Math/Arithmetic.h"
+#include "Allocators/AllocConcept.h"
+#include "Language/Concepts.h"
 
 /// <summary> Returns the pointer to the data of the specified type. </summary>
 /// <remarks> In the future, this macro may also be used to add additional checks or operations. </remarks>
@@ -29,7 +31,7 @@
 /// </remarks>
 template<
     typename Element, 
-    typename Alloc, 
+    TRY_CONCEPT(Allocator) Alloc,
     int32 DefaultUncapped,
     typename Growth
 >

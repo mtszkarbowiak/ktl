@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Language/Communism.h"
+#include "Language/Keywords.h"
 #include "Types/Numbers.h"
 
 // --- Identity ---
@@ -225,6 +226,13 @@ struct TIsSame<T, T>
 
 template<typename T1, typename T2>
 static constexpr bool TIsSameV = TIsSame<T1, T2>::Value;
+
+#if CONCEPTS_ENABLED
+
+template<typename T1, typename T2>
+concept SameAs = TIsSameV<T1, T2> && TIsSameV<T2, T1>;
+
+#endif
 
 
 // Const Check
