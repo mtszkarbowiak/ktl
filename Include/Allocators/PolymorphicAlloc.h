@@ -154,6 +154,12 @@ public:
 
         Data() = default;
 
+        FORCE_INLINE explicit
+        Data(NullOptT)
+        {
+            // Pass
+        }
+
         Data(const Data& other)
             : _mainData{ other._mainData }
             , _backupData{ other._backupData }

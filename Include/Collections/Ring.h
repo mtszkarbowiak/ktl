@@ -51,7 +51,7 @@ class Ring
     using AllocData   = typename A::Data;
     using AllocHelper = AllocHelperOf<Element, A, RING_DEFAULT_CAPACITY, G>;
 
-    AllocData _allocData{};
+    AllocData _allocData{ NullOptT{} };
     int32     _capacity{};
     int32     _head{};
     int32     _tail{}; // Points to the next FREE slot (not the last element).

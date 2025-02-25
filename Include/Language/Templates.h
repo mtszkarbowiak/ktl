@@ -160,4 +160,9 @@ auto AsConst(T& x) NOEXCEPT_S -> const T&
 /// is not bound to a const-reference.
 /// </summary>
 template<typename T>
-auto AsConst(T&&) = delete; 
+auto AsConst(T&&) = delete;
+
+
+// Other Tags
+
+struct NullOptT{};

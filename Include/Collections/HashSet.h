@@ -58,7 +58,7 @@ public:
     constexpr static int32 SlotSize = sizeof(Slot);
 
 PRIVATE:
-    AllocData _allocData{};
+    AllocData _allocData{ NullOptT{} };
     int32     _capacity{};           // Number of slots
     int32     _elementCountCached{}; // Number of elements
     int32     _cellsCountCached{};   // Number of cells

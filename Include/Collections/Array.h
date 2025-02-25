@@ -54,7 +54,7 @@ public:
     using ConstPuller = RawPuller<const T>;
 
 PRIVATE:
-    AllocData _allocData{};
+    AllocData _allocData{ NullOptT{} };
     int32     _capacity{};
     int32     _count{};
 

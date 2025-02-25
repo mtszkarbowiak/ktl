@@ -46,7 +46,7 @@ public:
     using AllocHelper = AllocHelperOf<BitsStorage::Block, A, ARRAY_DEFAULT_CAPACITY, G>;
 
 PRIVATE:
-    AllocData _allocData{};
+    AllocData _allocData{ NullOptT{} };
     int32     _blockCapacity{};
     int32     _bitCount{};
 
