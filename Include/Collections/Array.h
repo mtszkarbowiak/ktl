@@ -470,30 +470,23 @@ public:
 
 
     /// <summary>
-    /// Changes number of the elements by default-constructing or destroying them.
+    /// Changes number of the elements without initializing them.
     /// Element must be default-constructible.
+    /// Warning: This function is unsafe and should be used with caution.
     /// </summary>
     /// <returns> Span of the new elements, if they exist. </returns>
     MAY_DISCARD FORCE_INLINE
-    auto Resize(const int32 newCount) -> Span<Element>
+    auto ResizeNoInit(const int32 newCount) -> Span<Element>
     {
         const int32 oldCount = _count;
 
         if (newCount > oldCount)
         {
-            // Add new elements by default-construction.
-            Span<Element> newElements = AddNoInit(newCount - oldCount);
-            BulkOperations::DefaultLinearContent<Element>(
-                newElements.Data(),
-                newElements.Count()
-            );
-
-            return newElements;
+            return AddNoInit(newCount - oldCount);
         }
 
         if (newCount < oldCount)
         {
-            // Destroy the elements that are no longer needed.
             BulkOperations::DestroyLinearContent<Element>(
                 DATA_OF(Element, _allocData) + newCount,
                 oldCount - newCount
@@ -503,6 +496,22 @@ public:
         }
 
         return Span<Element>{ DATA_OF(Element, _allocData) + newCount, 0 };
+    }
+
+    /// <summary>
+    /// Changes number of the elements by default-constructing or destroying them.
+    /// Element must be default-constructible.
+    /// </summary>
+    /// <returns> Span of the new elements, if they exist. </returns>
+    MAY_DISCARD FORCE_INLINE
+    auto Resize(const int32 newCount) -> Span<Element>
+    {
+        Span<Element> newElements = ResizeNoInit(newCount);
+        BulkOperations::DefaultLinearContent<Element>(
+            newElements.Data(),
+            newElements.Count()
+        );
+        return newElements;
     }
 
 
