@@ -581,18 +581,10 @@ public:
     }
 
     /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
+    template<typename C_ = NullOptT>
     FORCE_INLINE explicit
-    Array(const int32 capacity)
-    {
-        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
-        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
-    }
-
-    /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext> // Universal reference
-    FORCE_INLINE explicit
-    Array(const int32 capacity, AllocContext&& context)
-        : _allocData{ FORWARD(AllocContext, context) }
+    Array(const int32 capacity, C_&& context = NullOptT{})
+        : _allocData{ FORWARD(C_, context) }
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);

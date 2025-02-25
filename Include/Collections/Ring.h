@@ -670,20 +670,13 @@ public:
         CopyToEmpty(other);
     }
 
-
-    /// <summary> Initializes an empty ring with an active context-less allocation of the specified capacity. </summary>
+    /// <summary> Initializes an empty ring with an active allocation of the specified capacity. </summary>
+    /// <param name="capacity"> The initial capacity of the ring. </param>
+    /// <param name="context"> The context to use for the allocation. </param>
+    template<typename C_ = NullOptT>
     FORCE_INLINE explicit
-    Ring(const int32 capacity)
-    {
-        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
-        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
-    }
-
-    /// <summary> Initializes an empty ring with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext> // Universal reference
-    FORCE_INLINE explicit
-    Ring(const int32 capacity, AllocContext&& context)
-        : _allocData{ FORWARD(AllocContext, context) }
+    Ring(const int32 capacity, C_&& context = NullOptT{})
+        : _allocData{ FORWARD(C_, context) }
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);

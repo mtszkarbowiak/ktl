@@ -627,22 +627,11 @@ public:
         CopyToEmpty(DATA_OF(const Slot, other._allocData), other._capacity);
     }
 
-
-    /// <summary> Initializes an empty hash set with an active context-less allocation of the specified capacity. </summary>
-    FORCE_INLINE explicit
-    HashSet(const int32 capacity)
-    {
-        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
-        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
-
-        BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
-    }
-
     /// <summary> Initializes an empty hash set with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext>
+    template<typename C_ = NullOptT>
     FORCE_INLINE explicit
-    HashSet(const int32 capacity, AllocContext&& context)
-        : _allocData{ FORWARD(AllocContext, context) }
+    HashSet(const int32 capacity, C_&& context = NullOptT{})
+        : _allocData{ FORWARD(C_, context) }
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);

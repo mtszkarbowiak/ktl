@@ -872,24 +872,13 @@ public:
         Append(other);
     }
 
-    /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
+    /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
+    template<typename C_ = NullOptT>
     FORCE_INLINE explicit
-    Dictionary(const int32 capacity)
+    Dictionary(const int32 capacity, C_&& context = NullOptT{}) // Universal reference
+        : _allocData{ FORWARD(C_, context) }
     {
         const int32 requiredCapacity  = Math::NextPow2(capacity);
-        const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
-        _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
-
-        BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
-    }
-
-    /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext>
-    FORCE_INLINE explicit
-    Dictionary(const int32 capacity, AllocContext&& context) // Universal reference
-        : _allocData{ FORWARD(AllocContext, context) }
-    {
-        const int32 requiredCapacity = Math::NextPow2(capacity);
         const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
         _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
 

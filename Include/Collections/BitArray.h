@@ -545,21 +545,11 @@ public:
     }
 
 
-    /// <summary> Initializing an empty bit-array with an active context-less allocation of the specified capacity. </summary>
-    FORCE_INLINE explicit
-    BitArray(const int32 bitCapacity)
-    {
-        using namespace BitsStorage;
-        const int32 requiredBlocks  = BlocksForBits(bitCapacity);
-        const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
-        _blockCapacity = allocatedMemory / BytesPerBlock;
-    }
-
     /// <summary> Initializes an empty bit-array with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext>
+    template<typename C_ = NullOptT>
     FORCE_INLINE explicit
-    BitArray(const int32 bitCapacity, AllocContext&& context)
-        : _allocData{ FORWARD(AllocContext, context) }
+    BitArray(const int32 bitCapacity, C_&& context = NullOptT{})
+        : _allocData{ FORWARD(C_, context) }
     {
         using namespace BitsStorage;
         const int32 requiredBlocks  = BlocksForBits(bitCapacity);
