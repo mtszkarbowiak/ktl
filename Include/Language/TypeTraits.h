@@ -839,7 +839,7 @@ concept Moveable = TIsMoveableV<T>;
 #endif
 
 
-// Generic contructible check
+// Generic constructible check
 
 template<typename T, typename U>
 struct THasCtor
@@ -858,7 +858,7 @@ concept Constructible = THasCtorV<T, U>;
 #endif
 
 
-// Unerlying Type
+// Underlying Type
 
 template<typename T>
 struct TUnderlyingType
