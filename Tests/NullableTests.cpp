@@ -15,6 +15,17 @@
 #include "Types/Ref.h"
 
 
+// static_assert(THasTrivialCtorV<Index>, "");
+static_assert(THasTrivialCopyV<Index>, "");
+static_assert(THasTrivialDtorV<Index>, "");
+
+// static_assert(THasTrivialCtorV<Nullable<Index>>, "");
+// static_assert(THasTrivialCopyV<Nullable<Index>>, "");
+// static_assert(THasTrivialDtorV<Nullable<Index>>, "");
+
+//TODO: Add Nullable trivial specializations.
+
+
 TEST(NullableByFlagTests, EmptyCtor)
 {
     Nullable<int32> nullable;
