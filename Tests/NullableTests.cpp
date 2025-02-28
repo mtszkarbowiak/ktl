@@ -158,10 +158,10 @@ namespace SentinelNullables
 TEST(NullableNested, NestedSentinel_Double)
 {
     using namespace SentinelNullables;
-
-    const Nullable1 nullableC{};
-    const Nullable1 nullableB{ Nullable0{} };
-    const Nullable1 nullableA{ Nullable0{ 69 } };
+    
+    const Nullable1 nullableC{ MakeNullable<Nullable0>(NullOptT{}) };
+    const Nullable1 nullableB{ MakeNullable<Nullable0>(MakeNullable<int>(NullOptT{})) };
+    const Nullable1 nullableA{ MakeNullable<Nullable0>(MakeNullable<int>(69)) };
 
     //
     GTEST_ASSERT_EQ(nullableC.HasValue(), false);
@@ -178,10 +178,10 @@ TEST(NullableNested, NestedSentinel_Triple)
 {
     using namespace SentinelNullables;
 
-    const Nullable2 nullableA{ Nullable1{ Nullable0{ 69 } } };
-    const Nullable2 nullableB{ Nullable1{ Nullable0{} } };
-    const Nullable2 nullableC{ Nullable1{} };
-    const Nullable2 nullableD{};
+    const Nullable2 nullableA{ MakeNullable<Nullable1>(MakeNullable<Nullable0>(MakeNullable<int>(69))) };
+    const Nullable2 nullableB{ MakeNullable<Nullable1>(MakeNullable<Nullable0>(MakeNullable<int>(NullOptT{}))) };
+    const Nullable2 nullableC{ MakeNullable<Nullable1>(MakeNullable<Nullable0>(NullOptT{})) };
+    const Nullable2 nullableD{ MakeNullable<Nullable1>(NullOptT{}) };
 
     //
     GTEST_ASSERT_EQ(nullableD.HasValue(), false);
@@ -214,9 +214,9 @@ TEST(NullableNested, NestedTombstone_Double)
 {
     using namespace TombstoneNullables;
 
-    const Nullable2 nullableC{};
-    const Nullable2 nullableB{ Nullable1{} };
-    const Nullable2 nullableA{ Nullable1{ Index{ 69 } } };
+    const Nullable2 nullableC{ MakeNullable<Nullable1>(NullOptT{}) };
+    const Nullable2 nullableB{ MakeNullable<Nullable1>(MakeNullable<Index>(NullOptT{})) };
+    const Nullable2 nullableA{ MakeNullable<Nullable1>(MakeNullable<Index>({ 69 })) };
 
     //
     GTEST_ASSERT_EQ(nullableC.HasValue(), false);
@@ -328,7 +328,7 @@ TEST(NullableNested, Propagation)
     static_assert(sizeof(Nullable2) == sizeof(CustomType), "");
 
     Nullable2 nullableA{};
-    nullableA.Set(Nullable1{ Nullable0{ CustomType{ 69 } } });
+    nullableA.Set(MakeNullable<Nullable0>(MakeNullable<CustomType>(CustomType{ 69 })));
 
     GTEST_ASSERT_TRUE(nullableA.HasValue());
 }

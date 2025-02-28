@@ -204,22 +204,6 @@ public:
         // Pass (`default` not supported)
     }
 
-    /// <summary> Initializes nullable with the specified value by move. </summary>
-    FORCE_INLINE explicit
-    Nullable(Element&& value) NOEXCEPT_Y
-        : _value{ MOVE(value) }
-        , _nullLevel{ 0 }
-    {
-    }
-
-    /// <summary> Initializes nullable with the specified value by copy. </summary>
-    FORCE_INLINE explicit
-    Nullable(const Element& value) NOEXCEPT_Y
-        : _value{ value }
-        , _nullLevel{ 0 }
-    {
-    }
-
     /// <summary> Initializes nullable with a copy of the specified value. </summary>
     FORCE_INLINE
     Nullable(const Nullable& other) NOEXCEPT_Y
@@ -487,20 +471,6 @@ public:
         // Pass (`default` not supported)
     }
 
-    /// <summary> Initializes nullable with the specified value by move. </summary>
-    FORCE_INLINE explicit
-    Nullable(Element&& value) NOEXCEPT_Y
-        : _value{ MOVE(value) }
-    {
-    }
-
-    /// <summary> Initializes nullable with the specified value by copy. </summary>
-    FORCE_INLINE explicit
-    Nullable(const Element& value) NOEXCEPT_Y
-        : _value{ value }
-    {
-    }
-
     /// <summary> Initializes nullable with a copy of the specified value. </summary>
     FORCE_INLINE
     Nullable(const Nullable& other) NOEXCEPT_Y
@@ -607,3 +577,33 @@ using SentinelNullable = Nullable<T, false>;
 /// </summary>
 template<typename T>
 using TombstoneNullable = Nullable<T, true>;
+
+
+/// <summary>
+/// Creates a nullable with the specified value by move.
+/// <summary>
+/// <remarks>
+/// This method replaces constructors to allow for trivial initialization.
+/// </remarks>
+template<typename T>
+NO_DISCARD FORCE_INLINE
+auto MakeNullable(T&& value) NOEXCEPT_Y
+{
+    using Element = typename TRemoveRef<T>::Type;
+    Nullable<Element> result{};
+    result.Set(FORWARD(T, value));
+    return result;
+}
+
+/// <summary>
+/// Creates a nullable with no value.
+/// <summary>
+/// <remarks>
+/// This method replaces constructors to allow for trivial initialization.
+/// </remarks>
+template<typename T>
+NO_DISCARD FORCE_INLINE
+auto MakeNullable(NullOptT) NOEXCEPT_Y -> Nullable<T>
+{
+    return Nullable<T>{};
+}

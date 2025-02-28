@@ -67,7 +67,7 @@ public:
 
         return SizeHint{
             remaining,
-            Nullable<::Index>{ remaining }
+            MakeNullable<::Index>(remaining)
         };
     }
 
@@ -195,7 +195,7 @@ public:
     auto Hint() const -> SizeHint
     {
         const int32 remaining = _endIndex - _currentIndex;
-        return { remaining, Nullable<::Index>{ remaining } };
+        return { remaining, MakeNullable<::Index>(remaining) };
     }
 
     NO_DISCARD FORCE_INLINE
