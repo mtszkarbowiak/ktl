@@ -31,7 +31,7 @@ public:
         return _rc;
     }
 
-    NO_DISCARD FORCE_INLINE
+    FORCE_INLINE
     void Reset()
     {
         ASSERT_COLLECTION_SAFE_MOD(!_rc.HasAnyRefs());

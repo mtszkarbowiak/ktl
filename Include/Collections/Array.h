@@ -54,7 +54,7 @@ public:
     using ConstPuller = RawPuller<const T>;
 
 PRIVATE:
-    AllocData _allocData{};
+    AllocData _allocData{ NullOptT{} };
     int32     _capacity{};
     int32     _count{};
 
@@ -201,7 +201,7 @@ public:
     /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
     /// </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    auto Data() -> Element*
+    auto Data() & -> Element*
     {
         return DATA_OF(Element, _allocData);
     }
@@ -211,7 +211,7 @@ public:
     /// To be used with <c>Count</c> for C-style API, where the first element is at index 0.
     /// </summary>
     NO_DISCARD FORCE_INLINE constexpr
-    auto Data() const -> const Element*
+    auto Data() const& -> const Element*
     {
         return DATA_OF(const Element, _allocData);
     }
@@ -237,6 +237,36 @@ public:
     // Element Manipulation
 
     /// <summary>
+    /// Adds many elements to the end of the array, without initializing them.
+    /// Warning: This function is unsafe and should be used with caution.
+    /// </summary>
+    MAY_DISCARD FORCE_INLINE
+    auto AddNoInit(const int32 count) -> Span<Element>
+    {
+        const int32 newCount = _count + count;
+        Reserve(newCount);
+
+        Element* target = DATA_OF(Element, _allocData) + _count;
+        _count = newCount;
+
+        return Span<Element>{ target, count };
+    }
+
+    /// <summary>
+    /// Adds an element to the end of the array, without initializing it.
+    /// Warning: This function is unsafe and should be used with caution.
+    /// </summary>
+    MAY_DISCARD FORCE_INLINE
+    auto AddNoInit() -> Element&
+    {
+        Reserve(_count + 1);
+
+        Element* result = DATA_OF(Element, _allocData) + _count;
+        _count += 1;
+        return *result;
+    }
+
+    /// <summary>
     /// Adds an element to the end of the array, by forwarding it to the constructor.
     /// </summary>
     /// <param name="element"> Element to add. </param>
@@ -249,14 +279,8 @@ public:
             "Add requires explicit usage of element type. If not intended, consider using emplacement."
         );
 
-        if (_count == _capacity)
-            Reserve(_capacity + 1);
-
-        Element* target = DATA_OF(Element, _allocData) + _count;
-
-        // Placement new
+        Element* target = &AddNoInit();
         new (target) Element(FORWARD(U, element));
-        _count += 1;
 
         return *target;
     }
@@ -267,14 +291,8 @@ public:
     MAY_DISCARD FORCE_INLINE
     auto Emplace(Args&&... args) -> Element&
     {
-        if (_count == _capacity)
-            Reserve(_capacity + 1);
-
-        Element* target = DATA_OF(Element, _allocData) + _count;
-
-        // Placement new
+        Element* target = &AddNoInit();
         new (target) Element(FORWARD(Args, args)...);
-        _count += 1;
 
         return *target;
     }
@@ -292,8 +310,7 @@ public:
     {
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _count);  // Allow index == _count for appending
 
-        if (_count == _capacity)
-            Reserve(_capacity + 1);
+        Reserve(_count + 1);
 
         // Pointer to the slot at the insertion point.
         Element* insertPtr = DATA_OF(Element, _allocData) + index;
@@ -336,8 +353,7 @@ public:
 
         // Technically, we could reduce number of moves for relocation.
         // However, it would complicate the code even more. A task for another day.
-        if (_count == _capacity)
-            Reserve(_capacity + 1);
+        Reserve(_count + 1);
 
         // Pointer to the first slot.
         Element* dataPtr = DATA_OF(Element, _allocData);
@@ -377,6 +393,11 @@ public:
     /// Removes element at the specified index, disregarding the order of the elements.
     /// </summary>
     /// <param name="index"> Index of the element to remove. It must be in the range [0, Count). </param>
+    /// <remarks>
+    /// Method <c>Remove(const T&)</c> is not provided.
+    /// It would be ambiguous if it removes the first or all occurrences.
+    /// The comparator is not an element of the array definition.
+    /// </remarks>
     FORCE_INLINE
     void RemoveAt(const int32 index)
     {
@@ -400,6 +421,11 @@ public:
     /// <param name="index"> Index of the element to remove. It must be in the range [0, Count). </param>
     /// <remarks>
     /// This operation is significantly slower than basic insertion. It should be used only when the order of the elements matters.
+    /// </remarks>
+    /// <remarks>
+    /// Method <c>Remove(const T&)</c> is not provided.
+    /// It would be ambiguous if it removes the first or all occurrences.
+    /// The comparator is not an element of the array definition.
     /// </remarks>
     void RemoveAtStable(const int32 index)
     {
@@ -440,6 +466,52 @@ public:
 
         _allocData.Free(); // Capacity is above zero!
         _capacity = 0;
+    }
+
+
+    /// <summary>
+    /// Changes number of the elements without initializing them.
+    /// Element must be default-constructible.
+    /// Warning: This function is unsafe and should be used with caution.
+    /// </summary>
+    /// <returns> Span of the new elements, if they exist. </returns>
+    MAY_DISCARD FORCE_INLINE
+    auto ResizeNoInit(const int32 newCount) -> Span<Element>
+    {
+        const int32 oldCount = _count;
+
+        if (newCount > oldCount)
+        {
+            return AddNoInit(newCount - oldCount);
+        }
+
+        if (newCount < oldCount)
+        {
+            BulkOperations::DestroyLinearContent<Element>(
+                DATA_OF(Element, _allocData) + newCount,
+                oldCount - newCount
+            );
+
+            _count = newCount;
+        }
+
+        return Span<Element>{ DATA_OF(Element, _allocData) + newCount, 0 };
+    }
+
+    /// <summary>
+    /// Changes number of the elements by default-constructing or destroying them.
+    /// Element must be default-constructible.
+    /// </summary>
+    /// <returns> Span of the new elements, if they exist. </returns>
+    MAY_DISCARD FORCE_INLINE
+    auto Resize(const int32 newCount) -> Span<Element>
+    {
+        Span<Element> newElements = ResizeNoInit(newCount);
+        BulkOperations::DefaultLinearContent<Element>(
+            newElements.Data(),
+            newElements.Count()
+        );
+        return newElements;
     }
 
 
@@ -510,9 +582,9 @@ public:
         }
 
         const int32 startIndex = _count - count;
-        const Element* startPtr = DATA_OF(Element, _allocData) + startIndex;
+        Element* startPtr = DATA_OF(Element, _allocData) + startIndex;
 
-        return Span<Element>{ startPtr, count };
+        return Span<Element>{ startPtr, startPtr + count };
     }
 
 
@@ -581,18 +653,10 @@ public:
     }
 
     /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
+    template<typename C_ = NullOptT>
     FORCE_INLINE explicit
-    Array(const int32 capacity)
-    {
-        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
-        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
-    }
-
-    /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext> // Universal reference
-    FORCE_INLINE explicit
-    Array(const int32 capacity, AllocContext&& context)
-        : _allocData{ FORWARD(AllocContext, context) }
+    Array(const int32 capacity, C_&& context = NullOptT{})
+        : _allocData{ FORWARD(C_, context) }
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
@@ -717,7 +781,7 @@ public:
 
     // Constraints
 
-    REQUIRE_TYPE_NOT_REFERENCE(Element);
-    REQUIRE_TYPE_NOT_CONST(Element);
-    REQUIRE_TYPE_MOVEABLE(Element);
+    static_assert(!TIsRefV<Element>,     INFO_TYPE_NOT_REF);
+    static_assert(!TIsConstV<Element>,   INFO_TYPE_NOT_CONST);
+    static_assert(TIsMoveableV<Element>, INFO_TYPE_MOVEABLE);
 };

@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Language/Communism.h"
+#include "Language/Keywords.h"
 #include "Types/Numbers.h"
 
 // --- Identity ---
@@ -26,7 +27,7 @@ struct TIdentity
 /// Not-callable function that returns the type it is given.
 /// </summary>
 template<typename T>
-auto Declval() noexcept -> T;
+auto Declval() noexcept -> T { return {}; }
 
 /// <summary>
 /// Type to trigger evaluation of SFINAE expressions.
@@ -225,6 +226,13 @@ struct TIsSame<T, T>
 
 template<typename T1, typename T2>
 static constexpr bool TIsSameV = TIsSame<T1, T2>::Value;
+
+#if CONCEPTS_ENABLED
+
+template<typename T1, typename T2>
+concept SameAs = TIsSameV<T1, T2> && TIsSameV<T2, T1>;
+
+#endif
 
 
 // Const Check
@@ -712,6 +720,13 @@ struct THasTrivialCtor
 template<typename T>
 static constexpr bool THasTrivialCtorV = THasTrivialCtor<T>::Value;
 
+#if CONCEPTS_ENABLED
+
+template<typename T>
+concept TriviallyConstructible = THasTrivialCtorV<T>;
+
+#endif
+
 
 // Trivially Copyable Check
 
@@ -756,6 +771,14 @@ struct THasCopyCtor
 template<typename T>
 static constexpr bool THasCopyCtorV = THasCopyCtor<T>::Value;
 
+#if CONCEPTS_ENABLED
+
+template<typename T>
+concept CopyConstructible = THasCopyCtorV<T>;
+
+#endif
+
+
 template<typename T>
 struct THasCopyAssign
 {
@@ -767,6 +790,14 @@ static constexpr bool THasCopyAssignV = THasCopyAssign<T>::Value;
 
 template<typename T>
 static constexpr bool TIsCopyableV = THasCopyCtorV<T> && THasCopyAssignV<T>;
+
+#if CONCEPTS_ENABLED
+
+template<typename T>
+concept Copyable = TIsCopyableV<T>;
+
+#endif
+
 
 
 // Moveable Check
@@ -780,6 +811,14 @@ struct THasMoveCtor
 template<typename T>
 static constexpr bool THasMoveCtorV = THasMoveCtor<T>::Value;
 
+#if CONCEPTS_ENABLED
+
+template<typename T>
+concept MoveConstructible = THasMoveCtorV<T>;
+
+#endif
+
+
 template<typename T>
 struct THasMoveAssign
 {
@@ -792,8 +831,34 @@ static constexpr bool THasMoveAssignV = THasMoveAssign<T>::Value;
 template<typename T>
 static constexpr bool TIsMoveableV = THasMoveCtorV<T> && THasMoveAssignV<T>;
 
+#if CONCEPTS_ENABLED
 
-// Unerlying Type
+template<typename T>
+concept Moveable = TIsMoveableV<T>;
+
+#endif
+
+
+// Generic constructible check
+
+template<typename T, typename U>
+struct THasCtor
+{
+    enum { Value = __is_constructible(T, U) };
+};
+
+template<typename T, typename U>
+static constexpr bool THasCtorV = THasCtor<T, U>::Value;
+
+#if CONCEPTS_ENABLED
+
+template<typename T, typename U>
+concept Constructible = THasCtorV<T, U>;
+
+#endif
+
+
+// Underlying Type
 
 template<typename T>
 struct TUnderlyingType

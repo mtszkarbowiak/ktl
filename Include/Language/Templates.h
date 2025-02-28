@@ -140,3 +140,29 @@ auto Ptr2Ref(T* ptr) NOEXCEPT_S -> T&
     ASSERT(ptr != nullptr);
     return *ptr;
 }
+
+
+// Const Helper
+
+/// <summary>
+/// Returns a const-reference to the referenced object.
+/// De facto, it is a no-op function, used to select the correct overload.
+/// </summary>
+template<typename T>
+NO_DISCARD FORCE_INLINE
+auto AsConst(T& x) NOEXCEPT_S -> const T&
+{
+    return (x);
+}
+
+/// <summary>
+/// Illegal overload, making sure that a temporary object
+/// is not bound to a const-reference.
+/// </summary>
+template<typename T>
+auto AsConst(T&&) = delete;
+
+
+// Other Tags
+
+struct NullOptT{};

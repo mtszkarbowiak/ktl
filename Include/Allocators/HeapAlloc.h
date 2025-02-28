@@ -12,6 +12,7 @@
 #include "Debugging/Assertions.h"
 #include "Language/Keywords.h"
 #include "Language/Memory.h"
+#include "Language/Templates.h"
 #include "Types/Numbers.h"
 
 /// <summary>
@@ -34,6 +35,13 @@ public:
         Data()
             : _ptr{ nullptr }
         {
+        }
+
+        FORCE_INLINE explicit
+        Data(NullOptT)
+            : _ptr{ nullptr }
+        {
+            // Pass
         }
 
         FORCE_INLINE

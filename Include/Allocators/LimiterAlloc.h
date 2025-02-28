@@ -42,6 +42,16 @@ public:
 
 
     public:
+        FORCE_INLINE
+        Data() = default;
+
+        FORCE_INLINE explicit
+        Data(NullOptT)
+        {
+            // Pass
+        }
+
+
         NO_DISCARD FORCE_INLINE
         auto MovesItems() const -> bool
         {

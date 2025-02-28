@@ -18,16 +18,14 @@
 /// </remarks>
 class BitMutPuller
 {
-    uint64* _blocks;
-    int32   _currentIndex;
-    int32   _endIndex;
-
-    static constexpr int32 BitsPerBlock = sizeof(*_blocks) * 8;
+    BitsStorage::Block* _blocks;
+    int32      _currentIndex;
+    int32      _endIndex;
 
 
 public:
     FORCE_INLINE explicit
-    BitMutPuller(uint64* blocks, const int32 beginIndex, const int32 endIndex)
+    BitMutPuller(BitsStorage::Block* blocks, const int32 beginIndex, const int32 endIndex)
         : _blocks{ blocks }
         , _currentIndex{ beginIndex }
         , _endIndex{ endIndex }
@@ -66,23 +64,39 @@ public:
     auto Hint() const -> SizeHint
     {
         const int32 remaining = _endIndex - _currentIndex;
-        return { remaining, Nullable<::Index>{ remaining } };
+
+        return SizeHint{
+            remaining,
+            Nullable<::Index>{ remaining }
+        };
     }
 
     NO_DISCARD FORCE_INLINE
     auto operator*() -> MutBitRef
     {
+        using namespace BitsStorage;
+
         const int32 blockIndex = _currentIndex / BitsPerBlock;
         const int32 bitIndex   = _currentIndex % BitsPerBlock;
-        return MutBitRef{ _blocks + blockIndex, bitIndex };
+
+        return MutBitRef{
+            _blocks + blockIndex,
+            bitIndex
+        };
     }
 
     NO_DISCARD FORCE_INLINE
     auto operator*() const -> ConstBitRef
     {
+        using namespace BitsStorage;
+
         const int32 blockIndex = _currentIndex / BitsPerBlock;
         const int32 bitIndex   = _currentIndex % BitsPerBlock;
-        return ConstBitRef{ _blocks + blockIndex, bitIndex };
+
+        return ConstBitRef{
+            _blocks + blockIndex,
+            bitIndex
+        };
     }
 
 
@@ -132,16 +146,17 @@ public:
 /// </remarks>
 class BitConstPuller
 {
-    const uint64* _blocks;
-    int32         _currentIndex;
-    int32         _endIndex;
-
-    static constexpr int32 BitsPerBlock = sizeof(*_blocks) * 8;
+    const BitsStorage::Block* _blocks;
+    int32            _currentIndex;
+    int32            _endIndex;
 
 
 public:
     FORCE_INLINE explicit
-    BitConstPuller(const uint64* array, const int32 beginIndex, const int32 endIndex)
+    BitConstPuller(
+        const BitsStorage::Block* array,
+        const int32 beginIndex, 
+        const int32 endIndex)
         : _blocks{ array }
         , _currentIndex{ beginIndex }
         , _endIndex{ endIndex }
@@ -186,6 +201,7 @@ public:
     NO_DISCARD FORCE_INLINE
     auto operator*() const -> ConstBitRef
     {
+        using namespace BitsStorage;
         const int32 blockIndex = _currentIndex / BitsPerBlock;
         const int32 bitIndex   = _currentIndex % BitsPerBlock;
         return ConstBitRef{ _blocks + blockIndex, bitIndex };

@@ -51,7 +51,7 @@ class Ring
     using AllocData   = typename A::Data;
     using AllocHelper = AllocHelperOf<Element, A, RING_DEFAULT_CAPACITY, G>;
 
-    AllocData _allocData{};
+    AllocData _allocData{ NullOptT{} };
     int32     _capacity{};
     int32     _head{};
     int32     _tail{}; // Points to the next FREE slot (not the last element).
@@ -670,20 +670,13 @@ public:
         CopyToEmpty(other);
     }
 
-
-    /// <summary> Initializes an empty ring with an active context-less allocation of the specified capacity. </summary>
+    /// <summary> Initializes an empty ring with an active allocation of the specified capacity. </summary>
+    /// <param name="capacity"> The initial capacity of the ring. </param>
+    /// <param name="context"> The context to use for the allocation. </param>
+    template<typename C_ = NullOptT>
     FORCE_INLINE explicit
-    Ring(const int32 capacity)
-    {
-        const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
-        _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
-    }
-
-    /// <summary> Initializes an empty ring with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext> // Universal reference
-    FORCE_INLINE explicit
-    Ring(const int32 capacity, AllocContext&& context)
-        : _allocData{ FORWARD(AllocContext, context) }
+    Ring(const int32 capacity, C_&& context = NullOptT{})
+        : _allocData{ FORWARD(C_, context) }
     {
         const int32 requiredCapacity = AllocHelper::InitCapacity(capacity);
         _capacity = AllocHelper::Allocate(_allocData, requiredCapacity);
@@ -983,8 +976,8 @@ public:
 
 
     // Constraints
-
-    REQUIRE_TYPE_NOT_REFERENCE(Element);
-    REQUIRE_TYPE_NOT_CONST(Element);
-    REQUIRE_TYPE_MOVEABLE(Element);
+    
+    static_assert(!TIsRefV<Element>,     INFO_TYPE_NOT_REF);
+    static_assert(!TIsConstV<Element>,   INFO_TYPE_NOT_CONST);
+    static_assert(TIsMoveableV<Element>, INFO_TYPE_MOVEABLE);
 };

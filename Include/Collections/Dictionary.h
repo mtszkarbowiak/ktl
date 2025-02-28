@@ -261,7 +261,7 @@ public:
     constexpr static int32 SlotSize = sizeof(Slot);
 
 PRIVATE:
-    AllocData _allocData{};
+    AllocData _allocData{ NullOptT{} };
     int32     _capacity{};           // Number of slots
     int32     _elementCountCached{}; // Number of elements
     int32     _cellsCountCached{};   // Number of cells
@@ -699,7 +699,7 @@ public:
             return nullptr;
 
         const HashSlotSearchResult result = FindSlot(
-            DATA_OF(Slot, _allocData),
+            DATA_OF(const Slot, _allocData),
             _capacity,
             key
         );
@@ -707,7 +707,7 @@ public:
         if (result.FoundObject.IsEmpty())
             return nullptr;
 
-        return &(DATA_OF(Slot, _allocData)[result.FoundObject.Value()].GetValue());
+        return &(DATA_OF(const Slot, _allocData)[result.FoundObject.Value()].GetValue());
     }
 
     /// <summary>
@@ -872,24 +872,13 @@ public:
         Append(other);
     }
 
-    /// <summary> Initializes an empty array with an active context-less allocation of the specified capacity. </summary>
+    /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
+    template<typename C_ = NullOptT>
     FORCE_INLINE explicit
-    Dictionary(const int32 capacity)
+    Dictionary(const int32 capacity, C_&& context = NullOptT{}) // Universal reference
+        : _allocData{ FORWARD(C_, context) }
     {
         const int32 requiredCapacity  = Math::NextPow2(capacity);
-        const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
-        _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
-
-        BulkOperations::DefaultLinearContent<Slot>(DATA_OF(Slot, _allocData), _capacity);
-    }
-
-    /// <summary> Initializes an empty array with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext>
-    FORCE_INLINE explicit
-    Dictionary(const int32 capacity, AllocContext&& context) // Universal reference
-        : _allocData{ FORWARD(AllocContext, context) }
-    {
-        const int32 requiredCapacity = Math::NextPow2(capacity);
         const int32 requestedCapacity = AllocHelper::InitCapacity(requiredCapacity);
         _capacity = AllocHelper::Allocate(_allocData, requestedCapacity);
 
@@ -1503,12 +1492,12 @@ public:
 
     // Constraints
 
-    REQUIRE_TYPE_NOT_REFERENCE(Key);
-    REQUIRE_TYPE_NOT_REFERENCE(Value);
-    REQUIRE_TYPE_NOT_CONST(Key);
-    REQUIRE_TYPE_NOT_CONST(Value);
-    REQUIRE_TYPE_MOVEABLE(Key);
-    REQUIRE_TYPE_MOVEABLE(Value);
+    static_assert(!TIsRefV<Key>,       INFO_TYPE_NOT_REF);
+    static_assert(!TIsRefV<Value>,     INFO_TYPE_NOT_REF);
+    static_assert(!TIsConstV<Key>,     INFO_TYPE_NOT_CONST);
+    static_assert(!TIsConstV<Value>,   INFO_TYPE_NOT_CONST);
+    static_assert(TIsMoveableV<Key>,   INFO_TYPE_MOVEABLE);
+    static_assert(TIsMoveableV<Value>, INFO_TYPE_MOVEABLE);
 
     static_assert(
         AllocHelper::HasBinaryMaskingSupport() == AllocHelper::BinaryMaskingSupportStatus::Supported, 

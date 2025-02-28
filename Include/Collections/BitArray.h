@@ -42,39 +42,28 @@ class BitArray
 {
 public:
     /// <summary> Underlying data type used to store the bits. </summary>
-    using Block       = uint64;
     using AllocData   = typename A::Data;
-    using AllocHelper = AllocHelperOf<Block, A, ARRAY_DEFAULT_CAPACITY, G>;
+    using AllocHelper = AllocHelperOf<BitsStorage::Block, A, ARRAY_DEFAULT_CAPACITY, G>;
 
 PRIVATE:
-    AllocData _allocData{};
+    AllocData _allocData{ NullOptT{} };
     int32     _blockCapacity{};
     int32     _bitCount{};
-
-    static constexpr int32 BytesPerBlock = sizeof(Block);
-    static constexpr int32 BitsPerBlock  = BytesPerBlock * 8;
 
 
 protected:
     FORCE_INLINE
-    auto Data() -> Block*
+    auto Data() & -> BitsStorage::Block*
     {
-        return DATA_OF(Block, _allocData);
+        return DATA_OF(BitsStorage::Block, _allocData);
     }
 
     FORCE_INLINE
-    auto Data() const -> const Block*
+    auto Data() const& -> const BitsStorage::Block*
     {
-        return DATA_OF(const Block, _allocData);
+        return DATA_OF(const BitsStorage::Block, _allocData);
     }
 
-
-    /// <summary> Calculates the number of blocks required to store the given number of bits. </summary>
-    static FORCE_INLINE constexpr
-    auto BlocksForBits(const int32 bitCount) -> int32
-    {
-        return (bitCount + BitsPerBlock - 1) / BitsPerBlock;
-    }
 
 public:
     // Capacity Access
@@ -90,7 +79,7 @@ public:
     NO_DISCARD FORCE_INLINE constexpr
     auto Capacity() const -> int32
     {
-        return _blockCapacity * BitsPerBlock;
+        return _blockCapacity * BitsStorage::BitsPerBlock;
     }
 
 
@@ -120,9 +109,13 @@ public:
 
     // Allocation Manipulation
 
-    /// <summary> Ensures that adding bits up to the requested capacity will not invoke the allocator. </summary>
+    /// <summary>
+    /// Ensures that adding bits up to the requested capacity will not invoke the allocator.
+    /// </summary>
     void Reserve(const int32 minBitsCapacity)
     {
+        using namespace BitsStorage;
+
         if (minBitsCapacity < 1)
             return; // Reserving 0 (or less) would never increase the capacity.
 
@@ -134,7 +127,8 @@ public:
         if (_blockCapacity == 0)
         {
             // If the array is empty, allocate the default capacity.
-            const int32 requiredBlocksCapacity = AllocHelper::InitCapacity(minBlocksCapacity);
+            const int32 requiredBlocksCapacity
+                = AllocHelper::InitCapacity(minBlocksCapacity);
             _blockCapacity = AllocHelper::Allocate(_allocData, requiredBlocksCapacity);
         }
         else
@@ -143,8 +137,10 @@ public:
             const AllocData& oldData = _allocData;
             AllocData newData{ oldData }; // Copy the binding
 
-            const int32  requiredBlocksCapacity = AllocHelper::NextCapacity(_blockCapacity, minBlocksCapacity);
-            const int32 allocatedBlocksCapacity = AllocHelper::Allocate(newData, requiredBlocksCapacity);
+            const int32  requiredBlocksCapacity
+                = AllocHelper::NextCapacity(_blockCapacity, minBlocksCapacity);
+            const int32 allocatedBlocksCapacity
+                = AllocHelper::Allocate(newData, requiredBlocksCapacity);
 
             const int32 oldBlocksCount = BlocksForBits(_bitCount);
             if (oldBlocksCount > 0)
@@ -168,6 +164,8 @@ public:
     /// </summary>
     void Compact() //TODO(mtszkarbowiak) Test Test BitArray::Compact
     {
+        using namespace BitsStorage;
+
         if (_bitCount == 0)
         {
             // If the array is empty, free the allocation.
@@ -192,8 +190,8 @@ public:
         const int32 allocatedBlocksCapacity = AllocHelper::Allocate(newData, requiredBlocksCapacity);
 
         BulkOperations::MoveLinearContent<Block>(
-            DATA_OF(Block, _allocData), 
-            DATA_OF(Block, newData), 
+            DATA_OF(Block, _allocData),
+            DATA_OF(Block, newData),
             BlocksForBits(_bitCount)
         );
         BulkOperations::DestroyLinearContent<Block>(
@@ -218,9 +216,15 @@ public:
     NO_DISCARD FORCE_INLINE
     auto operator[](const int32 index) const -> ConstBitRef
     {
+        using namespace BitsStorage;
+
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
-        return ConstBitRef{ DATA_OF(const Block, _allocData) + blockIndex, bitIndex };
+
+        return ConstBitRef{
+            DATA_OF(const Block, _allocData) + blockIndex,
+            bitIndex
+        };
     }
 
     /// <summary> Accesses the bit at the specified index. </summary>
@@ -231,9 +235,15 @@ public:
     NO_DISCARD FORCE_INLINE
     auto operator[](const int32 index) -> MutBitRef
     {
+        using namespace BitsStorage;
+
         const int32 blockIndex = index / BitsPerBlock;
         const int32 bitIndex   = index % BitsPerBlock;
-        return MutBitRef{ DATA_OF(Block, _allocData) + blockIndex, bitIndex };
+
+        return MutBitRef{
+            DATA_OF(Block, _allocData) + blockIndex,
+            bitIndex
+        };
     }
 
 
@@ -245,6 +255,8 @@ public:
     NO_DISCARD FORCE_INLINE
     auto GetBit(const int32 index) const -> bool
     {
+        using namespace BitsStorage;
+
         ASSERT_COLLECTION_SAFE_ACCESS(index >= 0 && index < _bitCount);
 
         const int32 blockIndex = index / BitsPerBlock;
@@ -263,6 +275,8 @@ public:
     FORCE_INLINE
     void SetBit(const int32 index, const bool value)
     {
+        using namespace BitsStorage;
+
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index < _bitCount);
 
         const int32 blockIndex = index / BitsPerBlock;
@@ -281,10 +295,12 @@ public:
     FORCE_INLINE
     void SetAll(const bool value)
     {
+        using namespace BitsStorage;
+
         if (_bitCount == 0)
             return;
 
-        const Block fillValue   = value ? ~Block{} : Block{};
+        const Block fillValue   = value ? FullBlock : EmptyBlock;
         const int32 blocksCount = BlocksForBits(_bitCount);
 
         Block* blocks = DATA_OF(Block, _allocData);
@@ -295,8 +311,10 @@ public:
 
     /// <summary> Accesses the block of bits bit at the specified index. </summary>
     NO_DISCARD FORCE_INLINE
-    auto GetBlock(const int32 blockIndex) const -> Block
+    auto GetBlock(const int32 blockIndex) const -> BitsStorage::Block
     {
+        using namespace BitsStorage;
+
         ASSERT_COLLECTION_SAFE_ACCESS(blockIndex >= 0 && blockIndex < _blockCapacity);
         const Block* srcBlock = DATA_OF(Block, _allocData) + blockIndex;
         return *srcBlock;
@@ -304,8 +322,10 @@ public:
 
     /// <summary> Sets the block of bits bit at the specified index. </summary>
     FORCE_INLINE
-    void SetBlock(const int32 blockIndex, const Block value)
+    void SetBlock(const int32 blockIndex, const BitsStorage::Block value)
     {
+        using namespace BitsStorage;
+
         ASSERT_COLLECTION_SAFE_MOD(blockIndex >= 0 && blockIndex < _blockCapacity);
         Block* dstBlock = DATA_OF(Block, _allocData) + blockIndex;
         *dstBlock = value;
@@ -316,8 +336,11 @@ public:
     void Add(const bool value)
     {
         const int32 bitIndex = _bitCount;
+
         Reserve(_bitCount + 1);
+
         ++_bitCount;
+
         SetBit(bitIndex, value);
     }
     
@@ -326,11 +349,17 @@ public:
     FORCE_INLINE
     void Clear()
     {
+        using namespace BitsStorage;
+
         if (_bitCount == 0)
             return;
 
         const int32 blocksCount = BlocksForBits(_bitCount);
-        BulkOperations::DestroyLinearContent<Block>(DATA_OF(Block, _allocData), blocksCount);
+        BulkOperations::DestroyLinearContent<Block>(
+            DATA_OF(Block, _allocData), 
+            blocksCount
+        );
+
         _bitCount = 0;
     }
 
@@ -351,6 +380,8 @@ public:
     /// <summary> Inserts a bit without changing the order of the other bits. </summary>
     void InsertAtStable(const int32 index, const bool value)
     {
+        using namespace BitsStorage;
+
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index <= _bitCount); // Allow index == _bitCount for appending
 
         Reserve(_bitCount + 1); // Ensure enough space for the new bit.
@@ -393,13 +424,15 @@ public:
     /// <summary> Removes the bit at the specified index without changing the order of the other bits. </summary>
     void RemoveAtStable(const int32 index)
     {
+        using namespace BitsStorage;
+
         ASSERT_COLLECTION_SAFE_MOD(index >= 0 && index < _bitCount); // Ensure the index is valid.
 
-        const int32 blockIndex = index / BitsPerBlock;
-        const int32 bitIndex = index % BitsPerBlock;
+        const int32 blockIndex  = index / BitsPerBlock;
+        const int32 bitIndex    = index % BitsPerBlock;
         const int32 blocksCount = BlocksForBits(_bitCount);
 
-        Block* blocks = DATA_OF(Block, _allocData);
+        Block* blocks = DATA_OF(BitsStorage::Block, _allocData);
 
         // Handle the block containing the removed bit.
         {
@@ -431,6 +464,8 @@ public:
 PRIVATE:
     void MoveToEmpty(BitArray&& other) noexcept
     {
+        using namespace BitsStorage;
+
         ASSERT_COLLECTION_SAFE_MOD(_bitCount == 0 && _blockCapacity == 0); // BitArray must be empty, but the collection must be initialized!
 
         if (other._bitCount == 0 ||other._blockCapacity == 0)
@@ -467,6 +502,8 @@ PRIVATE:
 
     void CopyToEmpty(const BitArray& other)
     {
+        using namespace BitsStorage;
+
         ASSERT_COLLECTION_SAFE_MOD(_bitCount == 0 && _blockCapacity == 0); // BitArray must be empty, but the collection must be initialized!
 
         if (other._bitCount == 0 || other._blockCapacity == 0)
@@ -508,21 +545,13 @@ public:
     }
 
 
-    /// <summary> Initializing an empty bit-array with an active context-less allocation of the specified capacity. </summary>
-    FORCE_INLINE explicit
-    BitArray(const int32 bitCapacity)
-    {
-        const int32 requiredBlocks  = BlocksForBits(bitCapacity);
-        const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
-        _blockCapacity = allocatedMemory / BytesPerBlock;
-    }
-
     /// <summary> Initializes an empty bit-array with an active allocation of the specified capacity and context. </summary>
-    template<typename AllocContext>
+    template<typename C_ = NullOptT>
     FORCE_INLINE explicit
-    BitArray(const int32 bitCapacity, AllocContext&& context)
-        : _allocData{ FORWARD(AllocContext, context) }
+    BitArray(const int32 bitCapacity, C_&& context = NullOptT{})
+        : _allocData{ FORWARD(C_, context) }
     {
+        using namespace BitsStorage;
         const int32 requiredBlocks  = BlocksForBits(bitCapacity);
         const int32 allocatedMemory = _allocData.Allocate(requiredBlocks * BytesPerBlock);
         _blockCapacity = allocatedMemory / BytesPerBlock;
@@ -568,12 +597,20 @@ public:
     NO_DISCARD FORCE_INLINE
     auto Values() -> BitMutPuller
     {
-        return BitMutPuller{ DATA_OF(Block, _allocData), 0, _bitCount };
+        return BitMutPuller{
+            DATA_OF(BitsStorage::Block, _allocData),
+            0,
+            _bitCount
+        };
     }
 
     NO_DISCARD FORCE_INLINE
     auto Values() const -> BitConstPuller
     {
-        return BitConstPuller{ DATA_OF(const Block, _allocData), 0, _bitCount };
+        return BitConstPuller{
+            DATA_OF(const BitsStorage::Block, _allocData),
+            0,
+            _bitCount
+        };
     }
 };

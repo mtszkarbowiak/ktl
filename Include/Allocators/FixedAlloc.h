@@ -10,6 +10,7 @@
 #include "Debugging/Assertions.h"
 #include "Language/Keywords.h"
 #include "Language/Memory.h"
+#include "Language/Templates.h"
 #include "Types/Numbers.h"
 
 /// <summary>
@@ -41,6 +42,13 @@ public:
     public:
         FORCE_INLINE constexpr
         Data() = default;
+
+        FORCE_INLINE constexpr explicit
+        Data(NullOptT)
+            : Data()
+        {
+            // Pass
+        }
 
         FORCE_INLINE constexpr
         Data(const Data&)
