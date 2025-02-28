@@ -16,8 +16,8 @@
 TEST(HashSetPullers, Empty)
 {
     HashSet<int32> set;
-    GTEST_ASSERT_EQ(set.Values().Hint().Min, 0);
-    GTEST_ASSERT_EQ(set.Values().Hint().Max.Value(), 0);
+    GTEST_ASSERT_EQ(set.Values().Hint().Min(), 0);
+    GTEST_ASSERT_EQ(set.Values().Hint().Max(), 0);
 }
 
 TEST(HashSetPullers, Count)
@@ -33,12 +33,12 @@ TEST(HashSetPullers, Count)
 TEST(DictionaryPullers, Empty)
 {
     Dictionary<int32, int32> dict;
-    GTEST_ASSERT_EQ(dict.Values().Hint().Min, 0);
-    GTEST_ASSERT_EQ(dict.Values().Hint().Max.Value(), 0);
-    GTEST_ASSERT_EQ(dict.Keys().Hint().Min, 0);
-    GTEST_ASSERT_EQ(dict.Keys().Hint().Max.Value(), 0);
-    GTEST_ASSERT_EQ(dict.Pairs().Hint().Min, 0);
-    GTEST_ASSERT_EQ(dict.Pairs().Hint().Max.Value(), 0);
+    GTEST_ASSERT_EQ(dict.Values().Hint().Min(), 0);
+    GTEST_ASSERT_EQ(dict.Values().Hint().Max(), 0);
+    GTEST_ASSERT_EQ(dict.Keys().Hint().Min(), 0);
+    GTEST_ASSERT_EQ(dict.Keys().Hint().Max(), 0);
+    GTEST_ASSERT_EQ(dict.Pairs().Hint().Min(), 0);
+    GTEST_ASSERT_EQ(dict.Pairs().Hint().Max(), 0);
 
     GTEST_ASSERT_EQ(Querying::Count(dict.Values()), 0);
     GTEST_ASSERT_EQ(Querying::Count(dict.Keys()), 0);
@@ -54,12 +54,12 @@ TEST(DictionaryPullers, Hint)
     dict.Remove(3);
     dict.Add(3, 4);
 
-    GTEST_ASSERT_EQ(dict.Keys().Hint().Min, 3);
-    GTEST_ASSERT_EQ(dict.Keys().Hint().Max.Value(), 3);
-    GTEST_ASSERT_EQ(dict.Values().Hint().Min, 3);
-    GTEST_ASSERT_EQ(dict.Values().Hint().Max.Value(), 3);
-    GTEST_ASSERT_EQ(dict.Pairs().Hint().Min, 3);
-    GTEST_ASSERT_EQ(dict.Pairs().Hint().Max.Value(), 3);
+    GTEST_ASSERT_EQ(dict.Keys().Hint().Min(), 3);
+    GTEST_ASSERT_EQ(dict.Keys().Hint().Max(), 3);
+    GTEST_ASSERT_EQ(dict.Values().Hint().Min(), 3);
+    GTEST_ASSERT_EQ(dict.Values().Hint().Max(), 3);
+    GTEST_ASSERT_EQ(dict.Pairs().Hint().Min(), 3);
+    GTEST_ASSERT_EQ(dict.Pairs().Hint().Max(), 3);
 }
 
 TEST(DictionaryPullers, Count)
