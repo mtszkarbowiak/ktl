@@ -5,6 +5,7 @@
 // and sublicense the code as long as the original license is included in derivative works.
 // See the LICENSE file for more details.
 
+#include <chrono>
 #include <gtest/gtest.h>
 
 #include "Threading/JobScheduler.h"
