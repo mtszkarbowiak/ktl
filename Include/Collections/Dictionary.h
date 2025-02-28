@@ -957,7 +957,7 @@ PRIVATE:
     {
         // Ensure that the dictionary is not empty.
         if (_capacity == 0)
-            return { 0, MakeNullable<Index>(0)};
+            return SizeHint::Empty();
 
         // Count the number of total occupied slots.
         int32 result = 0;
@@ -971,10 +971,7 @@ PRIVATE:
                 // it means that the index is the first occupied slot. (Fast path)
                 if (i == index && result == 0)
                 {
-                    return {
-                        _elementCountCached,
-                        MakeNullable<Index>(_elementCountCached)
-                    };
+                    return SizeHint::Exactly(_elementCountCached);
                 }
 
                 ++result;
@@ -988,7 +985,7 @@ PRIVATE:
                 ++result;
         }
 
-        return { result, MakeNullable<Index>(result) };
+        return SizeHint::Exactly(result);
     }
 
 

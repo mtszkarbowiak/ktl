@@ -45,7 +45,7 @@ namespace Querying
     NO_DISCARD
     auto ToArray(_C&& puller) -> Array<decltype(*puller), A, G>
     {
-        const int32 predictedCount = puller.Hint().Max.ValueOr(0);
+        const int32 predictedCount = puller.Hint().MaxOr(puller.Hint().Min());
         return ToArray<A, G, _C>(FORWARD(_C, puller), predictedCount);
     }
 }

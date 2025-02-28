@@ -752,7 +752,7 @@ public:
         {
             // In the future, this could be optimized to return the actual number of elements.
             // It will be done, once generalized hash collection utilities are introduced.
-            return { 0, MakeNullable<::Index>(_set->_elementCountCached) };
+            return SizeHint::Range(0, _set->_elementCountCached);
         }
 
         NO_DISCARD FORCE_INLINE explicit

@@ -64,11 +64,7 @@ public:
     auto Hint() const -> SizeHint
     {
         const int32 remaining = _endIndex - _currentIndex;
-
-        return SizeHint{
-            remaining,
-            MakeNullable<::Index>(remaining)
-        };
+        return SizeHint::Exactly(remaining);
     }
 
     NO_DISCARD FORCE_INLINE
@@ -195,7 +191,7 @@ public:
     auto Hint() const -> SizeHint
     {
         const int32 remaining = _endIndex - _currentIndex;
-        return { remaining, MakeNullable<::Index>(remaining) };
+        return SizeHint::Exactly(remaining);
     }
 
     NO_DISCARD FORCE_INLINE
