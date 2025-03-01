@@ -761,7 +761,7 @@ public:
         auto Hint() const -> SizeHint
         {
             const int32 remaining = _ring->Count() - _indexOfElement;
-            return { remaining, Nullable<::Index>{ remaining } };
+            return SizeHint::Exactly(remaining);
         }
 
         NO_DISCARD FORCE_INLINE
@@ -882,7 +882,7 @@ public:
         auto Hint() const -> SizeHint
         {
             const int32 remaining = _ring->Count() - _indexOfElement;
-            return { remaining, Nullable<::Index>{ remaining } };
+            return SizeHint::Exactly(remaining);
         }
 
         NO_DISCARD FORCE_INLINE
