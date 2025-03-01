@@ -12,7 +12,7 @@
 #include "Debugging/Assertions.h"
 #include "Language/Keywords.h"
 #include "Language/Memory.h"
-#include "Language/Templates.h"
+#include "Types/Base.h"
 #include "Types/Numbers.h"
 
 /// <summary>

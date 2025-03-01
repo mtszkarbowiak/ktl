@@ -10,32 +10,9 @@
 #include "Debugging/Assertions.h"
 #include "Language/Keywords.h"
 #include "Language/Templates.h"
+#include "Types/Base.h"
 #include "Types/Dummy.h"
 
-/// <summary>
-/// Wrapper over a value type that can be assigned an additional null value.
-/// </summary>
-///
-/// <typeparam name="T">
-/// Type of the stored value.
-/// </typeparam>
-/// <typeparam name="UseTombstone">
-/// Flag indicating whether to use tombstone value.
-/// </typeparam>
-template<typename T, bool M = (GetMaxTombstoneDepth<T>::Value > 0)>
-class Nullable;
-
-template<typename T>
-class Span;
-
-/// <summary>
-/// Wrapper over a value type that can be assigned an additional null value.
-/// To represent null, this implementation always uses a sentinel value taking additional byte.
-/// </summary>
-///
-/// <typeparam name="T">
-/// Type of the stored value. It need not to use a tombstone value.
-/// </typeparam>
 template<typename T>
 class Nullable<T, false>
 {
@@ -315,20 +292,6 @@ struct GetMaxTombstoneDepth<Nullable<T, false>>
 };
 
 
-/// <summary>
-/// Wrapper over a value type that can be assigned an additional null value.
-/// This implementation cedes tracking of null value to the underlying type via tombstone values.
-/// Therefore, it does not require any additional memory to store the null value.
-/// Additionally, the underlying type may skip the null value check.
-/// </summary>
-/// 
-/// <typeparam name="T">
-/// Type of the stored value. It must support tombstone values.
-/// </typeparam>
-///
-/// <remarks>
-/// 1. 
-/// </remarks>
 template<typename T>
 class Nullable<T, true>
 {
@@ -557,26 +520,11 @@ public:
     }
 };
 
-
 template<typename T>
 struct GetMaxTombstoneDepth<Nullable<T, true>>
 {
     enum { Value = GetMaxTombstoneDepth<T>::Value - 1 };
 };
-
-
-/// <summary>
-/// Type alias for a nullable type that enforces usage of sentinel value.
-/// </summary>
-template<typename T>
-using SentinelNullable = Nullable<T, false>;
-
-/// <summary>
-/// Type alias for a nullable type that enforces usage of tombstone value.
-/// All constraints of the underlying type must be met.
-/// </summary>
-template<typename T>
-using TombstoneNullable = Nullable<T, true>;
 
 
 /// <summary>
