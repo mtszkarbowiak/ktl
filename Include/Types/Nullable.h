@@ -287,7 +287,7 @@ public:
 };
 
 template<typename T, bool C>
-struct GetMaxTombstoneDepth<Nullable<T, C, false>>
+struct TMaxTombstoneDepth<Nullable<T, C, false>>
 {
     enum { Value = 64 };
 };
@@ -296,7 +296,7 @@ struct GetMaxTombstoneDepth<Nullable<T, C, false>>
 template<typename T, bool C>
 class Nullable<T, C, true>
 {
-    static_assert(GetMaxTombstoneDepth<T>::Value > 0, "Type does not support tombstone values.");
+    static_assert(TMaxTombstoneDepth<T>::Value > 0, "Type does not support tombstone values.");
 
 public:
     using Element = T;
@@ -523,9 +523,9 @@ public:
 };
 
 template<typename T, bool C>
-struct GetMaxTombstoneDepth<Nullable<T, C, true>>
+struct TMaxTombstoneDepth<Nullable<T, C, true>>
 {
-    enum { Value = GetMaxTombstoneDepth<T>::Value - 1 };
+    enum { Value = TMaxTombstoneDepth<T>::Value - 1 };
 };
 
 
