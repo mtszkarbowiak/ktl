@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "Language/TypeTraits.h"
 #include "Types/Numbers.h"
 
 
@@ -61,7 +62,7 @@ struct GetMaxTombstoneDepth
 
 template<
     typename T,
-    bool C = false,
+    bool C = (THasTrivialLifecycleV<T>),
     bool M = (GetMaxTombstoneDepth<T>::Value > 0)
 >
 class Nullable;

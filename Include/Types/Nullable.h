@@ -137,7 +137,8 @@ public:
 
     // Tombstone (Nested Nullable)
 
-    friend Nullable<Nullable, C, true>;
+    friend Nullable<Nullable, false, true>;
+    friend Nullable<Nullable, true,  true>;
 
 PRIVATE:
     NO_DISCARD FORCE_INLINE
@@ -390,7 +391,8 @@ public:
 
     // Tombstone (Nested Nullable)
 
-    friend Nullable<Nullable, C, true>;
+    friend Nullable<Nullable, false, true>;
+    friend Nullable<Nullable,  true, true>;
 
 PRIVATE:
     NO_DISCARD FORCE_INLINE
