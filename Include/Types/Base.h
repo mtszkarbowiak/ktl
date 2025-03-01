@@ -58,9 +58,15 @@ struct GetMaxTombstoneDepth
     enum { Value = 0 };
 };
 
-template<typename T, bool M = (GetMaxTombstoneDepth<T>::Value > 0)>
+
+template<
+    typename T,
+    bool C = false,
+    bool M = (GetMaxTombstoneDepth<T>::Value > 0)
+>
 class Nullable;
+
 template<typename T>
-using SentinelNullable = Nullable<T, false>;
+using SentinelNullable = Nullable<T, false, false>;
 template<typename T>
-using TombstoneNullable = Nullable<T, true>;
+using TombstoneNullable = Nullable<T, false, true>;

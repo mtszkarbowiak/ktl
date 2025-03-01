@@ -13,8 +13,8 @@
 #include "Types/Base.h"
 #include "Types/Dummy.h"
 
-template<typename T>
-class Nullable<T, false>
+template<typename T, bool C>
+class Nullable<T, C, false>
 {
 public:
     using Element = T;
@@ -137,7 +137,7 @@ public:
 
     // Tombstone (Nested Nullable)
 
-    friend Nullable<Nullable, true>;
+    friend Nullable<Nullable, C, true>;
 
 PRIVATE:
     NO_DISCARD FORCE_INLINE
@@ -285,15 +285,15 @@ public:
     }
 };
 
-template<typename T>
-struct GetMaxTombstoneDepth<Nullable<T, false>>
+template<typename T, bool C>
+struct GetMaxTombstoneDepth<Nullable<T, C, false>>
 {
     enum { Value = 64 };
 };
 
 
-template<typename T>
-class Nullable<T, true>
+template<typename T, bool C>
+class Nullable<T, C, true>
 {
     static_assert(GetMaxTombstoneDepth<T>::Value > 0, "Type does not support tombstone values.");
 
@@ -390,7 +390,7 @@ public:
 
     // Tombstone (Nested Nullable)
 
-    friend Nullable<Nullable, true>;
+    friend Nullable<Nullable, C, true>;
 
 PRIVATE:
     NO_DISCARD FORCE_INLINE
@@ -520,8 +520,8 @@ public:
     }
 };
 
-template<typename T>
-struct GetMaxTombstoneDepth<Nullable<T, true>>
+template<typename T, bool C>
+struct GetMaxTombstoneDepth<Nullable<T, C, true>>
 {
     enum { Value = GetMaxTombstoneDepth<T>::Value - 1 };
 };
