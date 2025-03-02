@@ -418,6 +418,13 @@ public:
             Set(MOVE(value));
         }
     }
+
+
+    // Constraints
+
+    static_assert(THasTrivialCtorV<Element>, "Type must have trivial constructor to be used in trivial Nullable.");
+    static_assert(THasTrivialCopyV<Element>, "Type must have trivial copy to be used in trivial Nullable.");
+    static_assert(THasTrivialDtorV<Element>, "Type must have trivial destructor to be used in trivial Nullable.");
 };
 
 template<typename T, bool C>
@@ -427,8 +434,8 @@ struct TMaxTombstoneDepth<Nullable<T, C, false>>
 };
 
 
-template<typename T, bool C>
-class Nullable<T, C, true>
+template<typename T>
+class Nullable<T, false, true>
 {
     static_assert(TMaxTombstoneDepth<T>::Value > 0, "Type does not support tombstone values.");
 
@@ -617,6 +624,167 @@ public:
 
     // Conversion
 
+    /// <summary>
+    /// Converts the nullable to boolean indicating whether the nullable has a value.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE explicit
+    operator bool() const NOEXCEPT_Y
+    {
+        return HasValue();
+    }
+
+
+    // Utility
+
+    NO_DISCARD FORCE_INLINE
+    auto IsEmpty() const NOEXCEPT_Y -> bool
+    {
+        return !HasValue();
+    }
+
+    /// <summary> Overwrites the value with the specified one by move, if it is null. </summary>
+    FORCE_INLINE
+    void SetIfNull(Element&& value) NOEXCEPT_Y
+    {
+        if (!HasValue())
+        {
+            Set(MOVE(value));
+        }
+    }
+
+    /// <summary> Overwrites the value with the specified one by copy, if it is null. </summary>
+    FORCE_INLINE
+    void SetIfNull(const Element& value) NOEXCEPT_Y
+    {
+        if (!HasValue())
+        {
+            Set(value);
+        }
+    }
+};
+
+template<typename T>
+class Nullable<T, true, true>
+{
+    static_assert(TMaxTombstoneDepth<T>::Value > 0, "Type does not support tombstone values.");
+
+public:
+    using Element = T;
+
+
+PRIVATE:
+    // Note: In trivial tombstone nullable, tombstone-constructor is not invoked!
+    // It is assumed, that the effect of trivial construction is the same as tombstone construction,
+    // or that the Nullable may contain a non-null value on init. This design choice delegates
+    // to the user ensuring that the underlying value is initialized correctly, while triviality
+    // of the construction is preserved.
+    Element _value;
+
+
+    // Element Access
+
+public:
+    /// <summary> Checks if the nullable has a value. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto HasValue() const NOEXCEPT_Y -> bool
+    {
+        return !_value.IsTombstone(); // Use the underlying type's tombstone.
+    }
+
+    /// <summary> Reference to the value. Nullable must not be empty. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto Value() NOEXCEPT_Y -> Element&
+    {
+        ASSERT(HasValue());
+        return _value;
+    }
+
+    /// <summary> Reference to the value. Nullable must not be empty. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto Value() const NOEXCEPT_Y -> const Element&
+    {
+        ASSERT(HasValue());
+        return _value;
+    }
+
+    /// <summary> Reference to the value or the fallback. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto ValueOr(const Element& fallback) const NOEXCEPT_Y -> const Element&
+    {
+        if (HasValue())
+        {
+            return _value;
+        }
+        else 
+        {
+            return fallback;
+        }
+    }
+
+    /// <summary> Overwrites the value with the specified one. </summary>
+    FORCE_INLINE
+    void Set(Element value) NOEXCEPT_Y
+    {
+        _value = MOVE(value);
+    }
+
+    /// <summary> Overwrites the value with the specified ony by emplace (ctor only). </summary>
+    /// <remarks>
+    /// If you want to assign null, use <c>Clear()</c>.
+    /// Never pass the tombstone depth directly.
+    /// </remarks>
+    template<typename... Args>
+    void Emplace(Args&&... args) NOEXCEPT_Y
+    {
+        _value = Element{ FORWARD(Args, args)... };
+    }
+
+    /// <summary> Resets the value to null. </summary>
+    FORCE_INLINE
+    void Clear() NOEXCEPT_Y
+    {
+        _value = Element{ TombstoneDepth{ 1 } };
+    }
+
+
+    // Lifecycle
+
+    Nullable() NOEXCEPT_Y = default;
+
+
+    // Tombstone (Nested Nullable)
+
+    friend Nullable<Nullable, false, true>;
+    friend Nullable<Nullable,  true, true>;
+
+PRIVATE:
+    NO_DISCARD FORCE_INLINE
+    auto IsTombstone() const NOEXCEPT_Y -> bool
+    {
+        return _value.IsTombstone() && GetTombstoneLevel() > 0;
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto GetTombstoneLevel() const  NOEXCEPT_Y-> int8
+    {
+        return _value.GetTombstoneLevel() - 1; // Go out
+    }
+
+    /// <summary>
+    /// Creates a tombstone of a nullable.
+    /// You better know what you are doing, if you want to use it!
+    /// </summary>
+    FORCE_INLINE explicit
+    Nullable(const TombstoneDepth tombstoneTag) NOEXCEPT_Y
+        : _value{ TombstoneDepth{static_cast<int8>(tombstoneTag.Value + 1) } } // Go in
+    {
+        ASSERT(tombstoneTag.Value > 0);
+    }
+
+
+    // Conversion
+
+public:
     /// <summary>
     /// Converts the nullable to boolean indicating whether the nullable has a value.
     /// </summary>
