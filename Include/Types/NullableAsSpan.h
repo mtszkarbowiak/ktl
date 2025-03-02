@@ -7,65 +7,34 @@
 
 #pragma once
 
+#include "Types/Base.h"
 #include "Types/Nullable.h"
 #include "Types/Span.h"
-//
-//template <typename T, bool C>
-//template <typename U>
-//constexpr 
-//auto Nullable<T, C, true>::AsSpan() -> Span<Element>
-//{
-//    if (HasValue())
-//    {
-//        return Span<Element>{ &_value, 1 };
-//    }
-//    else
-//    {
-//        return Span<Element>{};
-//    }
-//}
-//
-//template <typename T, bool C>
-//template <typename U>
-//constexpr 
-//auto Nullable<T, C, false>::AsSpan() -> Span<Element>
-//{
-//    if (HasValue())
-//    {
-//        return Span<Element>{ &_value, 1 };
-//    }
-//    else
-//    {
-//        return Span<Element>{};
-//    }
-//}
-//
-//template <typename T, bool C>
-//template <typename U>
-//constexpr 
-//auto Nullable<T, C, false>::AsSpan() const -> Span<const Element>
-//{
-//    if (HasValue())
-//    {
-//        return Span<const Element>{ &_value, 1 };
-//    }
-//    else
-//    {
-//        return Span<const Element>{};
-//    }
-//}
-//
-//template <typename T, bool C>
-//template <typename U>
-//constexpr 
-//auto Nullable<T, C, true>::AsSpan() const -> Span<const Element>
-//{
-//    if (HasValue())
-//    {
-//        return Span<const Element>{ &_value, 1 };
-//    }
-//    else
-//    {
-//        return Span<const Element>{};
-//    }
-//}
+
+template<typename T, bool C, bool M>
+NO_DISCARD FORCE_INLINE
+auto AsSpan(Nullable<T, C, M>& nullable) -> Span<T>
+{
+    if (nullable.HasValue())
+    {
+        return Span<T>{ &nullable.Value(), 1 };
+    }
+    else
+    {
+        return Span<T>{};
+    }
+}
+
+template<typename T, bool C, bool M>
+NO_DISCARD FORCE_INLINE
+auto AsSpan(const Nullable<T, C, M>& nullable) -> Span<const T>
+{
+    if (nullable.HasValue())
+    {
+        return Span<const T>{ &nullable.Value(), 1 };
+    }
+    else
+    {
+        return Span<const T>{};
+    }
+}

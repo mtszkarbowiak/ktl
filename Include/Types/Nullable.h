@@ -157,17 +157,6 @@ public:
     }
 
 
-    /// <summary> Creates a span which can be used to access the value. </summary>
-    template <typename U = T>
-    NO_DISCARD FORCE_INLINE constexpr
-    auto AsSpan() -> Span<Element>;
-
-    /// <summary> Creates a span which can be used to access the value. </summary>
-    template <typename U = T>
-    NO_DISCARD FORCE_INLINE constexpr
-    auto AsSpan() const -> Span<const Element>;
-
-
     // Tombstone
 
     friend Nullable<Nullable, false, true>;
@@ -385,7 +374,7 @@ public:
     {
         _tombstoneLevel = 0;
     }
-
+    
 
     // Lifecycle
 
@@ -554,16 +543,6 @@ public:
     {
         _value = Element{ TombstoneDepth{ 1 } };
     }
-
-    /// <summary> Creates a span which can be used to access the value. </summary>
-    template<typename U = T>
-    NO_DISCARD FORCE_INLINE constexpr
-    auto AsSpan() -> Span<Element>;
-
-    /// <summary> Creates a span which can be used to access the value. </summary>
-    template<typename U = T>
-    NO_DISCARD FORCE_INLINE constexpr
-    auto AsSpan() const -> Span<const Element>;
 
 
     // Tombstone
@@ -786,7 +765,7 @@ public:
     {
         _value = Element{ TombstoneDepth{ 1 } };
     }
-
+    
 
     // Lifecycle
 

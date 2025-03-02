@@ -191,3 +191,13 @@ public:
         return RawPuller<const T>{ cbegin(), cend() };
     }
 };
+
+/// <summary>
+/// Helper function that wraps creating span from the specified source.
+/// </summary>
+template<typename T>
+NO_DISCARD FORCE_INLINE
+auto AsSpan(T& source)
+{
+    return source.AsSpan();
+}
