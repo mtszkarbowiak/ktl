@@ -396,7 +396,7 @@ PRIVATE:
             {
                 // If the previous slot was occupied we must use the next free slot.
                 // Otherwise, we can re-use the last deleted slot.
-                firstFree.SetIfNull(currentIndex);
+                firstFree.SetIfEmpty(currentIndex);
 
                 return { {},  firstFree };
             }
