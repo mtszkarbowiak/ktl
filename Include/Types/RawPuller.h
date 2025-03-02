@@ -38,10 +38,7 @@ public:
     auto Hint() const -> SizeHint
     {
         const int32 remaining = static_cast<int32>(_end - _begin);
-        return {
-            remaining,
-            Nullable<Index>{ remaining }
-        };
+        return SizeHint::Exactly(remaining);
     }
 
     

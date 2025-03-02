@@ -191,7 +191,7 @@ public:
 
             // Set the key
             Key theKey{ FORWARD(K_, key) };
-            Nullable<Key> nullableKey{ MOVE(theKey) };
+            Nullable<Key> nullableKey = MakeNullable<Key&&>(MOVE(theKey));
             _key.Set(MOVE(nullableKey));
         }
 
@@ -410,7 +410,7 @@ PRIVATE:
             else if (slot.IsOccupied() && slot.GetKey() == key)
             {
                 // If the current slot has the key, just return the index :)
-                return { Nullable<Index>{ currentIndex }, {} };
+                return { MakeNullable<Index>(currentIndex), {} };
             }
 
             currentIndex = (initIndex + P::Next(capacity, numChecks)) & capacityBitMask;
@@ -957,7 +957,7 @@ PRIVATE:
     {
         // Ensure that the dictionary is not empty.
         if (_capacity == 0)
-            return { 0, Nullable<Index>{ 0 }};
+            return SizeHint::Empty();
 
         // Count the number of total occupied slots.
         int32 result = 0;
@@ -971,10 +971,7 @@ PRIVATE:
                 // it means that the index is the first occupied slot. (Fast path)
                 if (i == index && result == 0)
                 {
-                    return {
-                        _elementCountCached,
-                        Nullable<Index>{ _elementCountCached }
-                    };
+                    return SizeHint::Exactly(_elementCountCached);
                 }
 
                 ++result;
@@ -988,7 +985,7 @@ PRIVATE:
                 ++result;
         }
 
-        return { result, Nullable<Index>{ result } };
+        return SizeHint::Exactly(result);
     }
 
 

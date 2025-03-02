@@ -461,7 +461,7 @@ public:
 
         // Add the element to the set
         Slot* slot = DATA_OF(Slot, _allocData) + searchResult.FreeBucket.Value();
-        slot->Set(Cell{ MOVE(element) });
+        slot->Set(MakeNullable<Element&&>(MOVE(element)));
 
         ++_elementCountCached;
         ++_cellsCountCached;
@@ -752,7 +752,7 @@ public:
         {
             // In the future, this could be optimized to return the actual number of elements.
             // It will be done, once generalized hash collection utilities are introduced.
-            return { 0, Nullable<::Index>{ _set->_elementCountCached } };
+            return SizeHint::Range(0, _set->_elementCountCached);
         }
 
         NO_DISCARD FORCE_INLINE explicit

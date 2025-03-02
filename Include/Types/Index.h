@@ -8,10 +8,10 @@
 #pragma once
 
 #include "Debugging/Assertions.h"
+#include "Language/Communism.h"
 #include "Language/Keywords.h"
-#include "Language/Templates.h"
-#include "Types/Nullable.h"
 #include "Types/Numbers.h"
+#include "Types/Base.h"
 
 /// <summary>
 /// Wrapper over an integer value that represents an index in a collection,
@@ -99,7 +99,7 @@ public:
 };
 
 template<>
-struct GetMaxTombstoneDepth<Index>
+struct TMaxTombstoneDepth<Index>
 {
     enum { Value = 64 }; // More than enough for any collection.
 };

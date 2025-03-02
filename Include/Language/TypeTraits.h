@@ -858,6 +858,16 @@ concept Constructible = THasCtorV<T, U>;
 #endif
 
 
+// Aggregate triviality check
+
+/// Checks if the type has all lifecycle stages trivial: constructor, copy and destructor.
+template<typename T>
+static constexpr bool THasTrivialLifecycleV = 
+    THasTrivialCtorV<T> && 
+    THasTrivialCopyV<T> && 
+    THasTrivialDtorV<T>;
+
+
 // Underlying Type
 
 template<typename T>

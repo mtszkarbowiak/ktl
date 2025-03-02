@@ -30,8 +30,8 @@ TEST(ArrayIterators, ConstEnumerator)
     {
         actualSum += *enumerator;
 
-        GTEST_ASSERT_EQ(enumerator.Hint().Min,         elementsLeft);
-        GTEST_ASSERT_EQ(enumerator.Hint().Max.Value(), elementsLeft);
+        GTEST_ASSERT_EQ(enumerator.Hint().Min(), elementsLeft);
+        GTEST_ASSERT_EQ(enumerator.Hint().Max(), elementsLeft);
 
         ++index;
         --elementsLeft;
@@ -59,8 +59,8 @@ TEST(ArrayIterators, MutableEnumerator)
     {
         *enumerator = TestElements - *enumerator;
 
-        GTEST_ASSERT_EQ(enumerator.Hint().Min,         elementsLeft);
-        GTEST_ASSERT_EQ(enumerator.Hint().Max.Value(), elementsLeft);
+        GTEST_ASSERT_EQ(enumerator.Hint().Min(), elementsLeft);
+        GTEST_ASSERT_EQ(enumerator.Hint().Max(), elementsLeft);
 
         ++index;
         --elementsLeft;

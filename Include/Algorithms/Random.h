@@ -51,9 +51,9 @@ public:
         return copy;
     }
 
-    NO_DISCARD
+    NO_DISCARD FORCE_INLINE
     auto Hint() const -> SizeHint
     {
-        return SizeHint{ 0, Nullable<::Index>{} };
+        return SizeHint::Empty();
     }
 };

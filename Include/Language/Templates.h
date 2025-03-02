@@ -10,7 +10,6 @@
 #include "Language/Keywords.h"
 #include "Language/TypeTraits.h"
 #include "Language/Yolo.h"
-#include "Types/Numbers.h"
 
 // Move Semantics
 
@@ -92,37 +91,6 @@ void Swap(T& a, T& b) NOEXCEPT_S
     ::SwapInternal::SwapImpl(a, b);
 }
 
-
-// Null Semantics
-
-/// <summary>
-/// Special tag used to request the creation of a tombstone object.
-/// Tombstone objects are used to represent null values in nullable types.
-/// This allows for the optimization by avoiding the usage of additional flags.
-/// </summary>
-struct TombstoneDepth
-{
-    /// <summary>
-    /// Depth of the requested tombstone. It must always be greater than zero.
-    /// Zero depth means that the type does not support tombstone values.
-    /// </summary>
-    int8 Value{};
-};
-
-/// <summary>
-/// Number of tombstone values supported by the type.
-/// </summary>
-/// <remarks>
-/// Tombstone depth is a de facto maximal level of nesting Nullable types, without additional memory:
-/// <c> Nullable<Nullable<Nullable<...>>> </c>
-/// </remarks>
-template<typename T>
-struct GetMaxTombstoneDepth
-{
-    enum { Value = 0 };
-};
-
-
 // Null-Check
 
 template<typename T>
@@ -161,8 +129,3 @@ auto AsConst(T& x) NOEXCEPT_S -> const T&
 /// </summary>
 template<typename T>
 auto AsConst(T&&) = delete;
-
-
-// Other Tags
-
-struct NullOptT{};

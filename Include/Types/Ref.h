@@ -146,7 +146,7 @@ public:
 };
 
 template<typename T>
-struct GetMaxTombstoneDepth<Ref<T>>
+struct TMaxTombstoneDepth<Ref<T>>
 {
     enum { Value = 1 };
 };
