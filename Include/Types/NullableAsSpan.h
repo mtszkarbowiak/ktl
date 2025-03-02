@@ -9,63 +9,63 @@
 
 #include "Types/Nullable.h"
 #include "Types/Span.h"
-
-template <typename T, bool C>
-template <typename U>
-constexpr 
-auto Nullable<T, C, true>::AsSpan() -> Span<Element>
-{
-    if (HasValue())
-    {
-        return Span<Element>{ &_value, 1 };
-    }
-    else
-    {
-        return Span<Element>{};
-    }
-}
-
-template <typename T, bool C>
-template <typename U>
-constexpr 
-auto Nullable<T, C, false>::AsSpan() -> Span<Element>
-{
-    if (HasValue())
-    {
-        return Span<Element>{ &_value, 1 };
-    }
-    else
-    {
-        return Span<Element>{};
-    }
-}
-
-template <typename T, bool C>
-template <typename U>
-constexpr 
-auto Nullable<T, C, false>::AsSpan() const -> Span<const Element>
-{
-    if (HasValue())
-    {
-        return Span<const Element>{ &_value, 1 };
-    }
-    else
-    {
-        return Span<const Element>{};
-    }
-}
-
-template <typename T, bool C>
-template <typename U>
-constexpr 
-auto Nullable<T, C, true>::AsSpan() const -> Span<const Element>
-{
-    if (HasValue())
-    {
-        return Span<const Element>{ &_value, 1 };
-    }
-    else
-    {
-        return Span<const Element>{};
-    }
-}
+//
+//template <typename T, bool C>
+//template <typename U>
+//constexpr 
+//auto Nullable<T, C, true>::AsSpan() -> Span<Element>
+//{
+//    if (HasValue())
+//    {
+//        return Span<Element>{ &_value, 1 };
+//    }
+//    else
+//    {
+//        return Span<Element>{};
+//    }
+//}
+//
+//template <typename T, bool C>
+//template <typename U>
+//constexpr 
+//auto Nullable<T, C, false>::AsSpan() -> Span<Element>
+//{
+//    if (HasValue())
+//    {
+//        return Span<Element>{ &_value, 1 };
+//    }
+//    else
+//    {
+//        return Span<Element>{};
+//    }
+//}
+//
+//template <typename T, bool C>
+//template <typename U>
+//constexpr 
+//auto Nullable<T, C, false>::AsSpan() const -> Span<const Element>
+//{
+//    if (HasValue())
+//    {
+//        return Span<const Element>{ &_value, 1 };
+//    }
+//    else
+//    {
+//        return Span<const Element>{};
+//    }
+//}
+//
+//template <typename T, bool C>
+//template <typename U>
+//constexpr 
+//auto Nullable<T, C, true>::AsSpan() const -> Span<const Element>
+//{
+//    if (HasValue())
+//    {
+//        return Span<const Element>{ &_value, 1 };
+//    }
+//    else
+//    {
+//        return Span<const Element>{};
+//    }
+//}

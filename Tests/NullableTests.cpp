@@ -259,19 +259,19 @@ TEST(NullableUtilities, ValueEmplacement)
     LIFECYCLE_TEST_DIFF(1); // Only one instance should be created. Without temporary.
 }
 
-TEST(NullableUtilities, AsSpan)
-{
-    Nullable<int32> nullableA;
-    Nullable<Index> nullableB;
-    GTEST_ASSERT_EQ(nullableA.AsSpan().Count(), 0);
-    GTEST_ASSERT_EQ(nullableB.AsSpan().Count(), 0);
-    nullableA.Set(69);
-    nullableB.Set({ 69 });
-    GTEST_ASSERT_EQ(nullableA.AsSpan().Count(), 1);
-    GTEST_ASSERT_EQ(nullableB.AsSpan().Count(), 1);
-    GTEST_ASSERT_EQ(nullableA.AsSpan()[0], 69);
-    GTEST_ASSERT_EQ(nullableB.AsSpan()[0], 69);
-}
+//TEST(NullableUtilities, AsSpan)
+//{
+//    Nullable<int32> nullableA;
+//    Nullable<Index> nullableB;
+//    GTEST_ASSERT_EQ(nullableA.AsSpan().Count(), 0);
+//    GTEST_ASSERT_EQ(nullableB.AsSpan().Count(), 0);
+//    nullableA.Set(69);
+//    nullableB.Set({ 69 });
+//    GTEST_ASSERT_EQ(nullableA.AsSpan().Count(), 1);
+//    GTEST_ASSERT_EQ(nullableB.AsSpan().Count(), 1);
+//    GTEST_ASSERT_EQ(nullableA.AsSpan()[0], 69);
+//    GTEST_ASSERT_EQ(nullableB.AsSpan()[0], 69);
+//}
 
 
 namespace TombstonePropagation
