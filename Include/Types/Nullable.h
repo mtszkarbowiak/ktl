@@ -296,6 +296,12 @@ PRIVATE:
     Element _value{};
     int8    _tombstoneLevel{};
 
+    //TODO(mtszkarbowiak): Trivialize Nullable initialization for trivial T.
+    // Once this class is trivial, it will cause huge changes in the codebase:
+    // 1. All variables will require explicit initialization... breaking existing code.
+    // 2. Entire Nullable class will need to find ability to propagate tombstone level,
+    // such that value-init is possible... breaking existing code.
+
 
     // Element Access
 
