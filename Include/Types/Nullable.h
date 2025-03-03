@@ -21,8 +21,8 @@
 /// <typeparam name="T">
 /// Type of the stored object. Without any constraints.
 /// </typeparam>
-template<typename T>
-class Nullable<T, false, false>
+template<typename T, int8 D>
+class Nullable<T, D, false, false>
 {
 public:
     using Element = T;
@@ -159,10 +159,7 @@ public:
 
     // Tombstone
 
-    friend Nullable<Nullable, false, true>;
-    friend Nullable<Nullable, true,  true>;
-
-PRIVATE:
+public:
     NO_DISCARD FORCE_INLINE
     auto IsTombstone() const NOEXCEPT_Y -> bool
     {
@@ -286,8 +283,8 @@ public:
 /// Type of the stored object. Must be trivially constructible,
 /// copyable, and destructible.
 /// </typeparam>
-template<typename T>
-class Nullable<T, true, false>
+template<typename T, int8 D>
+class Nullable<T, D, true, false>
 {
 public:
     using Element = T;
@@ -389,10 +386,7 @@ public:
 
     // Tombstone
 
-    friend Nullable<Nullable, false, true>;
-    friend Nullable<Nullable, true,  true>;
-
-PRIVATE:
+public:
     NO_DISCARD FORCE_INLINE
     auto IsTombstone() const NOEXCEPT_Y -> bool
     {
@@ -438,8 +432,8 @@ public:
 /// <typeparam name="T">
 /// Type of the stored object. Must support tombstone values.
 /// </typeparam>
-template<typename T>
-class Nullable<T, false, true>
+template<typename T, int8 D>
+class Nullable<T, D, false, true>
 {
     static_assert(TMaxTombstoneDepth<T>::Value > 0, "Type does not support tombstone values.");
 
@@ -553,10 +547,7 @@ public:
 
     // Tombstone
 
-    friend Nullable<Nullable, false, true>;
-    friend Nullable<Nullable,  true, true>;
-
-PRIVATE:
+public:
     NO_DISCARD FORCE_INLINE
     auto IsTombstone() const NOEXCEPT_Y -> bool
     {
@@ -670,8 +661,8 @@ public:
 /// the underlying value is initialized correctly, while triviality
 /// of the construction is preserved.
 /// </remarks>
-template<typename T>
-class Nullable<T, true, true>
+template<typename T, int8 D>
+class Nullable<T, D, true, true>
 {
 public:
     using Element = T;
@@ -780,10 +771,7 @@ public:
 
     // Tombstone
 
-    friend Nullable<Nullable, false, true>;
-    friend Nullable<Nullable,  true, true>;
-
-PRIVATE:
+public:
     NO_DISCARD FORCE_INLINE
     auto IsTombstone() const NOEXCEPT_Y -> bool
     {
@@ -827,14 +815,14 @@ public:
 };
 
 
-template<typename T, bool C>
-struct TMaxTombstoneDepth<Nullable<T, C, false>>
+template<typename T, int8 D, bool C>
+struct TMaxTombstoneDepth<Nullable<T, D, C, false>>
 {
     enum { Value = 64 };
 };
 
-template<typename T, bool C>
-struct TMaxTombstoneDepth<Nullable<T, C, true>>
+template<typename T, int8 D, bool C>
+struct TMaxTombstoneDepth<Nullable<T, D, C, true>>
 {
     enum { Value = TMaxTombstoneDepth<T>::Value - 1 };
 };
@@ -846,12 +834,12 @@ struct TMaxTombstoneDepth<Nullable<T, C, true>>
 /// <remarks>
 /// This method replaces constructors to allow for trivial initialization.
 /// </remarks>
-template<typename T>
+template<typename T, int8 D = 1>
 NO_DISCARD FORCE_INLINE
 auto MakeNullable(T&& value) NOEXCEPT_Y
 {
     using Element = typename TRemoveRef<T>::Type;
-    Nullable<Element> result{};
+    Nullable<Element, D> result{};
     result.Set(FORWARD(T, value));
     return result;
 }
@@ -862,17 +850,24 @@ auto MakeNullable(T&& value) NOEXCEPT_Y
 /// <remarks>
 /// This method replaces constructors to allow for trivial initialization.
 /// </remarks>
-template<typename T>
+template<typename T, int8 D = 1>
 NO_DISCARD FORCE_INLINE
-auto MakeNullable(NullOptT) NOEXCEPT_Y -> Nullable<T>
+auto MakeNullable(NullOptT) NOEXCEPT_Y -> Nullable<T, D>
 {
-    return Nullable<T>{};
+    return Nullable<T, D>{};
 }
 
 
-template<typename T, bool C1, bool M1, bool C2, bool M2>
+template<
+    typename T,
+    bool D1, bool C1, bool M1,
+    bool D2, bool C2, bool M2
+>
 FORCE_INLINE
-auto operator==(const Nullable<T, C1, M1>& lhs, const Nullable<T, C2, M2>& rhs) NOEXCEPT_Y -> bool
+auto operator==(
+    const Nullable<T, D1, C1, M1>& lhs, 
+    const Nullable<T, D2, C2, M2>& rhs
+) NOEXCEPT_Y -> bool
 {
     if (lhs.HasValue() && rhs.HasValue())
     {
@@ -885,9 +880,16 @@ auto operator==(const Nullable<T, C1, M1>& lhs, const Nullable<T, C2, M2>& rhs) 
     return lhs.IsEmpty() && rhs.IsEmpty();
 }
 
-template<typename T, bool C1, bool M1, bool C2, bool M2>
+template<
+    typename T,
+    bool D1, bool C1, bool M1,
+    bool D2, bool C2, bool M2
+>
 FORCE_INLINE
-auto operator!=(const Nullable<T, C1, M1>& lhs, const Nullable<T, C2, M2>& rhs) NOEXCEPT_Y -> bool
+auto operator!=(
+    const Nullable<T, D1, C1, M1>& lhs, 
+    const Nullable<T, D2, C2, M2>& rhs
+) NOEXCEPT_Y -> bool
 {
     return !(lhs == rhs);
 }

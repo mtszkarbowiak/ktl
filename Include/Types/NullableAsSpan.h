@@ -11,9 +11,9 @@
 #include "Types/Nullable.h"
 #include "Types/Span.h"
 
-template<typename T, bool C, bool M>
+template<typename T, int8 D, bool C, bool M>
 NO_DISCARD FORCE_INLINE
-auto AsSpan(Nullable<T, C, M>& nullable) -> Span<T>
+auto AsSpan(Nullable<T, D, C, M>& nullable) -> Span<T>
 {
     if (nullable.HasValue())
     {
@@ -25,9 +25,9 @@ auto AsSpan(Nullable<T, C, M>& nullable) -> Span<T>
     }
 }
 
-template<typename T, bool C, bool M>
+template<typename T, int8 D, bool C, bool M>
 NO_DISCARD FORCE_INLINE
-auto AsSpan(const Nullable<T, C, M>& nullable) -> Span<const T>
+auto AsSpan(const Nullable<T, D, C, M>& nullable) -> Span<const T>
 {
     if (nullable.HasValue())
     {

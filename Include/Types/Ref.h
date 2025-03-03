@@ -72,9 +72,7 @@ public:
     
     // Tombstone
 
-    friend TombstoneNullable<Ref>;
-
-PRIVATE:
+public:
     FORCE_INLINE explicit
     Ref(MAYBE_UNUSED TombstoneDepth tombstoneTag) noexcept
         : _value{ nullptr }
