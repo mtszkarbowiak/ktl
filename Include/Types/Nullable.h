@@ -307,7 +307,7 @@ public:
     NO_DISCARD FORCE_INLINE
     auto HasValue() const NOEXCEPT_Y -> bool
     {
-        return _tombstoneLevel == D -1;
+        return _tombstoneLevel == D - 1;
     }
 
     NO_DISCARD FORCE_INLINE
@@ -401,7 +401,7 @@ public:
 
     FORCE_INLINE explicit
     Nullable(const TombstoneDepth tombstoneTag) NOEXCEPT_Y
-        : _tombstoneLevel{ tombstoneTag.Value + D }
+        : _tombstoneLevel{static_cast<int8>(tombstoneTag.Value + D) }
     {
         ASSERT(tombstoneTag.Value >= 0);
     }
@@ -834,7 +834,7 @@ struct TMaxTombstoneDepth<Nullable<T, D, C, true>>
 /// <remarks>
 /// This method replaces constructors to allow for trivial initialization.
 /// </remarks>
-template<typename T, int8 D = 1>
+template<typename T, int8 D = 0>
 NO_DISCARD FORCE_INLINE
 auto MakeNullable(T&& value) NOEXCEPT_Y
 {
@@ -850,7 +850,7 @@ auto MakeNullable(T&& value) NOEXCEPT_Y
 /// <remarks>
 /// This method replaces constructors to allow for trivial initialization.
 /// </remarks>
-template<typename T, int8 D = 1>
+template<typename T, int8 D = 0>
 NO_DISCARD FORCE_INLINE
 auto MakeNullable(NullOptT) NOEXCEPT_Y -> Nullable<T, D>
 {

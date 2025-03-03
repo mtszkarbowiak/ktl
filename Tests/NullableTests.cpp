@@ -142,9 +142,9 @@ TEST(NullableByTombstoneTests, RefExample)
 
 namespace SentinelNullables
 {
-    using Nullable0 = Nullable<int, 2>;
-    using Nullable1 = Nullable<Nullable0, 2>;
-    using Nullable2 = Nullable<Nullable1, 2>;
+    using Nullable0 = Nullable<int, -2>;
+    using Nullable1 = Nullable<Nullable0>;
+    using Nullable2 = Nullable<Nullable1>;
 
     static_assert(TMaxTombstoneDepth<int>::Value == 0, "");
     static_assert(TMaxTombstoneDepth<Nullable0>::Value == 64, "");
@@ -159,9 +159,9 @@ TEST(NullableNested, NestedSentinel_Double)
 {
     using namespace SentinelNullables;
     
-    const Nullable1 nullableC{ MakeNullable<Nullable0, 2>(NullOptT{}) };
-    const Nullable1 nullableB{ MakeNullable<Nullable0, 2>(MakeNullable<int, 2>(NullOptT{})) };
-    const Nullable1 nullableA{ MakeNullable<Nullable0, 2>(MakeNullable<int, 2>(69)) };
+    const Nullable1 nullableC{ MakeNullable<Nullable0>(NullOptT{}) };
+    const Nullable1 nullableB{ MakeNullable<Nullable0>(MakeNullable<int, -2>(NullOptT{})) };
+    const Nullable1 nullableA{ MakeNullable<Nullable0>(MakeNullable<int, -2>(69)) };
 
     //
     GTEST_ASSERT_EQ(nullableC.HasValue(), false);
@@ -178,10 +178,15 @@ TEST(NullableNested, NestedSentinel_Triple)
 {
     using namespace SentinelNullables;
 
-    const Nullable2 nullableA{ MakeNullable<Nullable1, 2>(MakeNullable<Nullable0, 2>(MakeNullable<int, 2>(69))) };
-    const Nullable2 nullableB{ MakeNullable<Nullable1, 2>(MakeNullable<Nullable0, 2>(MakeNullable<int, 2>(NullOptT{}))) };
-    const Nullable2 nullableC{ MakeNullable<Nullable1, 2>(MakeNullable<Nullable0, 2>(NullOptT{})) };
-    const Nullable2 nullableD{ MakeNullable<Nullable1, 2>(NullOptT{}) };
+    const Nullable2 nullableA{ MakeNullable<Nullable1>(MakeNullable<Nullable0>(MakeNullable<int, -2>(69))) };
+    const Nullable2 nullableB{ MakeNullable<Nullable1>(MakeNullable<Nullable0>(MakeNullable<int, -2>(NullOptT{}))) };
+    const Nullable2 nullableC{ MakeNullable<Nullable1>(MakeNullable<Nullable0>(NullOptT{})) };
+    const Nullable2 nullableD{ MakeNullable<Nullable1>(NullOptT{}) };
+
+    {
+        const Nullable2 nullableE{}; // Should be empty!
+        EXPECT_FALSE(nullableE.HasValue());
+    }
 
     //
     GTEST_ASSERT_EQ(nullableD.HasValue(), false);
