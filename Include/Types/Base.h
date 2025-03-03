@@ -59,6 +59,24 @@ struct TMaxTombstoneDepth
     enum { Value = 0 };
 };
 
+/// <summary>
+/// Pre-declaration of the Nullable type.
+/// </summary>
+///
+/// <typeparam name="T">
+/// Type of the stored object.
+/// </typeparam>
+/// <typeparam name="D">
+/// (Optional) Tombstone depth drift. It indicates which tombstone level defines the null state.
+/// To be used to modify the tombstone depth of trivially constructed nested nullables.
+/// Example: <c>Nullable<Nullable<int, 2>></c> produces correct values during trivial construction.
+/// </typeparam>
+/// <typeparam name="C">
+/// (Automatic) Flag indicating if the nullable has trivial lifecycle.
+/// </typeparam>
+/// <typeparam name="M">
+/// (Automatic) Flag indicating if the nullable delegates nullification to the tombstone of wrapped type.
+/// </typeparam>
 template<
     typename T,
     int8 D = 1,

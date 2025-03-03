@@ -830,7 +830,7 @@ struct TMaxTombstoneDepth<Nullable<T, D, C, true>>
 
 /// <summary>
 /// Creates a nullable with the specified value.
-/// <summary>
+/// </summary>
 /// <remarks>
 /// This method replaces constructors to allow for trivial initialization.
 /// </remarks>
@@ -846,7 +846,7 @@ auto MakeNullable(T&& value) NOEXCEPT_Y
 
 /// <summary>
 /// Creates a new empty nullable.
-/// <summary>
+/// </summary>
 /// <remarks>
 /// This method replaces constructors to allow for trivial initialization.
 /// </remarks>
