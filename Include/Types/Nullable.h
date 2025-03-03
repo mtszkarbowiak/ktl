@@ -291,7 +291,7 @@ public:
 
 PRIVATE:
     Element _value{};
-    int8    _tombstoneLevel{};
+    int8    _tombstoneLevel{ D };
 
     //TODO(mtszkarbowiak): Trivialize Nullable initialization for trivial T.
     // Once this class is trivial, it will cause huge changes in the codebase:
@@ -307,13 +307,13 @@ public:
     NO_DISCARD FORCE_INLINE
     auto HasValue() const NOEXCEPT_Y -> bool
     {
-        return _tombstoneLevel == -1;
+        return _tombstoneLevel == D -1;
     }
 
     NO_DISCARD FORCE_INLINE
     auto IsEmpty() const NOEXCEPT_Y -> bool
     {
-        return _tombstoneLevel == 0;
+        return _tombstoneLevel == D;
     }
 
     /// <summary> Reference to the value. Nullable must not be empty. </summary>
@@ -350,7 +350,7 @@ public:
     void Set(Element value) NOEXCEPT_Y
     {
         _value = MOVE(value);
-        _tombstoneLevel = -1;
+        _tombstoneLevel = D - 1;
     }
 
     /// <summary> Overwrites the value with the specified one, only if it is null. </summary>
@@ -368,14 +368,14 @@ public:
     void Emplace(Args&&... args) NOEXCEPT_Y
     {
         _value = Element{ FORWARD(Args, args)... };
-        _tombstoneLevel = -1;
+        _tombstoneLevel = D - 1;
     }
 
 
     /// <summary> Resets the value to null. </summary>
     void Clear() NOEXCEPT_Y
     {
-        _tombstoneLevel = 0;
+        _tombstoneLevel = D;
     }
     
 
@@ -390,18 +390,18 @@ public:
     NO_DISCARD FORCE_INLINE
     auto IsTombstone() const NOEXCEPT_Y -> bool
     {
-        return _tombstoneLevel >= 1;
+        return _tombstoneLevel >= 1 + D;
     }
 
     NO_DISCARD FORCE_INLINE
     auto GetTombstoneLevel() const NOEXCEPT_Y -> int8
     {
-        return _tombstoneLevel;
+        return _tombstoneLevel - D;
     }
 
     FORCE_INLINE explicit
     Nullable(const TombstoneDepth tombstoneTag) NOEXCEPT_Y
-        : _tombstoneLevel{ tombstoneTag.Value }
+        : _tombstoneLevel{ tombstoneTag.Value + D }
     {
         ASSERT(tombstoneTag.Value >= 0);
     }
@@ -854,7 +854,9 @@ template<typename T, int8 D = 1>
 NO_DISCARD FORCE_INLINE
 auto MakeNullable(NullOptT) NOEXCEPT_Y -> Nullable<T, D>
 {
-    return Nullable<T, D>{};
+    Nullable<T, D> result{};
+    result.Clear();
+    return result;
 }
 
 
