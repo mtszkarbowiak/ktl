@@ -15,10 +15,7 @@
 /// To be used when the reference counter is to protect a resource from being
 /// read and written at the same time in not thread-safe code.
 /// </summary>
-template<
-    typename  T,
-    typename  A = HeapAlloc
->
+template<typename T, typename A>
 class RcBox
 {
     Box<T, A> _box;

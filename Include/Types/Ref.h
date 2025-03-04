@@ -72,7 +72,8 @@ public:
     
     // Tombstone
 
-    friend TombstoneNullable<Ref>;
+    friend TombstoneNullable<Ref, false>;
+    friend TombstoneNullable<Ref, true>;
 
 PRIVATE:
     FORCE_INLINE explicit
@@ -146,7 +147,7 @@ public:
 };
 
 template<typename T>
-struct GetMaxTombstoneDepth<Ref<T>>
+struct TMaxTombstoneDepth<Ref<T>>
 {
     enum { Value = 1 };
 };

@@ -262,7 +262,7 @@ namespace
 
 TEST(EnumSet, BasicOperations)
 {
-    EnumSet<ExampleEnum> set;
+    EnumSet<ExampleEnum> set{};
 
     set.Add(ExampleEnum::A);
     EXPECT_TRUE (set.Contains(ExampleEnum::A));
@@ -282,7 +282,7 @@ TEST(EnumSet, BasicOperations)
 
 TEST(EnumSet, CountElements)
 {
-    EnumSet<ExampleEnum> set;
+    EnumSet<ExampleEnum> set{};
     EXPECT_EQ(set.Count(), 0);
 
     set.Add(ExampleEnum::A).Add(ExampleEnum::B);
@@ -297,8 +297,8 @@ TEST(EnumSet, CountElements)
 
 TEST(EnumSet, BitwiseOperations)
 {
-    EnumSet<ExampleEnum> setA;
-    EnumSet<ExampleEnum> setB;
+    EnumSet<ExampleEnum> setA{};
+    EnumSet<ExampleEnum> setB{};
 
     setA.Add(ExampleEnum::A).Add(ExampleEnum::B);
     setB.Add(ExampleEnum::B).Add(ExampleEnum::C);
@@ -321,8 +321,8 @@ TEST(EnumSet, BitwiseOperations)
 
 TEST(EnumSet, ComparisonOperations)
 {
-    EnumSet<ExampleEnum> setA;
-    EnumSet<ExampleEnum> setB;
+    EnumSet<ExampleEnum> setA{};
+    EnumSet<ExampleEnum> setB{};
 
     setA.Add(ExampleEnum::A).Add(ExampleEnum::B);
     setB.Add(ExampleEnum::A).Add(ExampleEnum::B);

@@ -13,7 +13,7 @@
 template <typename T>
 template <typename U>
 constexpr 
-auto Nullable<T, true>::AsSpan() -> Span<Element>
+auto Nullable<T, true, false>::AsSpan() -> Span<Element>
 {
     if (HasValue())
     {
@@ -28,22 +28,7 @@ auto Nullable<T, true>::AsSpan() -> Span<Element>
 template <typename T>
 template <typename U>
 constexpr 
-auto Nullable<T, false>::AsSpan() -> Span<Element>
-{
-    if (HasValue())
-    {
-        return Span<Element>{ &_value, 1 };
-    }
-    else
-    {
-        return Span<Element>{};
-    }
-}
-
-template <typename T>
-template <typename U>
-constexpr 
-auto Nullable<T, false>::AsSpan() const -> Span<const Element>
+auto Nullable<T, true, false>::AsSpan() const -> Span<const Element>
 {
     if (HasValue())
     {
@@ -58,7 +43,55 @@ auto Nullable<T, false>::AsSpan() const -> Span<const Element>
 template <typename T>
 template <typename U>
 constexpr 
-auto Nullable<T, true>::AsSpan() const -> Span<const Element>
+auto Nullable<T, false, false>::AsSpan() -> Span<Element>
+{
+    if (HasValue())
+    {
+        return Span<Element>{ &_value, 1 };
+    }
+    else
+    {
+        return Span<Element>{};
+    }
+}
+
+template <typename T>
+template <typename U>
+constexpr 
+auto Nullable<T, false, false>::AsSpan() const -> Span<const Element>
+{
+    if (HasValue())
+    {
+        return Span<const Element>{ &_value, 1 };
+    }
+    else
+    {
+        return Span<const Element>{};
+    }
+}
+
+
+// Tombstone Nullable
+
+template <typename T, bool C>
+template <typename U>
+constexpr
+auto Nullable<T, C, true>::AsSpan() -> Span<Element>
+{
+    if (HasValue())
+    {
+        return Span<Element>{ &_value, 1 };
+    }
+    else
+    {
+        return Span<Element>{};
+    }
+}
+
+template <typename T, bool C>
+template <typename U>
+constexpr 
+auto Nullable<T, C, true>::AsSpan() const -> Span<const Element>
 {
     if (HasValue())
     {

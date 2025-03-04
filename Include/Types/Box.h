@@ -11,6 +11,7 @@
 #include "Collections/AllocHelper.h"
 #include "Language/Templates.h"
 #include "Language/Yolo.h"
+#include "Types/Base.h"
 
 /// <summary>
 /// Stores one (or zero) element using a custom allocator.
@@ -27,10 +28,7 @@
 /// 1. Use factory methods to create instances of this class.
 /// 2. This class works effectively as <c>std::unique_ptr</c>, but customizes the allocator.
 /// </remarks>
-template<
-    typename T,
-    typename A = HeapAlloc
->
+template<typename T, typename A>
 struct Box
 {
     using Element   = T;

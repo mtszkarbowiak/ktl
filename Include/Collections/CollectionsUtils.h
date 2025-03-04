@@ -26,11 +26,6 @@
 #include <initializer_list> // Initializer list.
 
 
-/// <summary>
-/// Default memory allocator. To be used when no specific allocator is required.
-/// </summary>
-using DefaultAlloc = HeapAlloc;
-
 
 #ifndef ARRAY_DEFAULT_CAPACITY
     /// <summary> Default capacity for arrays. </summary>

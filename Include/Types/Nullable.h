@@ -7,37 +7,13 @@
 
 #pragma once
 
-#include "Debugging/Assertions.h"
-#include "Language/Keywords.h"
-#include "Language/Templates.h"
+#include "Types/Base.h"
 #include "Types/Dummy.h"
 
-/// <summary>
-/// Wrapper over a value type that can be assigned an additional null value.
-/// </summary>
-///
-/// <typeparam name="T">
-/// Type of the stored value.
-/// </typeparam>
-/// <typeparam name="UseTombstone">
-/// Flag indicating whether to use tombstone value.
-/// </typeparam>
-template<typename T, bool M = (GetMaxTombstoneDepth<T>::Value > 0)>
-class Nullable;
+// Sentinel Nullable
 
 template<typename T>
-class Span;
-
-/// <summary>
-/// Wrapper over a value type that can be assigned an additional null value.
-/// To represent null, this implementation always uses a sentinel value taking additional byte.
-/// </summary>
-///
-/// <typeparam name="T">
-/// Type of the stored value. It need not to use a tombstone value.
-/// </typeparam>
-template<typename T>
-class Nullable<T, false>
+class Nullable<T, false, false>
 {
 public:
     using Element = T;
@@ -48,7 +24,7 @@ PRIVATE:
         Element _value;
         Dummy   _dummy; // Ensure default ctor.
     };
-    int8 _nullLevel{ 1 };
+    int8 _tombstoneLevel;
 
 
     // Element Access
@@ -58,7 +34,7 @@ public:
     NO_DISCARD FORCE_INLINE
     auto HasValue() const NOEXCEPT_Y -> bool
     {
-        return _nullLevel == 0;
+        return _tombstoneLevel == -1;
     }
 
     /// <summary> Reference to the value. Nullable must not be empty. </summary>
@@ -101,7 +77,7 @@ public:
         else 
         {
             new (&_value) Element{ MOVE(value) };
-            _nullLevel = 0;
+            _tombstoneLevel = -1;
         }
     }
 
@@ -115,7 +91,7 @@ public:
         else
         {
             new (&_value) Element{ value };
-            _nullLevel = 0;
+            _tombstoneLevel = -1;
         }
     }
 
@@ -131,7 +107,7 @@ public:
         else
         {
             new (&_value) Element{ FORWARD(Args, args)... };
-            _nullLevel = 0;
+            _tombstoneLevel = -1;
         }
     }
 
@@ -142,7 +118,7 @@ public:
         if (HasValue())
         {
             _value.~Element();
-            _nullLevel = 1;
+            _tombstoneLevel = 0;
         }
     }
 
@@ -160,19 +136,20 @@ public:
 
     // Tombstone (Nested Nullable)
 
-    friend Nullable<Nullable, true>;
+    friend TombstoneNullable<Nullable, true>;
+    friend TombstoneNullable<Nullable, false>;
 
 PRIVATE:
     NO_DISCARD FORCE_INLINE
     auto IsTombstone() const NOEXCEPT_Y -> bool
     {
-        return _nullLevel > 1;
+        return _tombstoneLevel > 0;
     }
 
     NO_DISCARD FORCE_INLINE
     auto GetTombstoneLevel() const NOEXCEPT_Y -> int8
     {
-        return _nullLevel - 1; // Go out
+        return _tombstoneLevel; // Go out
     }
 
     /// <summary>
@@ -181,7 +158,7 @@ PRIVATE:
     /// </summary>
     FORCE_INLINE explicit
     Nullable(const TombstoneDepth tombstoneTag) NOEXCEPT_Y
-        : _nullLevel{ static_cast<int8>(tombstoneTag.Value + 1) } // Go in
+        : _tombstoneLevel{ static_cast<int8>(tombstoneTag.Value) } // Go in
     {
         ASSERT(tombstoneTag.Value >= 0);
     }
@@ -191,15 +168,17 @@ PRIVATE:
 
 public:
     /// <summary> Initializes empty nullable. </summary>
-    FORCE_INLINE constexpr
+    FORCE_INLINE constexpr explicit
     Nullable() NOEXCEPT_Y
+        : _tombstoneLevel{ 0 }
     {
         // Pass (`default` not supported)
     }
 
     /// <summary> Initializes empty nullable. </summary>
-    FORCE_INLINE constexpr explicit
+    FORCE_INLINE constexpr
     Nullable(NullOptT) NOEXCEPT_Y
+        : _tombstoneLevel{ 0 }
     {
         // Pass (`default` not supported)
     }
@@ -208,7 +187,7 @@ public:
     FORCE_INLINE explicit
     Nullable(Element&& value) NOEXCEPT_Y
         : _value{ MOVE(value) }
-        , _nullLevel{ 0 }
+        , _tombstoneLevel{ -1 }
     {
     }
 
@@ -216,14 +195,14 @@ public:
     FORCE_INLINE explicit
     Nullable(const Element& value) NOEXCEPT_Y
         : _value{ value }
-        , _nullLevel{ 0 }
+        , _tombstoneLevel{ -1 }
     {
     }
 
     /// <summary> Initializes nullable with a copy of the specified value. </summary>
     FORCE_INLINE
     Nullable(const Nullable& other) NOEXCEPT_Y
-        : _nullLevel{ other._nullLevel }
+        : _tombstoneLevel{ other._tombstoneLevel }
     {
         if (HasValue())
         {
@@ -234,7 +213,7 @@ public:
     /// <summary> Initializes nullable by moving the value from other nullable. </summary>
     FORCE_INLINE
     Nullable(Nullable&& other) NOEXCEPT_S
-        : _nullLevel{ other._nullLevel }
+        : _tombstoneLevel{ other._tombstoneLevel }
     {
         if (HasValue())
         {
@@ -250,7 +229,7 @@ public:
         if (this != &other)
         {
             Clear();
-            _nullLevel = other._nullLevel;
+            _tombstoneLevel = other._tombstoneLevel;
             if (HasValue())
             {
                 new (&_value) Element{ other._value };
@@ -266,7 +245,7 @@ public:
         if (this != &other)
         {
             Clear();
-            _nullLevel = other._nullLevel;
+            _tombstoneLevel = other._tombstoneLevel;
             if (HasValue())
             {
                 new (&_value) Element{ MOVE(other._value) };
@@ -325,36 +304,215 @@ public:
 };
 
 template<typename T>
-struct GetMaxTombstoneDepth<Nullable<T, false>>
+class Nullable<T, true, false>
+{
+public:
+    using Element = T;
+
+    static_assert(THasTrivialCtorV<T>, "Type must have trivial constructor.");
+    static_assert(THasTrivialDtorV<T>, "Type must have trivial destructor.");
+
+PRIVATE:
+    Element _value;
+    int8    _tombstoneLevel;
+
+
+    // Element Access
+
+public:
+    /// <summary> Checks if the nullable has a value. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto HasValue() const NOEXCEPT_Y -> bool
+    {
+        return _tombstoneLevel == -1;
+    }
+
+    /// <summary> Reference to the value. Nullable must not be empty. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto Value() NOEXCEPT_Y -> Element&
+    {
+        ASSERT(HasValue());
+        return _value;
+    }
+
+    /// <summary> Reference to the value. Nullable must not be empty. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto Value() const NOEXCEPT_Y -> const Element&
+    {
+        ASSERT(HasValue());
+        return _value;
+    }
+
+    /// <summary> Reference to the value or the fallback. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto ValueOr(const Element& fallback) const NOEXCEPT_Y -> const Element&
+    {
+        if (HasValue())
+        {
+            return _value;
+        }
+        else 
+        {
+            return fallback;
+        }
+    }
+
+    /// <summary> Overwrites the value with the specified one by copy. </summary>
+    void Set(const Element& value) NOEXCEPT_Y
+    {
+        _value = value;
+        _tombstoneLevel = -1;
+    }
+
+    /// <summary> Overwrites the value with the specified ony by emplace (ctor only). </summary>
+    template<typename... Args>
+    void Emplace(Args&&... args) NOEXCEPT_Y
+    {
+        _value = Element{ FORWARD(Args, args)... };
+        _tombstoneLevel = -1;
+    }
+
+
+    /// <summary> Resets the value to null. </summary>
+    void Clear() NOEXCEPT_Y
+    {
+        _tombstoneLevel = 0;
+    }
+
+
+    /// <summary> Creates a span which can be used to access the value. </summary>
+    template <typename U = T>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto AsSpan() -> Span<Element>;
+
+    /// <summary> Creates a span which can be used to access the value. </summary>
+    template <typename U = T>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto AsSpan() const -> Span<const Element>;
+
+
+    // Tombstone (Nested Nullable)
+
+    friend TombstoneNullable<Nullable, true>;
+    friend TombstoneNullable<Nullable, false>;
+
+PRIVATE:
+    NO_DISCARD FORCE_INLINE
+    auto IsTombstone() const NOEXCEPT_Y -> bool
+    {
+        return _tombstoneLevel > 0;
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto GetTombstoneLevel() const NOEXCEPT_Y -> int8
+    {
+        return _tombstoneLevel; // Go out
+    }
+
+    /// <summary>
+    /// Creates a tombstone of a nullable.
+    /// You better know what you are doing, if you want to use it!
+    /// </summary>
+    FORCE_INLINE explicit
+    Nullable(const TombstoneDepth tombstoneTag) NOEXCEPT_Y
+        : _tombstoneLevel{ static_cast<int8>(tombstoneTag.Value) } // Go in
+    {
+        ASSERT(tombstoneTag.Value >= 0);
+    }
+
+
+    // Lifecycle
+
+public:
+    /// <summary> Initializes empty nullable. </summary>
+    FORCE_INLINE constexpr explicit
+    Nullable() NOEXCEPT_Y = default;
+
+    /// <summary> Initializes empty nullable. </summary>
+    FORCE_INLINE constexpr
+    Nullable(NullOptT) NOEXCEPT_Y
+        : _tombstoneLevel{ 0 }
+    {
+        // Pass (`default` not supported)
+    }
+
+    /// <summary> Initializes nullable with the specified value by move. </summary>
+    FORCE_INLINE explicit
+    Nullable(Element&& value) NOEXCEPT_Y
+        : _value{ MOVE(value) }
+        , _tombstoneLevel{ -1 }
+    {
+    }
+
+    /// <summary> Initializes nullable with the specified value by copy. </summary>
+    FORCE_INLINE explicit
+    Nullable(const Element& value) NOEXCEPT_Y
+        : _value{ value }
+        , _tombstoneLevel{ -1 }
+    {
+    }
+
+
+
+    // Conversion
+
+    /// <summary>
+    /// Converts the nullable to boolean indicating whether the nullable has a value.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE explicit
+    operator bool() const NOEXCEPT_Y
+    {
+        return HasValue();
+    }
+
+
+    // Utility
+
+    NO_DISCARD FORCE_INLINE
+    auto IsEmpty() const NOEXCEPT_Y -> bool
+    {
+        return !HasValue();
+    }
+
+    /// <summary> Overwrites the value with the specified one by move, if it is null. </summary>
+    FORCE_INLINE
+    void SetIfNull(Element&& value) NOEXCEPT_Y
+    {
+        if (!HasValue())
+        {
+            Set(MOVE(value));
+        }
+    }
+
+    /// <summary> Overwrites the value with the specified one by copy, if it is null. </summary>
+    FORCE_INLINE
+    void SetIfNull(const Element& value) NOEXCEPT_Y
+    {
+        if (!HasValue())
+        {
+            Set(value);
+        }
+    }
+};
+
+template<typename T, bool C>
+struct TMaxTombstoneDepth<Nullable<T, C, false>>
 {
     enum { Value = 64 };
 };
 
+// Tombstone Nullable
 
-/// <summary>
-/// Wrapper over a value type that can be assigned an additional null value.
-/// This implementation cedes tracking of null value to the underlying type via tombstone values.
-/// Therefore, it does not require any additional memory to store the null value.
-/// Additionally, the underlying type may skip the null value check.
-/// </summary>
-/// 
-/// <typeparam name="T">
-/// Type of the stored value. It must support tombstone values.
-/// </typeparam>
-///
-/// <remarks>
-/// 1. 
-/// </remarks>
-template<typename T>
-class Nullable<T, true>
+template<typename T, bool C>
+class Nullable<T, C, true>
 {
-    static_assert(GetMaxTombstoneDepth<T>::Value > 0, "Type does not support tombstone values.");
+    static_assert(TMaxTombstoneDepth<T>::Value > 0, "Type does not support tombstone values.");
 
 public:
     using Element = T;
 
 PRIVATE:
-    Element _value{ TombstoneDepth{ 1 } };
+    Element _value;
 
 
     // Element Access
@@ -443,7 +601,8 @@ public:
 
     // Tombstone (Nested Nullable)
 
-    friend Nullable<Nullable, true>;
+    friend TombstoneNullable<Nullable, true>;
+    friend TombstoneNullable<Nullable, false>;
 
 PRIVATE:
     NO_DISCARD FORCE_INLINE
@@ -474,15 +633,17 @@ PRIVATE:
 
 public:
     /// <summary> Initializes empty nullable. </summary>
-    FORCE_INLINE constexpr
+    FORCE_INLINE constexpr explicit
     Nullable() NOEXCEPT_Y
+        : _value{ TombstoneDepth{ 1 } }
     {
         // Pass (`default` not supported)
     }
 
     /// <summary> Initializes empty nullable. </summary>
-    FORCE_INLINE constexpr explicit
+    FORCE_INLINE constexpr
     Nullable(NullOptT) NOEXCEPT_Y
+        : _value{ TombstoneDepth{ 1 } }
     {
         // Pass (`default` not supported)
     }
@@ -587,23 +748,8 @@ public:
     }
 };
 
-
-template<typename T>
-struct GetMaxTombstoneDepth<Nullable<T, true>>
+template<typename T, bool C>
+struct TMaxTombstoneDepth<Nullable<T, C, true>>
 {
-    enum { Value = GetMaxTombstoneDepth<T>::Value - 1 };
+    enum { Value = TMaxTombstoneDepth<T>::Value - 1 };
 };
-
-
-/// <summary>
-/// Type alias for a nullable type that enforces usage of sentinel value.
-/// </summary>
-template<typename T>
-using SentinelNullable = Nullable<T, false>;
-
-/// <summary>
-/// Type alias for a nullable type that enforces usage of tombstone value.
-/// All constraints of the underlying type must be met.
-/// </summary>
-template<typename T>
-using TombstoneNullable = Nullable<T, true>;
