@@ -12,8 +12,8 @@
 
 // Sentinel Nullable
 
-template<typename T, bool C>
-class Nullable<T, C, false>
+template<typename T>
+class Nullable<T, false, false>
 {
 public:
     using Element = T;
@@ -260,6 +260,198 @@ public:
     {
         Clear();
     }
+
+
+    // Conversion
+
+    /// <summary>
+    /// Converts the nullable to boolean indicating whether the nullable has a value.
+    /// </summary>
+    NO_DISCARD FORCE_INLINE explicit
+    operator bool() const NOEXCEPT_Y
+    {
+        return HasValue();
+    }
+
+
+    // Utility
+
+    NO_DISCARD FORCE_INLINE
+    auto IsEmpty() const NOEXCEPT_Y -> bool
+    {
+        return !HasValue();
+    }
+
+    /// <summary> Overwrites the value with the specified one by move, if it is null. </summary>
+    FORCE_INLINE
+    void SetIfNull(Element&& value) NOEXCEPT_Y
+    {
+        if (!HasValue())
+        {
+            Set(MOVE(value));
+        }
+    }
+
+    /// <summary> Overwrites the value with the specified one by copy, if it is null. </summary>
+    FORCE_INLINE
+    void SetIfNull(const Element& value) NOEXCEPT_Y
+    {
+        if (!HasValue())
+        {
+            Set(value);
+        }
+    }
+};
+
+template<typename T>
+class Nullable<T, true, false>
+{
+public:
+    using Element = T;
+
+    static_assert(THasTrivialCtorV<T>, "Type must have trivial constructor.");
+    static_assert(THasTrivialDtorV<T>, "Type must have trivial destructor.");
+
+PRIVATE:
+    Element _value;
+    int8    _tombstoneLevel;
+
+
+    // Element Access
+
+public:
+    /// <summary> Checks if the nullable has a value. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto HasValue() const NOEXCEPT_Y -> bool
+    {
+        return _tombstoneLevel == -1;
+    }
+
+    /// <summary> Reference to the value. Nullable must not be empty. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto Value() NOEXCEPT_Y -> Element&
+    {
+        ASSERT(HasValue());
+        return _value;
+    }
+
+    /// <summary> Reference to the value. Nullable must not be empty. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto Value() const NOEXCEPT_Y -> const Element&
+    {
+        ASSERT(HasValue());
+        return _value;
+    }
+
+    /// <summary> Reference to the value or the fallback. </summary>
+    NO_DISCARD FORCE_INLINE
+    auto ValueOr(const Element& fallback) const NOEXCEPT_Y -> const Element&
+    {
+        if (HasValue())
+        {
+            return _value;
+        }
+        else 
+        {
+            return fallback;
+        }
+    }
+
+    /// <summary> Overwrites the value with the specified one by copy. </summary>
+    void Set(const Element& value) NOEXCEPT_Y
+    {
+        _value = value;
+        _tombstoneLevel = -1;
+    }
+
+    /// <summary> Overwrites the value with the specified ony by emplace (ctor only). </summary>
+    template<typename... Args>
+    void Emplace(Args&&... args) NOEXCEPT_Y
+    {
+        _value = Element{ FORWARD(Args, args)... };
+        _tombstoneLevel = -1;
+    }
+
+
+    /// <summary> Resets the value to null. </summary>
+    void Clear() NOEXCEPT_Y
+    {
+        _tombstoneLevel = 0;
+    }
+
+
+    /// <summary> Creates a span which can be used to access the value. </summary>
+    template <typename U = T>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto AsSpan() -> Span<Element>;
+
+    /// <summary> Creates a span which can be used to access the value. </summary>
+    template <typename U = T>
+    NO_DISCARD FORCE_INLINE constexpr
+    auto AsSpan() const -> Span<const Element>;
+
+
+    // Tombstone (Nested Nullable)
+
+    friend TombstoneNullable<Nullable, true>;
+    friend TombstoneNullable<Nullable, false>;
+
+PRIVATE:
+    NO_DISCARD FORCE_INLINE
+    auto IsTombstone() const NOEXCEPT_Y -> bool
+    {
+        return _tombstoneLevel > 0;
+    }
+
+    NO_DISCARD FORCE_INLINE
+    auto GetTombstoneLevel() const NOEXCEPT_Y -> int8
+    {
+        return _tombstoneLevel; // Go out
+    }
+
+    /// <summary>
+    /// Creates a tombstone of a nullable.
+    /// You better know what you are doing, if you want to use it!
+    /// </summary>
+    FORCE_INLINE explicit
+    Nullable(const TombstoneDepth tombstoneTag) NOEXCEPT_Y
+        : _tombstoneLevel{ static_cast<int8>(tombstoneTag.Value) } // Go in
+    {
+        ASSERT(tombstoneTag.Value >= 0);
+    }
+
+
+    // Lifecycle
+
+public:
+    /// <summary> Initializes empty nullable. </summary>
+    FORCE_INLINE constexpr explicit
+    Nullable() NOEXCEPT_Y = default;
+
+    /// <summary> Initializes empty nullable. </summary>
+    FORCE_INLINE constexpr
+    Nullable(NullOptT) NOEXCEPT_Y
+        : _tombstoneLevel{ 0 }
+    {
+        // Pass (`default` not supported)
+    }
+
+    /// <summary> Initializes nullable with the specified value by move. </summary>
+    FORCE_INLINE explicit
+    Nullable(Element&& value) NOEXCEPT_Y
+        : _value{ MOVE(value) }
+        , _tombstoneLevel{ -1 }
+    {
+    }
+
+    /// <summary> Initializes nullable with the specified value by copy. </summary>
+    FORCE_INLINE explicit
+    Nullable(const Element& value) NOEXCEPT_Y
+        : _value{ value }
+        , _tombstoneLevel{ -1 }
+    {
+    }
+
 
 
     // Conversion
