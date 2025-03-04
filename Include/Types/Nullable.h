@@ -7,26 +7,8 @@
 
 #pragma once
 
-#include "Debugging/Assertions.h"
-#include "Language/Keywords.h"
-#include "Language/Templates.h"
+#include "Types/Base.h"
 #include "Types/Dummy.h"
-
-/// <summary>
-/// Wrapper over a value type that can be assigned an additional null value.
-/// </summary>
-///
-/// <typeparam name="T">
-/// Type of the stored value.
-/// </typeparam>
-/// <typeparam name="UseTombstone">
-/// Flag indicating whether to use tombstone value.
-/// </typeparam>
-template<typename T, bool M = (GetMaxTombstoneDepth<T>::Value > 0)>
-class Nullable;
-
-template<typename T>
-class Span;
 
 /// <summary>
 /// Wrapper over a value type that can be assigned an additional null value.

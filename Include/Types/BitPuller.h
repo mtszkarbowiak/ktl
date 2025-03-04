@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "Collections/CollectionsUtils.h"
 #include "Types/BitRef.h"
 
 /// <summary>

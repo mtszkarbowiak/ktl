@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "Collections/CollectionsUtils.h"
 #include "Types/BitsBlock.h"
+#include "Types/Base.h"
 
 /// <summary> Utility class that allows accessing the bit at the specified index using the assignment operator. </summary>
 class MutBitRef final

@@ -21,7 +21,7 @@
 /// (Optional) Underlying type storing the bitfield. 
 /// Can be used if only a part of the enum class is needed.
 /// </typeparam>
-template<typename E, typename S = typename TUnderlyingType<E>::Type>
+template<typename E, typename S>
 class EnumSet
 {
 public:
