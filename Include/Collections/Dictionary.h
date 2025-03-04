@@ -398,7 +398,7 @@ PRIVATE:
                 // Otherwise, we can re-use the last deleted slot.
                 firstFree.SetIfNull(currentIndex);
 
-                return { {},  firstFree };
+                return { NullOptT{},  firstFree };
             }
 
             if (slot.IsDeleted() && firstFree.IsEmpty())
@@ -410,7 +410,7 @@ PRIVATE:
             else if (slot.IsOccupied() && slot.GetKey() == key)
             {
                 // If the current slot has the key, just return the index :)
-                return { Nullable<Index>{ currentIndex }, {} };
+                return { Nullable<Index>{ currentIndex }, NullOptT{} };
             }
 
             currentIndex = (initIndex + P::Next(capacity, numChecks)) & capacityBitMask;

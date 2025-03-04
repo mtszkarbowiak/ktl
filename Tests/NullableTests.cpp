@@ -28,7 +28,7 @@ static_assert(THasTrivialDtorV<Index>, "");
 
 TEST(NullableByFlagTests, EmptyCtor)
 {
-    Nullable<int32> nullable;
+    Nullable<int32> nullable{};
     GTEST_ASSERT_FALSE(nullable.HasValue());
 }
 
@@ -43,7 +43,7 @@ TEST(NullableByTombstoneTests, EmptyCtor)
 
 TEST(NullableByFlagTests, ValueCtor_EmptyAsgn)
 {
-    Nullable<int32> nullable;
+    Nullable<int32> nullable{};
     nullable.Set(69);
     GTEST_ASSERT_TRUE(nullable.HasValue());
     nullable = Nullable<int32>{};
@@ -52,7 +52,7 @@ TEST(NullableByFlagTests, ValueCtor_EmptyAsgn)
 
 TEST(NullableByTombstoneTests, ValueCtor_EmptyAsgn)
 {
-    Nullable<Index> nullable;
+    Nullable<Index> nullable{};
     nullable.Set(69);
     GTEST_ASSERT_TRUE(nullable.HasValue());
     nullable = Nullable<Index>{};
@@ -62,7 +62,7 @@ TEST(NullableByTombstoneTests, ValueCtor_EmptyAsgn)
 
 TEST(NullableByFlagTests, ValueCtor_ValueAsgn)
 {
-    Nullable<int32> nullable;
+    Nullable<int32> nullable{};
     nullable.Set(69);
     GTEST_ASSERT_TRUE(nullable.HasValue());
     nullable.Set(42);
@@ -72,7 +72,7 @@ TEST(NullableByFlagTests, ValueCtor_ValueAsgn)
 
 TEST(NullableByTombstoneTests, ValueCtor_ValueAsgn)
 {
-    Nullable<Index> nullable;
+    Nullable<Index> nullable{};
     nullable.Set(69);
     GTEST_ASSERT_TRUE(nullable.HasValue());
     nullable.Set(42);
@@ -83,7 +83,7 @@ TEST(NullableByTombstoneTests, ValueCtor_ValueAsgn)
 
 TEST(NullableByFlagTests, ValueClearing)
 {
-    Nullable<int32> nullable;
+    Nullable<int32> nullable{};
     nullable.Set(69);
     GTEST_ASSERT_TRUE(nullable.HasValue());
     nullable.Clear();
@@ -92,7 +92,7 @@ TEST(NullableByFlagTests, ValueClearing)
 
 TEST(NullableByTombstone, ValueClearing)
 {
-    Nullable<Index> nullable;
+    Nullable<Index> nullable{};
     nullable.Set(69);
     GTEST_ASSERT_TRUE(nullable.HasValue());
     nullable.Clear();
@@ -104,7 +104,7 @@ TEST(NullableByFlagTests, ValueCtor)
 {
     LIFECYCLE_TEST_INTO
     {
-        Nullable<TestTracker> nullable;
+        Nullable<TestTracker> nullable{};
     }
     LIFECYCLE_TEST_OUT
 }
@@ -113,7 +113,7 @@ TEST(NullableByFlagTests, ValueAsgn)
 {
     LIFECYCLE_TEST_INTO
     {
-        Nullable<TestTracker> nullable;
+        Nullable<TestTracker> nullable{};
         GTEST_ASSERT_EQ(LifecycleCountersInstance.Instances, 0); // The type should not have been initialized!
         GTEST_ASSERT_FALSE(nullable.HasValue());
         nullable.Set(TestTracker{ 69 });
@@ -232,8 +232,8 @@ TEST(NullableNested, NestedTombstone_Double)
 
 TEST(NullableUtilities, BoolConversion)
 {
-    Nullable<int32> nullableA;
-    Nullable<Index> nullableB;
+    Nullable<int32> nullableA{};
+    Nullable<Index> nullableB{};
     GTEST_ASSERT_FALSE(static_cast<bool>(nullableA));
     GTEST_ASSERT_FALSE(static_cast<bool>(nullableB));
     nullableA.Set(69);
@@ -250,7 +250,7 @@ TEST(NullableUtilities, ValueEmplacement)
 {
     LIFECYCLE_TEST_INTO
     {
-        Nullable<TestTracker> nullable;
+        Nullable<TestTracker> nullable{};
         nullable.Emplace(69);
         GTEST_ASSERT_TRUE(nullable.HasValue());
         GTEST_ASSERT_EQ(nullable.Value().Value, 69);
@@ -261,8 +261,8 @@ TEST(NullableUtilities, ValueEmplacement)
 
 TEST(NullableUtilities, AsSpan)
 {
-    Nullable<int32> nullableA;
-    Nullable<Index> nullableB;
+    Nullable<int32> nullableA{};
+    Nullable<Index> nullableB{};
     GTEST_ASSERT_EQ(nullableA.AsSpan().Count(), 0);
     GTEST_ASSERT_EQ(nullableB.AsSpan().Count(), 0);
     nullableA.Set(69);

@@ -30,7 +30,7 @@ PRIVATE:
         Element _value;
         Dummy   _dummy; // Ensure default ctor.
     };
-    int8 _nullLevel{ 1 };
+    int8 _nullLevel;
 
 
     // Element Access
@@ -173,15 +173,17 @@ PRIVATE:
 
 public:
     /// <summary> Initializes empty nullable. </summary>
-    FORCE_INLINE constexpr
+    FORCE_INLINE constexpr explicit
     Nullable() NOEXCEPT_Y
+        : _nullLevel{ 1 }
     {
         // Pass (`default` not supported)
     }
 
     /// <summary> Initializes empty nullable. </summary>
-    FORCE_INLINE constexpr explicit
+    FORCE_INLINE constexpr
     Nullable(NullOptT) NOEXCEPT_Y
+        : _nullLevel{ 1 }
     {
         // Pass (`default` not supported)
     }
@@ -336,7 +338,7 @@ public:
     using Element = T;
 
 PRIVATE:
-    Element _value{ TombstoneDepth{ 1 } };
+    Element _value;
 
 
     // Element Access
@@ -456,15 +458,17 @@ PRIVATE:
 
 public:
     /// <summary> Initializes empty nullable. </summary>
-    FORCE_INLINE constexpr
+    FORCE_INLINE constexpr explicit
     Nullable() NOEXCEPT_Y
+        : _value{ TombstoneDepth{ 1 } }
     {
         // Pass (`default` not supported)
     }
 
     /// <summary> Initializes empty nullable. </summary>
-    FORCE_INLINE constexpr explicit
+    FORCE_INLINE constexpr
     Nullable(NullOptT) NOEXCEPT_Y
+        : _value{ TombstoneDepth{ 1 } }
     {
         // Pass (`default` not supported)
     }

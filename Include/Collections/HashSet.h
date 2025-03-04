@@ -180,8 +180,8 @@ PRIVATE:
         ASSERT_COLLECTION_INTEGRITY(data);
         ASSERT_COLLECTION_INTEGRITY(Math::IsPow2(capacity)); // Make sure the capacity is a power of 2
 
-        Nullable<Index> keyCell;
-        Nullable<Index> firstFreeSlot;
+        Nullable<Index> keyCell{};
+        Nullable<Index> firstFreeSlot{};
 
         const int32 capacityBitMask = capacity - 1;
         const int32 initIndex = H::GetHash(key) & capacityBitMask;
