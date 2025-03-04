@@ -10,16 +10,10 @@
 #include "Types/Base.h"
 #include "Types/Dummy.h"
 
-/// <summary>
-/// Wrapper over a value type that can be assigned an additional null value.
-/// To represent null, this implementation always uses a sentinel value taking additional byte.
-/// </summary>
-///
-/// <typeparam name="T">
-/// Type of the stored value. It need not to use a tombstone value.
-/// </typeparam>
-template<typename T>
-class Nullable<T, false>
+// Sentinel Nullable
+
+template<typename T, bool C>
+class Nullable<T, C, false>
 {
 public:
     using Element = T;
@@ -142,7 +136,8 @@ public:
 
     // Tombstone (Nested Nullable)
 
-    friend Nullable<Nullable, true>;
+    friend TombstoneNullable<Nullable, true>;
+    friend TombstoneNullable<Nullable, false>;
 
 PRIVATE:
     NO_DISCARD FORCE_INLINE
@@ -308,29 +303,16 @@ public:
     }
 };
 
-template<typename T>
-struct TMaxTombstoneDepth<Nullable<T, false>>
+template<typename T, bool C>
+struct TMaxTombstoneDepth<Nullable<T, C, false>>
 {
     enum { Value = 64 };
 };
 
+// Tombstone Nullable
 
-/// <summary>
-/// Wrapper over a value type that can be assigned an additional null value.
-/// This implementation cedes tracking of null value to the underlying type via tombstone values.
-/// Therefore, it does not require any additional memory to store the null value.
-/// Additionally, the underlying type may skip the null value check.
-/// </summary>
-/// 
-/// <typeparam name="T">
-/// Type of the stored value. It must support tombstone values.
-/// </typeparam>
-///
-/// <remarks>
-/// 1. 
-/// </remarks>
-template<typename T>
-class Nullable<T, true>
+template<typename T, bool C>
+class Nullable<T, C, true>
 {
     static_assert(TMaxTombstoneDepth<T>::Value > 0, "Type does not support tombstone values.");
 
@@ -427,7 +409,8 @@ public:
 
     // Tombstone (Nested Nullable)
 
-    friend Nullable<Nullable, true>;
+    friend TombstoneNullable<Nullable, true>;
+    friend TombstoneNullable<Nullable, false>;
 
 PRIVATE:
     NO_DISCARD FORCE_INLINE
@@ -573,23 +556,8 @@ public:
     }
 };
 
-
-template<typename T>
-struct TMaxTombstoneDepth<Nullable<T, true>>
+template<typename T, bool C>
+struct TMaxTombstoneDepth<Nullable<T, C, true>>
 {
     enum { Value = TMaxTombstoneDepth<T>::Value - 1 };
 };
-
-
-/// <summary>
-/// Type alias for a nullable type that enforces usage of sentinel value.
-/// </summary>
-template<typename T>
-using SentinelNullable = Nullable<T, false>;
-
-/// <summary>
-/// Type alias for a nullable type that enforces usage of tombstone value.
-/// All constraints of the underlying type must be met.
-/// </summary>
-template<typename T>
-using TombstoneNullable = Nullable<T, true>;

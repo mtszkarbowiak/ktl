@@ -10,10 +10,10 @@
 #include "Types/Nullable.h"
 #include "Types/Span.h"
 
-template <typename T>
+template <typename T, bool C>
 template <typename U>
 constexpr 
-auto Nullable<T, true>::AsSpan() -> Span<Element>
+auto Nullable<T, C, true>::AsSpan() -> Span<Element>
 {
     if (HasValue())
     {
@@ -25,10 +25,10 @@ auto Nullable<T, true>::AsSpan() -> Span<Element>
     }
 }
 
-template <typename T>
+template <typename T, bool C>
 template <typename U>
 constexpr 
-auto Nullable<T, false>::AsSpan() -> Span<Element>
+auto Nullable<T, C, false>::AsSpan() -> Span<Element>
 {
     if (HasValue())
     {
@@ -40,10 +40,10 @@ auto Nullable<T, false>::AsSpan() -> Span<Element>
     }
 }
 
-template <typename T>
+template <typename T, bool C>
 template <typename U>
 constexpr 
-auto Nullable<T, false>::AsSpan() const -> Span<const Element>
+auto Nullable<T, C, false>::AsSpan() const -> Span<const Element>
 {
     if (HasValue())
     {
@@ -55,10 +55,10 @@ auto Nullable<T, false>::AsSpan() const -> Span<const Element>
     }
 }
 
-template <typename T>
+template <typename T, bool C>
 template <typename U>
 constexpr 
-auto Nullable<T, true>::AsSpan() const -> Span<const Element>
+auto Nullable<T, C, true>::AsSpan() const -> Span<const Element>
 {
     if (HasValue())
     {

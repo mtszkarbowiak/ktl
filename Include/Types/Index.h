@@ -57,7 +57,8 @@ public:
 
     // Tombstone
 
-    friend TombstoneNullable<Index>;
+    friend TombstoneNullable<Index, false>;
+    friend TombstoneNullable<Index, true>;
 
 PRIVATE:
     /// <summary>

@@ -72,7 +72,8 @@ public:
     
     // Tombstone
 
-    friend TombstoneNullable<Ref>;
+    friend TombstoneNullable<Ref, false>;
+    friend TombstoneNullable<Ref, true>;
 
 PRIVATE:
     FORCE_INLINE explicit
