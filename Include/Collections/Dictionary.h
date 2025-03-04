@@ -417,7 +417,7 @@ PRIVATE:
         }
 
         // If everything failed, return double null to indicate that the search was unsuccessful.
-        return {};
+        return { NullOptT{}, NullOptT{} };
     }
 
     void RebuildImpl(const int32 miCapacitySlots)
