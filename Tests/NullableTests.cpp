@@ -146,10 +146,10 @@ namespace SentinelNullables
     using Nullable1 = Nullable<Nullable0>;
     using Nullable2 = Nullable<Nullable1>;
 
-    static_assert(GetMaxTombstoneDepth<int>::Value == 0, "");
-    static_assert(GetMaxTombstoneDepth<Nullable0>::Value == 64, "");
-    static_assert(GetMaxTombstoneDepth<Nullable1>::Value == 63, "");
-    static_assert(GetMaxTombstoneDepth<Nullable2>::Value == 62, "");
+    static_assert(TMaxTombstoneDepth<int>::Value == 0, "");
+    static_assert(TMaxTombstoneDepth<Nullable0>::Value == 64, "");
+    static_assert(TMaxTombstoneDepth<Nullable1>::Value == 63, "");
+    static_assert(TMaxTombstoneDepth<Nullable2>::Value == 62, "");
 
     static_assert(sizeof(Nullable1) == sizeof(Nullable0), "");
     static_assert(sizeof(Nullable2) == sizeof(Nullable0), "");
@@ -312,7 +312,7 @@ namespace TombstonePropagation
 }
 
 template<>
-struct GetMaxTombstoneDepth<TombstonePropagation::CustomType>
+struct TMaxTombstoneDepth<TombstonePropagation::CustomType>
 {
     enum { Value = 64 }; // More than enough for any collection.
 };

@@ -27,7 +27,7 @@ class ConstBitRef;
 
 template<typename K, typename V>
 struct Pair;
-template<typename T, bool M = (GetMaxTombstoneDepth<T>::Value > 0)>
+template<typename T, bool M = (TMaxTombstoneDepth<T>::Value > 0)>
 class Nullable;
 template<typename E, typename S = typename TUnderlyingType<E>::Type>
 class EnumSet;

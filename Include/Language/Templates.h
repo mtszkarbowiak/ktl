@@ -117,7 +117,7 @@ struct TombstoneDepth
 /// <c> Nullable<Nullable<Nullable<...>>> </c>
 /// </remarks>
 template<typename T>
-struct GetMaxTombstoneDepth
+struct TMaxTombstoneDepth
 {
     enum { Value = 0 };
 };

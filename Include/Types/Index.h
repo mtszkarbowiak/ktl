@@ -99,7 +99,7 @@ public:
 };
 
 template<>
-struct GetMaxTombstoneDepth<Index>
+struct TMaxTombstoneDepth<Index>
 {
     enum { Value = 64 }; // More than enough for any collection.
 };
