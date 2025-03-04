@@ -53,3 +53,9 @@ class RcBox;
 
 class Index;
 class SizeHint;
+
+
+// Dummies
+
+class Dummy;
+enum class DummyEnum { A };

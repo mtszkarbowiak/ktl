@@ -7,8 +7,7 @@
 
 #pragma once
 
-#include <Language/TypeTraits.h>
-#include <Debugging/Assertions.h>
+#include <Types/Base.h>
 
 /// <summary>
 /// Set of enum classes, stored as a bitfield.
@@ -29,7 +28,7 @@ public:
     using StorageType = S;
 
 PRIVATE:
-    StorageType _value = 0;
+    StorageType _value;
 
     static_assert(TIsEnumV<EnumType>, "EnumSet can only be used with enum classes.");
 
@@ -206,3 +205,7 @@ public:
         return result;
     }
 };
+
+static_assert(THasTrivialCtorV<EnumSet<DummyEnum>>, "SizeHint should be trivially constructible.");
+static_assert(THasTrivialCopyV<EnumSet<DummyEnum>>, "SizeHint should be trivially copyable.");
+static_assert(THasTrivialDtorV<EnumSet<DummyEnum>>, "SizeHint should be trivially destructible.");
