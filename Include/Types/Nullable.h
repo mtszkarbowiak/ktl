@@ -24,7 +24,7 @@ PRIVATE:
         Element _value;
         Dummy   _dummy; // Ensure default ctor.
     };
-    int8 _nullLevel;
+    int8 _tombstoneLevel;
 
 
     // Element Access
@@ -34,7 +34,7 @@ public:
     NO_DISCARD FORCE_INLINE
     auto HasValue() const NOEXCEPT_Y -> bool
     {
-        return _nullLevel == 0;
+        return _tombstoneLevel == -1;
     }
 
     /// <summary> Reference to the value. Nullable must not be empty. </summary>
@@ -77,7 +77,7 @@ public:
         else 
         {
             new (&_value) Element{ MOVE(value) };
-            _nullLevel = 0;
+            _tombstoneLevel = -1;
         }
     }
 
@@ -91,7 +91,7 @@ public:
         else
         {
             new (&_value) Element{ value };
-            _nullLevel = 0;
+            _tombstoneLevel = -1;
         }
     }
 
@@ -107,7 +107,7 @@ public:
         else
         {
             new (&_value) Element{ FORWARD(Args, args)... };
-            _nullLevel = 0;
+            _tombstoneLevel = -1;
         }
     }
 
@@ -118,7 +118,7 @@ public:
         if (HasValue())
         {
             _value.~Element();
-            _nullLevel = 1;
+            _tombstoneLevel = 0;
         }
     }
 
@@ -143,13 +143,13 @@ PRIVATE:
     NO_DISCARD FORCE_INLINE
     auto IsTombstone() const NOEXCEPT_Y -> bool
     {
-        return _nullLevel > 1;
+        return _tombstoneLevel > 0;
     }
 
     NO_DISCARD FORCE_INLINE
     auto GetTombstoneLevel() const NOEXCEPT_Y -> int8
     {
-        return _nullLevel - 1; // Go out
+        return _tombstoneLevel; // Go out
     }
 
     /// <summary>
@@ -158,7 +158,7 @@ PRIVATE:
     /// </summary>
     FORCE_INLINE explicit
     Nullable(const TombstoneDepth tombstoneTag) NOEXCEPT_Y
-        : _nullLevel{ static_cast<int8>(tombstoneTag.Value + 1) } // Go in
+        : _tombstoneLevel{ static_cast<int8>(tombstoneTag.Value) } // Go in
     {
         ASSERT(tombstoneTag.Value >= 0);
     }
@@ -170,7 +170,7 @@ public:
     /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE constexpr explicit
     Nullable() NOEXCEPT_Y
-        : _nullLevel{ 1 }
+        : _tombstoneLevel{ 0 }
     {
         // Pass (`default` not supported)
     }
@@ -178,7 +178,7 @@ public:
     /// <summary> Initializes empty nullable. </summary>
     FORCE_INLINE constexpr
     Nullable(NullOptT) NOEXCEPT_Y
-        : _nullLevel{ 1 }
+        : _tombstoneLevel{ 0 }
     {
         // Pass (`default` not supported)
     }
@@ -187,7 +187,7 @@ public:
     FORCE_INLINE explicit
     Nullable(Element&& value) NOEXCEPT_Y
         : _value{ MOVE(value) }
-        , _nullLevel{ 0 }
+        , _tombstoneLevel{ -1 }
     {
     }
 
@@ -195,14 +195,14 @@ public:
     FORCE_INLINE explicit
     Nullable(const Element& value) NOEXCEPT_Y
         : _value{ value }
-        , _nullLevel{ 0 }
+        , _tombstoneLevel{ -1 }
     {
     }
 
     /// <summary> Initializes nullable with a copy of the specified value. </summary>
     FORCE_INLINE
     Nullable(const Nullable& other) NOEXCEPT_Y
-        : _nullLevel{ other._nullLevel }
+        : _tombstoneLevel{ other._tombstoneLevel }
     {
         if (HasValue())
         {
@@ -213,7 +213,7 @@ public:
     /// <summary> Initializes nullable by moving the value from other nullable. </summary>
     FORCE_INLINE
     Nullable(Nullable&& other) NOEXCEPT_S
-        : _nullLevel{ other._nullLevel }
+        : _tombstoneLevel{ other._tombstoneLevel }
     {
         if (HasValue())
         {
@@ -229,7 +229,7 @@ public:
         if (this != &other)
         {
             Clear();
-            _nullLevel = other._nullLevel;
+            _tombstoneLevel = other._tombstoneLevel;
             if (HasValue())
             {
                 new (&_value) Element{ other._value };
@@ -245,7 +245,7 @@ public:
         if (this != &other)
         {
             Clear();
-            _nullLevel = other._nullLevel;
+            _tombstoneLevel = other._tombstoneLevel;
             if (HasValue())
             {
                 new (&_value) Element{ MOVE(other._value) };
