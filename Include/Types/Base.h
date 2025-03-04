@@ -52,4 +52,4 @@ class RcBox;
 // Iteration
 
 class Index;
-struct SizeHint;
+class SizeHint;

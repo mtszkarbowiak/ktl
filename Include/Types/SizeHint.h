@@ -18,12 +18,14 @@
 /// </summary>
 class SizeHint final
 {
-    int32 _min{};
-    int32 _max{};
+    int32 _min;
+    int32 _max;
 
     // Access
 
 public:
+    SizeHint() = default;
+
     /// <summary>
     /// Minimal number of elements to iterate over.
     /// </summary>
@@ -106,3 +108,7 @@ public:
         return hint;
     }
 };
+
+static_assert(THasTrivialCtorV<SizeHint>, "SizeHint should be trivially constructible.");
+static_assert(THasTrivialCopyV<SizeHint>, "SizeHint should be trivially copyable.");
+static_assert(THasTrivialDtorV<SizeHint>, "SizeHint should be trivially destructible.");
